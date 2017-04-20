@@ -1,0 +1,7 @@
+New log file opened at Thu Apr 20 14:23:49 CEST 2017 by 16962@mintaka
+Taking next connection to: 61318
+New client attempting to connect on port: 61319-61318
+  Address = /10.1.30.50:61318
+This client on port 61319 has uuid 1ce5ea7a-45d8-45ad-ac45-4eb1d4383511 configName activator humanReadableName Activator protocolVersion 3 featureTags Vector()
+Connected Clients: activator-1ce5ea7a-45d8-45ad-ac45-4eb1d4383511
+Taking next connection to: 61318
