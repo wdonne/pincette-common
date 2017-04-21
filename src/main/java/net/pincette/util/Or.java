@@ -6,6 +6,10 @@ import java.util.function.Supplier;
 
 
 /**
+ * This lets you chain a number of lambda expressions. The execution stops at
+ * the first expression that yields a value. It can be used like this:
+ * <p>
+ * {@code Or.tryWith(lamba1).or(lambda2).or(lambda3).get();}
  * @author Werner Donn\u00e9
  */
 

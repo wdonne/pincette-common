@@ -28,6 +28,15 @@ public class Collections
 
 {
 
+  /**
+   * Returns a new set with the elements of <code>c1</code> but without those
+   * that also occur in <code>c2</code>.
+   * @param c1 the first collection.
+   * @param c2 the second collection.
+   * @param <T> the type of the elements in the collections and the result.
+   * @return The new set.
+   */
+
   public static <T> Set<T>
   difference(final Collection<T> c1, final Collection<T> c2)
   {
@@ -40,6 +49,16 @@ public class Collections
 
 
 
+  /**
+   * Returns an optional value for a key. The value will be empty is the key
+   * doesn't exist.
+   * @param map the map that is queried.
+   * @param key the query key.
+   * @param <K> the key type.
+   * @param <V> the value type.
+   * @return The optional value.
+   */
+
   public static <K,V> Optional<V>
   get(final Map<K,V> map, final K key)
   {
@@ -48,6 +67,14 @@ public class Collections
 
 
 
+  /**
+   * Returns a stream of pairs for a list, where the second element of the
+   * pair is the zero-based position of the element in the list.
+   * @param list the list of which the stream is made.
+   * @param <T> the type of the elements in the list.
+   * @return The stream of pairs.
+   */
+
   public static <T> Stream<Pair<T,Integer>>
   indexedStream(final List<T> list)
   {
@@ -55,6 +82,14 @@ public class Collections
   }
 
 
+
+  /**
+   * Returns a new set containing all elements that are common in the given
+   * collections.
+   * @param collections the given collections.
+   * @param <T> the element type.
+   * @return The intersection.
+   */
 
   @SafeVarargs
   public static <T> Set<T>
@@ -69,6 +104,13 @@ public class Collections
 
 
 
+  /**
+   * Creates a list with the given elements.
+   * @param elements the given elements.
+   * @param <T> the element type.
+   * @return The new list.
+   */
+
   @SafeVarargs
   public static <T> List<T>
   list(final T... elements)
@@ -77,6 +119,15 @@ public class Collections
   }
 
 
+
+  /**
+   * Creates a map with the given element pairs, where each first element is
+   * a key and each second element a value.
+   * @param pairs the given pairs.
+   * @param <K> the key type.
+   * @param <V> the value type.
+   * @return The new map.
+   */
 
   @SafeVarargs
   public static <K,V> Map<K,V>
@@ -88,6 +139,15 @@ public class Collections
   }
 
 
+
+  /**
+   * Returns a new map with all the mappings of the given maps combined. When
+   * there is more than one mapping for a key only one will be retained.
+   * @param maps the given maps.
+   * @param <K> the key type.
+   * @param <V> the value type.
+   * @return The new map.
+   */
 
   @SafeVarargs
   public static <K,V> Map<K,V>
@@ -102,6 +162,16 @@ public class Collections
 
 
 
+  /**
+   * Returns a set of pairs where each element in <code>s1</code> is combined
+   * with each element in <code>s2</code>.
+   * @param s1 the elements for the first elements of the pairs.
+   * @param s2 the elements for the second elements of the pairs.
+   * @param <T> the element type of the first set.
+   * @param <U> the element type of the second set.
+   * @return The new set.
+   */
+
   public static <T,U> Set<Pair<T,U>>
   multiply(final Set<T> s1, final Set<U> s2)
   {
@@ -114,7 +184,13 @@ public class Collections
 
 
   /**
-   * Returns a new map.
+   * Returns a new map with the added mapping.
+   * @param map the original map.
+   * @param key the new key.
+   * @param value the new value.
+   * @param <K> the key type.
+   * @param <V> the value type.
+   * @return The new map.
    */
 
   public static <K,V> Map<K,V>
@@ -130,7 +206,12 @@ public class Collections
 
 
   /**
-   * Returns a new map.
+   * Returns a new map, which hasn't mappings for the given keys.
+   * @param map the original map.
+   * @param keys the keys that are to be removed.
+   * @param <K> the key type.
+   * @param <V> the value type.
+   * @return The new map.
    */
 
   @SafeVarargs
@@ -146,6 +227,13 @@ public class Collections
 
 
 
+  /**
+   * Returns an iterator that iterates over the list in reverse order.
+   * @param list the given list.
+   * @param <T> the element type.
+   * @return The iterator.
+   */
+
   public static <T> Iterator<T>
   reverse(final List<T> list)
   {
@@ -154,14 +242,29 @@ public class Collections
 
 
 
+  /**
+   * Creates a set with the given elements.
+   * @param elements the given elements.
+   * @param <T> the element type.
+   * @return The new set.
+   */
+
   @SafeVarargs
   public static <T> Set<T>
-  set(final T... objects)
+  set(final T... elements)
   {
-    return Arrays.stream(objects).collect(toSet());
+    return Arrays.stream(elements).collect(toSet());
   }
 
 
+
+  /**
+   * Returns a new set containing all of the elements from the given
+   * collections.
+   * @param collections the given collections.
+   * @param <T> the element type.
+   * @return The new set.
+   */
 
   @SafeVarargs
   public static <T> Set<T>

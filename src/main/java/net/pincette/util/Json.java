@@ -573,6 +573,9 @@ public class Json
 
   /**
    * Returns the value for <code>field</code>, which may be dot-separated.
+   * @param obj the given JSON object.
+   * @param field the query field.
+   * @return The optional result value.
    */
 
   public static Optional<JsonValue>
@@ -602,6 +605,8 @@ public class Json
 
   /**
    * Returns the last segment of a dot-separated path.
+   * @param path the given path.
+   * @return The last segment.
    */
 
   public static String
@@ -674,6 +679,8 @@ public class Json
   /**
    * Returns <code>true</code> if <code>obj</code> contains an entry with the
    * name "error" and value <code>true</code>.
+   * @param obj the given JSON object.
+   * @return Whether the object contains errors or not.
    */
 
   public static boolean
@@ -687,6 +694,8 @@ public class Json
   /**
    * Returns <code>true</code> if any object in <code>array</code> contains an
    * entry with the name "error" and value <code>true</code>.
+   * @param array the given JSON array.
+   * @return Whether the array contains errors or not.
    */
 
   public static boolean
@@ -899,6 +908,8 @@ public class Json
 
   /**
    * Removes fields with a name that starts with an underscore.
+   * @param obj the given JSON object.
+   * @return The new JSON object without the technical fields.
    */
 
   public static JsonObject
@@ -958,6 +969,9 @@ public class Json
    * Returns a new value where recursively entries that <code>match</code>
    * are transformed by <code>transformer</code>. If the latter is empty
    * the entry is removed from the result.
+   * @param json the given JSON value.
+   * @param transformer the applied transformer.
+   * @return The new JSON value.
    */
 
   public static JsonValue
@@ -984,9 +998,12 @@ public class Json
 
 
   /**
-   * Returns a new value where recursively entries that <code>match</code>
+   * Returns a new structure where recursively entries that <code>match</code>
    * are transformed by <code>transformer</code>. If the latter is empty
    * the entry is removed from the result.
+   * @param json the given JSON structure.
+   * @param transformer the applied transformer.
+   * @return The new JSON structure.
    */
 
   public static JsonStructure
@@ -1017,6 +1034,9 @@ public class Json
    * Returns a new array where entries of objects that <code>match</code>
    * are transformed by <code>transformer</code>. If the latter is empty
    * the entry is removed from the result.
+   * @param array the given JSON array.
+   * @param transformer the applied transformer.
+   * @return The new JSON array.
    */
 
   public static JsonArray
@@ -1051,6 +1071,9 @@ public class Json
    * Returns a new object where entries that <code>match</code> are transformed
    * by <code>transformer</code>. If the latter is empty the
    * entry is removed from the result.
+   * @param obj the given JSON object.
+   * @param transformer the applied transformer.
+   * @return The new JSON object.
    */
 
   public static JsonObject
@@ -1370,13 +1393,23 @@ public class Json
 
   {
 
+    /**
+     * A dot-separated key path.
+     */
+
     final public String path;
+
+    /**
+     * A JSON value.
+     */
+
     final public JsonValue value;
 
 
 
     /**
-     * The <code>path</code> is a dot-separated key path.
+     * @param path a dot-separated key path.
+     * @param value a JSON value.
      */
 
     public

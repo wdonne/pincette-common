@@ -55,6 +55,16 @@ public class Util
 
 
 
+  /**
+   * Adds an element to a collection that calls <code>close</code> on all
+   * elements when its own <code>close</code> method is called.
+   * @param autoClose the collection that implements
+   * {@link java.lang.AutoCloseable}.
+   * @param element the element that is to be added.
+   * @param <T> the element type.
+   * @return The added element.
+   */
+
   public static <T> T
   add(final AutoCloseCollection autoClose, final T element)
   {
@@ -69,6 +79,9 @@ public class Util
    * Produces a stream with all paths from <code>path</code> up to the root
    * path, which is just the <code>delimiter</code>. A trailing
    * <code>delimiter</code> will be discarded.
+   * @param path the path that will be decomposed.
+   * @param delimiter the delimiter that separates the path segments.
+   * @return The stream with the generated paths.
    */
 
   public static Stream<String>
@@ -90,6 +103,14 @@ public class Util
 
 
 
+  /**
+   * Wraps a resource in an {@link java.lang.AutoCloseable}.
+   * @param resource the given resource.
+   * @param close the function that is called with the resource.
+   * @param <T> the resource type.
+   * @return The wrapped resource.
+   */
+
   public static <T> AutoCloseable
   autoClose(final T resource, final ConsumerWithException<T> close)
   {
@@ -97,6 +118,12 @@ public class Util
   }
 
 
+
+  /**
+   * Creates an {@link AutoCloseCollection} where the added elements are
+   * supposed to have a <code>close</code> method.
+   * @return The new collection.
+   */
 
   public static AutoCloseCollection
   autoClose()
@@ -106,6 +133,14 @@ public class Util
 
 
 
+  /**
+   * Creates an {@link AutoCloseCollection}.
+   * @param close the function that is called on each element when the
+   *              collection is closed.
+   * @param <T> the element type.
+   * @return The new collection.
+   */
+
   public static <T> AutoCloseCollection<T>
   autoClose(final ConsumerWithException<T> close)
   {
@@ -113,6 +148,14 @@ public class Util
   }
 
 
+
+  /**
+   * Returns an iterator over pairs where the first element is the result of
+   * the given iterator and the second the zero-based position in the list.
+   * @param iterator the given iterator.
+   * @param <T> the element type.
+   * @return The new iterator.
+   */
 
   public static <T> Iterator<Pair<T,Integer>>
   countingIterator(final Iterator<T> iterator)
@@ -137,6 +180,14 @@ public class Util
   }
 
 
+
+  /**
+   * Returns <code>true</code> if the given object equals one of the given
+   * values.
+   * @param o the given object.
+   * @param values the values to compare with.
+   * @return The comparison result.
+   */
 
   public static boolean
   equalsOneOf(final Object o, final Object... values)
@@ -217,10 +268,18 @@ public class Util
 
 
 
+  /**
+   * Returns the last segment of the path.
+   * @param path the given path.
+   * @param delimiter the regular expression that separates the segments.
+   * @return The optional segment.
+   */
+
   public static Optional<String>
-  getLastSegment(final String s, final String delimiter)
+  getLastSegment(final String path, final String delimiter)
   {
-    final List<String> segments = getSegments(s, delimiter).collect(toList());
+    final List<String> segments =
+      getSegments(path, delimiter).collect(toList());
 
     return
       segments.size() > 0 ?
@@ -240,12 +299,15 @@ public class Util
   /**
    * Returns the segments, but without the empty strings that can be generated
    * by leading, trailing or consecutive delimiters.
+   * @param path the path that is split in segments.
+   * @param delimiter the regular expression that separates the segments.
+   * @return The segment stream.
    */
 
   public static Stream<String>
-  getSegments(final String s, final String delimiter)
+  getSegments(final String path, final String delimiter)
   {
-    return Arrays.stream(s.split(delimiter)).filter(seg -> seg.length() > 0);
+    return Arrays.stream(path.split(delimiter)).filter(seg -> seg.length() > 0);
   }
 
 
@@ -347,18 +409,13 @@ public class Util
   loadProperties(final Supplier<InputStream> in)
   {
     return
-      Arrays.
-        stream(tryToGet(() -> readLineConfig(in.get())).orElse(new String[0])).
+      tryToGet(() -> readLineConfig(in.get())).orElse(Stream.empty()).
         map(line -> line.split("=")).
         filter(line -> line.length == 2).
         collect(toMap(line -> line[0], line -> line[1]));
   }
 
 
-
-  /**
-   * The <code>path</code> is a dot-separated string.
-   */
 
   public static <T> Optional<T>
   pathSearch(final Map<String,? extends T> map, final String path)
@@ -370,6 +427,11 @@ public class Util
 
   /**
    * The <code>path</code> is a dot-separated string.
+   * @param map the map that is searched.
+   * @param path the path that is used for the search.
+   * @param evaluator used in the evaluation of expressions.
+   * @param <T> the value type.
+   * @return The optional value.
    */
 
   public static <T> Optional<T>
@@ -423,6 +485,11 @@ public class Util
    * zero-based offset. The arithmatic operators "+", "-", "*" and "/" may be
    * used to combine fields and literals. The generic type <code>T</code> is
    * the type for the leafs of the tree.
+   * @param map the map that is searched.
+   * @param path the path that is used for the search.
+   * @param evaluator used in the evaluation of expressions.
+   * @param <T> the value type.
+   * @return The optional value.
    */
 
   public static <T> Optional<T>
@@ -443,43 +510,37 @@ public class Util
             new Pair<Object,Integer>(map.get(stripCondition(path.get(0))), 0)
           ),
           pair ->
-            !pair.isPresent() ?
-              Optional.empty() :
-              (
-                pair.get().second == path.size() - 1 ?
-                  Optional.of(new Pair<>(pair.get().first, Integer.MAX_VALUE)) :
+            pair.map
+            (
+              p ->
+                p.second == path.size() - 1 ?
+                  new Pair<>(p.first, Integer.MAX_VALUE) :
                   (
-                    pair.get().first instanceof Map ?
-                      Optional.of
+                    p.first instanceof Map ?
+                      new Pair<>
                       (
-                        new Pair<>
+                        ((Map<String,Object>) p.first).get
                         (
-                          ((Map<String,Object>) pair.get().first).get
-                          (
-                            stripCondition(path.get(pair.get().second + 1))
-                          ),
-                          pair.get().second + 1
-                        )
+                          stripCondition(path.get(p.second + 1))
+                        ),
+                        p.second + 1
                       ) :
                       (
-                        pair.get().first instanceof List ?
-                          Optional.of
+                        p.first instanceof List ?
+                          new Pair<Object,Integer>
                           (
-                            new Pair<>
+                            Util.<T>getFromList
                             (
-                              Util.<T>getFromList
-                              (
-                                (List<Map<String,Object>>) pair.get().first,
-                                path.get(pair.get().second),
-                                evaluator != null ? evaluator : (a -> a)
-                              ),
-                              pair.get().second
-                            )
+                              (List<Map<String,Object>>) p.first,
+                              path.get(p.second),
+                              evaluator != null ? evaluator : (a -> a)
+                            ),
+                            p.second
                           ) :
-                          Optional.empty()
+                          null
                       )
                   )
-              )
+            )
         ).
         filter
         (
@@ -487,18 +548,14 @@ public class Util
             !pair.isPresent() ||
               pair.map(p -> p.second == Integer.MAX_VALUE).orElse(false)
         ).
-        map
-        (
-          pair -> !pair.isPresent() ?
-            Optional.<T>empty() : Optional.ofNullable((T) pair.get().first)
-        ).
+        map(pair -> pair.map(p -> (T) p.first)).
         findFirst().
         orElse(Optional.empty());
   }
 
 
 
-  public static String[]
+  public static Stream<String>
   readLineConfig(final InputStream in) throws IOException
   {
     return
@@ -513,7 +570,7 @@ public class Util
 
 
 
-  public static String[]
+  public static Stream<String>
   readLineConfig(final BufferedReader in) throws IOException
   {
     return readLineConfig(in.lines());
@@ -521,7 +578,7 @@ public class Util
 
 
 
-  public static String[]
+  public static Stream<String>
   readLineConfig(final Path path) throws IOException
   {
     return readLineConfig(Files.lines(path, Charset.forName("UTF-8")));
@@ -529,8 +586,17 @@ public class Util
 
 
 
-  public static String[]
-  readLineConfig(final Stream<String> lines) throws IOException
+  /**
+   * Returns lines from a stream of strings. Comments start with the "#"
+   * character and are removed from the result. Lines can be split over
+   * multiple lines with the "\" character. The pieces will be assembled into
+   * a single line.
+   * @param lines the given stream of lines.
+   * @return The generated lines.
+   */
+
+  public static Stream<String>
+  readLineConfig(final Stream<String> lines)
   {
     final List<String> buffer = new ArrayList<>();
 
@@ -555,8 +621,7 @@ public class Util
               ).andThenGet(() -> null) :
               (flushLines(buffer) + line)
         ).
-        filter(Objects::nonNull).
-        toArray(String[]::new);
+        filter(Objects::nonNull);
   }
 
 
@@ -615,6 +680,11 @@ public class Util
 
   /**
    * Iterates sequentially until the predicate returns <code>false</code>.
+   * @param seed the initial value.
+   * @param f the function that calculates the next value.
+   * @param p the predicate.
+   * @param <T> the value type.
+   * @return The generated stream.
    */
 
   public static <T> Stream<T>
@@ -796,6 +866,18 @@ public class Util
   }
 
 
+
+  /**
+   * Tries to calculate a result with a resource that should implement
+   * {@link java.lang.AutoCloseable}.
+   * @param resource the function that produces the resource.
+   * @param fn the function that calculates the result with the resource. It
+   *           may return <code>null</code>.
+   * @param error the exception handler.
+   * @param <T> the resource type.
+   * @param <R> the result type.
+   * @return The optional value.
+   */
 
   public static <T,R> Optional<R>
   tryToGetWith

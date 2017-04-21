@@ -6,6 +6,7 @@ import java.util.function.Function;
 
 
 /**
+ * An immutable pair of elements.
  * @author Werner Donn\u00e9
  */
 
@@ -53,7 +54,15 @@ public final class Pair<T,U>
 
 
   /**
-   * Creates a pair with the first two elements.
+   * Creates a pair with the first two elements. If the array has less than
+   * two elements the corresponding elements in the pair will be
+   * <code>null</code>.
+   * @param array the given array.
+   * @param map the function that is applied to the array value and the
+   *            result of which is put in the pair.
+   * @param <T> the array element type.
+   * @param <R> the pair element type.
+   * @return The new pair.
    */
 
   public static <T,R> Pair<R,R>
