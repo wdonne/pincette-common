@@ -68,7 +68,7 @@ public class JsonEventReader implements XMLEventReader
   private XMLEvent
   createNop()
   {
-    return factory.createIgnorableSpace("");
+    return factory.createCharacters("");
   }
 
 
