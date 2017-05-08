@@ -4,12 +4,12 @@ name := """pincette-common"""
 organization := "net.pincette"
 version := "1.0"
 
-scalaVersion := "2.11.6"
+scalaVersion := "2.11.11"
 
 libraryDependencies ++= Seq(
   "junit" % "junit" % "4.12"  % "test",
   "com.novocode" % "junit-interface" % "0.11" % "test",
-  "javax.json" % "javax.json-api" % "1.1.0-M1"
+  "javax.json" % "javax.json-api" % "1.0"
 )
 
 publishTo := Some("Pincette" at "https://re.pincette.net/repo")

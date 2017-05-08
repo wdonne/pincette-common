@@ -53,6 +53,14 @@ public final class Pair<T,U>
 
 
 
+  public static <T,U> Pair<T,U>
+  pair(final T first, final U second)
+  {
+    return new Pair<>(first, second);
+  }
+
+
+
   /**
    * Creates a pair with the first two elements. If the array has less than
    * two elements the corresponding elements in the pair will be
