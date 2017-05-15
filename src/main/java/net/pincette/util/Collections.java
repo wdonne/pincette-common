@@ -16,6 +16,7 @@ import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static net.pincette.util.Util.countingIterator;
 import static net.pincette.util.Util.stream;
+import static net.pincette.util.Util.takeWhile;
 
 
 
@@ -95,9 +96,15 @@ public class Collections
   public static <T> Set<T>
   intersection(final Collection<T>... collections)
   {
-    final Set<T> result = new HashSet<>();
+    if (collections.length == 0)
+    {
+      return new HashSet<>();
+    }
 
-    Arrays.stream(collections).forEach(result::retainAll);
+    final Set<T> result = new HashSet<>(collections[0]);
+
+    takeWhile(1, i -> i + 1, i -> i < collections.length).
+      forEach(i -> result.retainAll(collections[i]));
 
     return result;
   }
