@@ -1,6 +1,8 @@
 package net.pincette.util;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,12 +34,16 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
 import net.pincette.function.ConsumerWithException;
 import net.pincette.function.FunctionWithException;
 import net.pincette.function.RunnableWithException;
 import net.pincette.function.SideEffect;
 import net.pincette.function.SupplierWithException;
 import net.pincette.io.EscapedUnicodeFilterReader;
+import net.pincette.io.StreamConnector;
 
 
 
@@ -150,6 +156,29 @@ public class Util
 
 
   /**
+   * Compresses using GZIP.
+   * @param b the array to be compressed.
+   * @return The compressed array.
+   */
+
+  public static byte[]
+  compress(final byte[] b)
+  {
+    final ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+    tryToDoRethrow
+    (
+      () ->
+        StreamConnector.
+          copy(new ByteArrayInputStream(b), new GZIPOutputStream(out))
+    );
+
+    return out.toByteArray();
+  }
+
+
+
+  /**
    * Returns an iterator over pairs where the first element is the result of
    * the given iterator and the second the zero-based position in the list.
    * @param iterator the given iterator.
@@ -177,6 +206,29 @@ public class Util
           return new Pair<>(iterator.next(), count++);
         }
       };
+  }
+
+
+
+  /**
+   * Decompresses using GZIP.
+   * @param b the array to be decompressed.
+   * @return The decompressed array.
+   */
+
+  public static byte[]
+  decompress(final byte[] b)
+  {
+    final ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+    tryToDoRethrow
+      (
+        () ->
+          StreamConnector.
+            copy(new GZIPInputStream(new ByteArrayInputStream(b)), out)
+      );
+
+    return out.toByteArray();
   }
 
 
