@@ -391,6 +391,21 @@ public class Util
 
 
 
+  public static int
+  hash(final Object... objects)
+  {
+    return
+      Arrays.stream(objects).
+        reduce
+        (
+          0,
+          (r, o) -> 41 * (41 * (41 + (o != null ? o.hashCode() : 0)) + r),
+          (r1, r2) -> r1
+        );
+  }
+
+
+
   public static boolean
   isDate(final String s)
   {
@@ -465,6 +480,28 @@ public class Util
         map(line -> line.split("=")).
         filter(line -> line.length == 2).
         collect(toMap(line -> line[0], line -> line[1]));
+  }
+
+
+
+  /**
+   * Throws an unchecked exception if the <code>predicate</code> is not met
+   * and returns <code>o</code> otherwise.
+   * @param o the object to test and return.
+   * @param predicate the predicate to be met.
+   * @param <T> the type of the object.
+   * @return Returns <code>o</code>.
+   */
+
+  public static <T> T
+  must(final T o, final Predicate<T> predicate)
+  {
+    if (!predicate.test(o))
+    {
+      throw new RuntimeException("Unmet predicate");
+    }
+
+    return o;
   }
 
 

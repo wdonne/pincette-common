@@ -3,6 +3,8 @@ package net.pincette.util;
 import java.util.Objects;
 import java.util.function.Function;
 
+import static net.pincette.util.Util.hash;
+
 
 
 /**
@@ -20,7 +22,7 @@ public final class Pair<T,U>
 
 
   public
-  Pair(T first, U second)
+  Pair(final T first, final U second)
   {
     this.first = first;
     this.second = second;
@@ -30,7 +32,7 @@ public final class Pair<T,U>
 
   @SuppressWarnings("unchecked")
   public boolean
-  equals(Object o)
+  equals(final Object o)
   {
     return
       getClass().isAssignableFrom(o.getClass()) &&
@@ -43,12 +45,7 @@ public final class Pair<T,U>
   public int
   hashCode()
   {
-    return
-      41 *
-        (
-          41 * (41 + (first != null ? first.hashCode() : 0)) +
-            (second != null ? second.hashCode() : 0)
-        );
+    return hash(first, second);
   }
 
 
@@ -77,7 +74,7 @@ public final class Pair<T,U>
   toPair(final T[] array, final Function<T,R> map)
   {
     return
-      new Pair<R,R>
+      new Pair<>
       (
         array.length > 0 ? map.apply(array[0]) : null,
         array.length > 1 ? map.apply(array[1]) : null
