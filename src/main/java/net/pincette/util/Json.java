@@ -32,6 +32,8 @@ import javax.json.JsonValue;
 import javax.json.stream.JsonGenerator;
 
 import static javax.xml.stream.XMLOutputFactory.newInstance;
+import static net.pincette.util.Collections.list;
+import static net.pincette.util.Pair.pair;
 import static net.pincette.util.Util.pathSearch;
 import static net.pincette.util.Util.takeWhile;
 import static net.pincette.util.Util.tryToGetSilent;
@@ -424,6 +426,17 @@ public class Json
     }
 
     return (JsonString) value;
+  }
+
+
+
+  private static Transformer
+  chain(final Stream<Transformer> stream)
+  {
+    return
+      stream.
+        reduce((t1, t2) -> t1.thenApply(t2)).
+        orElse(nopTransformer());
   }
 
 
@@ -874,6 +887,19 @@ public class Json
 
 
 
+  /**
+   * Returns a transformer that does nothing.
+   * @return The transformer.
+   */
+
+  public static Transformer
+  nopTransformer()
+  {
+    return new Transformer(e -> false, Optional::of);
+  }
+
+
+
   public static JsonObject
   remove(final JsonObject obj, final Set<String> fields)
   {
@@ -921,6 +947,73 @@ public class Json
 
     return builder.build();
   }
+
+
+
+  /**
+   * Returns a new object where the value at <code>path</code>, which is a
+   * dot-separated path, is replaced with <code>value</code>.
+   * @param obj the given JSON object.
+   * @param path the dot-separated path.
+   * @param value the new value.
+   * @return The new JSON object.
+   */
+
+  public static JsonObject
+  set(final JsonObject obj, final String path, final Object value)
+  {
+    return set(obj, list(pair(path, value)));
+  }
+
+
+
+  /**
+   * Returns a copy of the object where the values of the fields in
+   * <code>values</code> are replaced. The first entry of a pair is a
+   * dot-separated path and the second entry is the new value.
+   * @param obj the given JSON object.
+   * @param values the list of pairs, where the first entry is a
+   *               dot-separated path and the second entry is the new value.
+   * @return The new object.
+   */
+
+  public static JsonObject
+  set(final JsonObject obj, List<Pair<String,Object>> values)
+  {
+    return
+      transform
+      (
+        obj,
+        chain
+        (
+          values.
+            stream().
+            map(pair -> setTransformer(pair.first, pair.second))
+        )
+      );
+  }
+
+
+
+  /**
+   * Returns a transformer that replaces the value of the field designated by
+   * the dot-separated <code>path</code> with <code>value</code>.
+   * @param path the dot-separated path.
+   * @param value the new value.
+   * @return The transformer.
+   */
+
+  public static Transformer
+  setTransformer(final String path, final Object value)
+  {
+    return
+      new Transformer
+      (
+        e -> e.path.equals(path),
+        e -> Optional.of(new JsonEntry(e.path, createValue(value)))
+      );
+  }
+
 
 
 
