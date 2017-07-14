@@ -889,6 +889,18 @@ public class Util
 
 
   public static <T> boolean
+  tryToDoWithRethrow
+  (
+    final SupplierWithException<T> resource,
+    final ConsumerWithException<T> fn
+  )
+  {
+    return tryToDoWith(resource, fn, e -> {throw new RuntimeException(e);});
+  }
+
+
+
+  public static <T> boolean
   tryToDoWithSilent
   (
     final SupplierWithException<T> resource,
