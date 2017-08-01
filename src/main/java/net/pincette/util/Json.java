@@ -13,7 +13,10 @@ import java.time.Instant;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.Stream;
+import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static javax.json.Json.createArrayBuilder;
 import static javax.json.Json.createObjectBuilder;
@@ -202,6 +205,29 @@ public class Json
     array.forEach(builder::add);
 
     return builder;
+  }
+
+
+
+  /**
+   * Returns a copy of the object where the values of the fields in
+   * <code>values</code> are replaced. The first entry of a pair is the
+   * name path and the second entry is the new value.
+   * @param obj the given JSON object.
+   * @param values the list of pairs, where the first entry is the
+   *               name and the second entry is the new value.
+   * @return The new object.
+   */
+
+  public static JsonObject
+  add(final JsonObject obj, List<Pair<String,Object>> values)
+  {
+    final JsonObjectBuilder builder = createObjectBuilder();
+
+    copy(obj, builder);
+    values.forEach(pair -> addJsonField(builder, pair.first, pair.second));
+
+    return builder.build();
   }
 
 
@@ -951,51 +977,6 @@ public class Json
 
 
   /**
-   * Returns a new object where the value at <code>path</code>, which is a
-   * dot-separated path, is replaced with <code>value</code>.
-   * @param obj the given JSON object.
-   * @param path the dot-separated path.
-   * @param value the new value.
-   * @return The new JSON object.
-   */
-
-  public static JsonObject
-  set(final JsonObject obj, final String path, final Object value)
-  {
-    return set(obj, list(pair(path, value)));
-  }
-
-
-
-  /**
-   * Returns a copy of the object where the values of the fields in
-   * <code>values</code> are replaced. The first entry of a pair is a
-   * dot-separated path and the second entry is the new value.
-   * @param obj the given JSON object.
-   * @param values the list of pairs, where the first entry is a
-   *               dot-separated path and the second entry is the new value.
-   * @return The new object.
-   */
-
-  public static JsonObject
-  set(final JsonObject obj, List<Pair<String,Object>> values)
-  {
-    return
-      transform
-      (
-        obj,
-        chain
-        (
-          values.
-            stream().
-            map(pair -> setTransformer(pair.first, pair.second))
-        )
-      );
-  }
-
-
-
-  /**
    * Returns a transformer that replaces the value of the field designated by
    * the dot-separated <code>path</code> with <code>value</code>.
    * @param path the dot-separated path.
@@ -1043,17 +1024,57 @@ public class Json
 
 
 
+  /**
+   * Converts <code>value</code> recursively to a Java value.
+   * @param value the given value.
+   * @return The converted value.
+   */
+
   public static Object
   toNative(final JsonValue value)
   {
     switch (value.getValueType())
     {
+      case ARRAY: return toNative(asArray(value));
       case FALSE: return false;
       case TRUE: return true;
       case NUMBER: return asNumber(value).doubleValue();
+      case OBJECT: return toNative(asObject(value));
       case STRING: return asString(value).getString();
       default: return value;
     }
+  }
+
+
+
+  /**
+   * Converts <code>array</code> recursively to a list with Java values.
+   * @param array the given array.
+   * @return The generated list.
+   */
+
+  public static List<?>
+  toNative(final JsonArray array)
+  {
+    return array.stream().map(Json::toNative).collect(toList());
+  }
+
+
+
+  /**
+   * Converts <code>object</code> recursively to a map with Java values.
+   * @param object the given object.
+   * @return The generated map.
+   */
+
+  public static Map<String,?>
+  toNative(final JsonObject object)
+  {
+    return
+      object.
+        entrySet().
+        stream().
+        collect(toMap(Map.Entry::getKey, e -> toNative(e.getValue())));
   }
 
 
