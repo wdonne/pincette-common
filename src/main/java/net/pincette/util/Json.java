@@ -220,7 +220,7 @@ public class Json
    */
 
   public static JsonObject
-  add(final JsonObject obj, List<Pair<String,Object>> values)
+  add(final JsonObject obj, Collection<Pair<String,Object>> values)
   {
     final JsonObjectBuilder builder = createObjectBuilder();
 
