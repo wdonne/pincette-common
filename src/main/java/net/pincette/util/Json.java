@@ -180,9 +180,7 @@ public class Json
     final Map<String,?> fields
   )
   {
-    fields.
-      entrySet().
-      forEach(entry -> addJsonField(builder, entry.getKey(), entry.getValue()));
+    fields.forEach((k, v) -> addJsonField(builder, k, v));
 
     return builder;
   }
@@ -769,6 +767,14 @@ public class Json
 
 
 
+  public static ValidationResult
+  isArray(final ValidationContext context)
+  {
+    return new ValidationResult(isArray(context.value), null);
+  }
+
+
+
   public static boolean
   isBoolean(final JsonValue value)
   {
@@ -869,6 +875,14 @@ public class Json
   isObject(final JsonValue value)
   {
     return value.getValueType() == JsonValue.ValueType.OBJECT;
+  }
+
+
+
+  public static ValidationResult
+  isObject(final ValidationContext context)
+  {
+    return new ValidationResult(isObject(context.value), null);
   }
 
 
