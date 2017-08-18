@@ -2,7 +2,7 @@ import com.github.tototoshi.sbt.automkcol.Plugin._
 
 name := """pincette-common"""
 organization := "net.pincette"
-version := "1.0.6"
+version := "1.1"
 
 scalaVersion := "2.11.11"
 
@@ -17,5 +17,3 @@ isSnapshot := true // Allow overwrites.
 AutoMkcol.globalSettings
 
 crossPaths := false
-
-fork in run := true
