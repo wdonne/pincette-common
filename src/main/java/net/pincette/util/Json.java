@@ -13,7 +13,6 @@ import java.time.Instant;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.Stream;
-import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -35,7 +34,6 @@ import javax.json.JsonValue;
 import javax.json.stream.JsonGenerator;
 
 import static javax.xml.stream.XMLOutputFactory.newInstance;
-import static net.pincette.util.Collections.list;
 import static net.pincette.util.Pair.pair;
 import static net.pincette.util.Util.pathSearch;
 import static net.pincette.util.Util.takeWhile;
@@ -145,14 +143,9 @@ public class Json
 
 
   public static JsonObject
-  add(final JsonObject obj, final Consumer<JsonObjectBuilder> add)
+  add(final JsonObject obj, final UnaryOperator<JsonObjectBuilder> add)
   {
-    final JsonObjectBuilder builder = createObjectBuilder();
-
-    copy(obj, builder);
-    add.accept(builder);
-
-    return builder.build();
+    return add.apply(copy(obj, createObjectBuilder())).build();
   }
 
 
@@ -180,9 +173,16 @@ public class Json
     final Map<String,?> fields
   )
   {
-    fields.forEach((k, v) -> addJsonField(builder, k, v));
-
-    return builder;
+    return
+      fields.
+        entrySet().
+        stream().
+        reduce
+        (
+          builder,
+          (b, e) -> addJsonField(b, e.getKey(), e.getValue()),
+          (b1, b2) -> b1
+        );
   }
 
 
@@ -190,9 +190,7 @@ public class Json
   public static JsonObjectBuilder
   add(final JsonObjectBuilder builder, final JsonObject obj)
   {
-    copy(obj, builder);
-
-    return builder;
+    return copy(obj, builder);
   }
 
 
@@ -200,9 +198,8 @@ public class Json
   public static JsonArrayBuilder
   add(final JsonArrayBuilder builder, final JsonArray array)
   {
-    array.forEach(builder::add);
-
-    return builder;
+    return
+      array.stream().reduce(builder, JsonArrayBuilder::add, (b1, b2) -> b1);
   }
 
 
@@ -220,12 +217,16 @@ public class Json
   public static JsonObject
   add(final JsonObject obj, Collection<Pair<String,Object>> values)
   {
-    final JsonObjectBuilder builder = createObjectBuilder();
-
-    copy(obj, builder);
-    values.forEach(pair -> addJsonField(builder, pair.first, pair.second));
-
-    return builder.build();
+    return
+      values.
+        stream().
+        reduce
+        (
+          copy(obj, createObjectBuilder()),
+          (b, p) -> addJsonField(b, p.first, p.second),
+          (b1, b2) -> b1
+        ).
+        build();
   }
 
 
@@ -282,11 +283,7 @@ public class Json
                 {
                   if (value instanceof Date)
                   {
-                    builder.add
-                    (
-                      name,
-                      Instant.ofEpochMilli(((Date) value).getTime()).toString()
-                    );
+                    builder.add(name, ((Date) value).toInstant().toString());
                   }
                   else
                   {
@@ -459,21 +456,21 @@ public class Json
   {
     return
       stream.
-        reduce((t1, t2) -> t1.thenApply(t2)).
+        reduce(Transformer::thenApply).
         orElse(nopTransformer());
   }
 
 
 
-  public static void
+  public static JsonObjectBuilder
   copy(final JsonObject obj, final JsonObjectBuilder builder)
   {
-    copy(obj, builder, key -> true);
+    return copy(obj, builder, key -> true);
   }
 
 
 
-  public static void
+  public static JsonObjectBuilder
   copy
   (
     final JsonObject obj,
@@ -481,12 +478,12 @@ public class Json
     final Predicate<String> retain
   )
   {
-    copy(obj, builder, (key, o) -> retain.test(key));
+    return copy(obj, builder, (key, o) -> retain.test(key));
   }
 
 
 
-  public static void
+  public static JsonObjectBuilder
   copy
   (
     final JsonObject obj,
@@ -494,16 +491,17 @@ public class Json
     final BiPredicate<String,JsonObject> retain
   )
   {
-    obj.
-      keySet().
-      stream().
-      filter(key -> retain.test(key, obj)).
-      forEach(key -> builder.add(key, obj.get(key)));
+    return
+      obj.
+        keySet().
+        stream().
+        filter(key -> retain.test(key, obj)).
+        reduce(builder, (b, key) -> b.add(key, obj.get(key)), (b1, b2) -> b1);
   }
 
 
 
-  public static void
+  public static JsonArrayBuilder
   copy
   (
     final JsonArray array,
@@ -511,7 +509,11 @@ public class Json
     final Predicate<JsonValue> retain
   )
   {
-    array.stream().filter(retain).forEach(builder::add);
+    return
+      array.
+        stream().
+        filter(retain).
+        reduce(builder, JsonArrayBuilder::add, (b1, b2) -> b1);
   }
 
 
@@ -519,17 +521,13 @@ public class Json
   public static JsonObject
   createErrorObject(final JsonValue value, final String message)
   {
-    final JsonObjectBuilder builder = createObjectBuilder();
-
-    if (value != null)
-    {
-      builder.add("value", value);
-    }
-
-    builder.add("error", true);
-    builder.add("message", message);
-
-    return builder.build();
+    return
+      Optional.of(createObjectBuilder()).
+        map(builder -> builder.add("error", true)).
+        map(builder -> builder.add("message", message)).
+        map(builder -> value != null ? builder.add("value", value) : builder).
+        map(JsonObjectBuilder::build).
+        orElse(emptyObject());
   }
 
 
@@ -537,11 +535,10 @@ public class Json
   public static JsonValue
   createValue(final Object value)
   {
-    final JsonObjectBuilder builder = createObjectBuilder();
-
-    addJsonField(builder, "__synthetic_key__", value);
-
-    return builder.build().get("__synthetic_key__");
+    return
+      addJsonField(createObjectBuilder(), "__synthetic_key__", value).
+        build().
+        get("__synthetic_key__");
   }
 
 
@@ -579,11 +576,7 @@ public class Json
   public static JsonObject
   from(final Map<String,?> fields)
   {
-    final JsonObjectBuilder builder = createObjectBuilder();
-
-    add(builder, fields);
-
-    return builder.build();
+    return add(createObjectBuilder(), fields).build();
   }
 
 
@@ -591,11 +584,11 @@ public class Json
   public static JsonArray
   from(final List<?> values)
   {
-    final JsonArrayBuilder builder = createArrayBuilder();
-
-    values.forEach(value -> addJsonField(builder, value));
-
-    return builder.build();
+    return
+      values.
+        stream().
+        reduce(createArrayBuilder(), Json::addJsonField, (b1, b2) -> b1).
+        build();
   }
 
 
@@ -951,11 +944,7 @@ public class Json
   public static JsonObject
   remove(final JsonObject obj, final Predicate<String> pred)
   {
-    final JsonObjectBuilder builder = createObjectBuilder();
-
-    copy(obj, builder, key -> !pred.test(key));
-
-    return builder.build();
+    return copy(obj, createObjectBuilder(), key -> !pred.test(key)).build();
   }
 
 
@@ -963,11 +952,8 @@ public class Json
   public static JsonArray
   remove(final JsonArray array, final Predicate<JsonValue> pred)
   {
-    final JsonArrayBuilder builder = createArrayBuilder();
-
-    copy(array, builder, value -> !pred.test(value));
-
-    return builder.build();
+    return
+      copy(array, createArrayBuilder(), value -> !pred.test(value)).build();
   }
 
 
@@ -981,11 +967,8 @@ public class Json
   public static JsonObject
   removeTechnical(final JsonObject obj)
   {
-    final JsonObjectBuilder builder = createObjectBuilder();
-
-    copy(obj, builder, key -> !key.startsWith("_"));
-
-    return builder.build();
+    return
+      copy(obj, createObjectBuilder(), key -> !key.startsWith("_")).build();
   }
 
 
@@ -1183,14 +1166,17 @@ public class Json
     final Transformer transformer
   )
   {
-    final JsonArrayBuilder builder = createArrayBuilder();
-
-    array.
-      stream().
-      filter(Objects::nonNull).
-      forEach(value -> builder.add(transform(value, parent, transformer)));
-
-    return builder.build();
+    return
+      array.
+        stream().
+        filter(Objects::nonNull).
+        reduce
+        (
+          createArrayBuilder(),
+          (b, v) -> b.add(transform(v, parent, transformer)),
+          (b1, b2) -> b1
+        ).
+        build();
   }
 
 
@@ -1220,32 +1206,34 @@ public class Json
     final Transformer transformer
   )
   {
-    final JsonObjectBuilder builder = createObjectBuilder();
-
-    obj.
-      keySet().
-      forEach
-      (
-        key ->
-          transformer.run(new JsonEntry(getPath(parent, key), obj.get(key))).
-          map
-          (
-            entry ->
-              new JsonEntry
-              (
-                getPath(parent, getKey(entry.path)),
-                transform
+    return
+      obj.
+        keySet().
+        stream().
+        reduce
+        (
+          createObjectBuilder(),
+          (b, k) ->
+            transformer.run(new JsonEntry(getPath(parent, k), obj.get(k))).
+            map
+            (
+              entry ->
+                new JsonEntry
                 (
-                  entry.value,
                   getPath(parent, getKey(entry.path)),
-                  transformer
+                  transform
+                  (
+                    entry.value,
+                    getPath(parent, getKey(entry.path)),
+                    transformer
+                  )
                 )
-              )
-          ).
-          ifPresent(entry -> builder.add(getKey(entry.path), entry.value))
-      );
-
-    return builder.build();
+            ).
+            map(entry -> b.add(getKey(entry.path), entry.value)).
+            orElse(b),
+          (b1, b2) -> b1
+        ).
+        build();
   }
 
 
@@ -1470,7 +1458,7 @@ public class Json
       builder.add("error", true);
     }
 
-    return new Pair<>(builder.build(), errors);
+    return pair(builder.build(), errors);
   }
 
 
@@ -1512,7 +1500,7 @@ public class Json
       ).
       reduce(false, (e1, e2) -> e1 || e2);
 
-    return new Pair<>(builder.build(), errors);
+    return pair(builder.build(), errors);
   }
 
 
