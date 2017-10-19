@@ -6,11 +6,15 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
+import static net.pincette.util.Pair.pair;
 import static net.pincette.util.Util.takeWhile;
+
+import net.pincette.util.Pair;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.xml.sax.helpers.AttributesImpl;
 
 
 
@@ -29,7 +33,7 @@ public class Util
       takeWhile
       (
         node.getParentNode(),
-        n -> n.getParentNode(),
+        Node::getParentNode,
         n -> n instanceof Element
       ).
       map(n -> (Element) n);
@@ -81,9 +85,24 @@ public class Util
     return
       node.getParentNode() != null ?
         Optional.ofNullable(node.getParentNode().getNextSibling()).
-          map(n -> n).
           orElse(findNextHigherSibling(node.getParentNode())) :
         null;
+  }
+
+
+
+  public static Optional<Pair<Integer,AttributesImpl>>
+  getIndex
+  (
+    final AttributesImpl atts,
+    final String namespaceUri,
+    final String localName
+  )
+  {
+    return
+      Optional.of(atts.getIndex(namespaceUri, localName)).
+        filter(i -> i != -1).
+        map(i -> pair(i, atts));
   }
 
 
@@ -91,8 +110,7 @@ public class Util
   public static Stream<Node>
   stream(final NamedNodeMap map)
   {
-    return
-      takeWhile(0, i -> i + 1, i -> i < map.getLength()).map(i -> map.item(i));
+    return takeWhile(0, i -> i + 1, i -> i < map.getLength()).map(map::item);
   }
 
 } // Util

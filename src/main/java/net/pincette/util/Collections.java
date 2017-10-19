@@ -149,7 +149,8 @@ public class Collections
 
   /**
    * Returns a new map with all the mappings of the given maps combined. When
-   * there is more than one mapping for a key only one will be retained.
+   * there is more than one mapping for a key only the last one will be
+   * retained.
    * @param maps the given maps.
    * @param <K> the key type.
    * @param <V> the value type.

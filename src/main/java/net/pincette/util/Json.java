@@ -1,6 +1,7 @@
 package net.pincette.util;
 
 import net.pincette.xml.stream.JsonEventReader;
+import scala.annotation.meta.param;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -17,6 +18,8 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Stream.concat;
+import static java.util.stream.Stream.of;
 import static javax.json.Json.createArrayBuilder;
 import static javax.json.Json.createObjectBuilder;
 import static javax.json.Json.createParserFactory;
@@ -227,6 +230,27 @@ public class Json
           (b1, b2) -> b1
         ).
         build();
+  }
+
+
+
+  /**
+   * Executes <code>add</code> if <code>test</code> returns <code>true</code>.
+   * @param builder the builder
+   * @param test the test function
+   * @param add the add function
+   * @return The builder.
+   */
+
+  public static JsonObjectBuilder
+  addIf
+  (
+    final JsonObjectBuilder builder,
+    final Supplier<Boolean> test,
+    final UnaryOperator<JsonObjectBuilder> add
+  )
+  {
+    return test.get() ? add.apply(builder) : builder;
   }
 
 
@@ -916,6 +940,56 @@ public class Json
   isUri(final ValidationContext context)
   {
     return new ValidationResult(isUri(context.value), null);
+  }
+
+
+
+  /**
+   * Returns a stream of nested objects in document order.
+   * @param json the structure to navigate.
+   * @return The stream of found objects.
+   */
+
+  public static Stream<JsonObject>
+  nestedObjects(final JsonStructure json)
+  {
+    return
+      isArray(json) ?
+        nestedObjects(json.asJsonArray()) : nestedObjects(json.asJsonObject());
+  }
+
+
+
+  public static Stream<JsonObject>
+  nestedObjects(final JsonObject json)
+  {
+    return
+      nestedObjectsAndSelf(json.entrySet().stream().map(Map.Entry::getValue));
+  }
+
+
+
+  public static Stream<JsonObject>
+  nestedObjects(final JsonArray json)
+  {
+    return nestedObjectsAndSelf(json.stream());
+  }
+
+
+
+  private static Stream<JsonObject>
+  nestedObjectsAndSelf(final Stream<JsonValue> stream)
+  {
+    return
+      stream.
+        filter(j -> isObject(j) || isArray(j)).
+        flatMap
+        (
+          j ->
+            isObject(j) ?
+              concat(of(j.asJsonObject()), nestedObjects(j.asJsonObject())) :
+              nestedObjects(j.asJsonArray())
+        );
   }
 
 

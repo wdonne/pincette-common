@@ -3,7 +3,7 @@ package net.pincette.util;
 import java.util.Objects;
 import java.util.function.Function;
 
-import static net.pincette.util.Util.hash;
+import static java.util.Objects.hash;
 
 
 

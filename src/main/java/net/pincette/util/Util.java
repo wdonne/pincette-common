@@ -32,6 +32,8 @@ import java.util.regex.Pattern;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static net.pincette.util.Pair.pair;
+
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import java.util.zip.GZIPInputStream;
@@ -260,15 +262,29 @@ public class Util
 
 
 
+  /**
+   * Allows to write things like <code>from(value).accept(v -&gt; {...})</code>.
+   * This way you don't need to declare a variable for the value.
+   * @param value the given value.
+   * @param <T> the type of the given value.
+   * @return The function that accepts a function to consume the value.
+   */
+
+  public static <T> Consumer<ConsumerWithException<T>>
+  from(final T value)
+  {
+    return fn -> tryToDoRethrow(() -> fn.accept(value));
+  }
+
+
+
   private static Optional<String>
   getArrayExpression(final String name)
   {
-    final int index = name.indexOf('[');
-
     return
-      index != -1 && name.charAt(name.length() - 1) == ']' ?
-        Optional.of(name.substring(index + 1, name.length() - 1).trim()) :
-        Optional.empty();
+      Optional.of(name.indexOf('[')).
+        filter(i -> i != -1 && name.charAt(name.length() - 1) == ']').
+        map(i -> name.substring(i + 1, name.length() - 1).trim());
   }
 
 
@@ -312,10 +328,10 @@ public class Util
                           ).
                           findFirst()
                     ).
-                    orElseGet(HashMap<String,Object>::new);
+                    orElseGet(HashMap::new);
             }
         ).
-        orElseGet(HashMap<String,Object>::new);
+        orElseGet(HashMap::new);
   }
 
 
@@ -330,12 +346,10 @@ public class Util
   public static Optional<String>
   getLastSegment(final String path, final String delimiter)
   {
-    final List<String> segments =
-      getSegments(path, delimiter).collect(toList());
-
     return
-      segments.size() > 0 ?
-        Optional.of(segments.get(segments.size() - 1)) : Optional.empty();
+      Optional.of(getSegments(path, delimiter).collect(toList())).
+        filter(segments -> segments.size() > 0).
+        map(segments -> segments.get(segments.size() - 1));
   }
 
 
@@ -387,21 +401,6 @@ public class Util
     {
       e.printStackTrace();
     }
-  }
-
-
-
-  public static int
-  hash(final Object... objects)
-  {
-    return
-      Arrays.stream(objects).
-        reduce
-        (
-          0,
-          (r, o) -> 41 * (41 * (41 + (o != null ? o.hashCode() : 0)) + r),
-          (r1, r2) -> r1
-        );
   }
 
 
@@ -603,10 +602,10 @@ public class Util
             (
               p ->
                 p.second == path.size() - 1 ?
-                  new Pair<>(p.first, Integer.MAX_VALUE) :
+                  pair(p.first, Integer.MAX_VALUE) :
                   (
                     p.first instanceof Map ?
-                      new Pair<>
+                      pair
                       (
                         ((Map<String,Object>) p.first).get
                         (
@@ -760,9 +759,11 @@ public class Util
   private static String
   stripCondition(final String field)
   {
-    final int index = field.indexOf('[');
-
-    return index != -1 ? field.substring(0, index) : field;
+    return
+      Optional.of(field.indexOf('[')).
+        filter(i -> i != -1).
+        map(i -> field.substring(0, i)).
+        orElse(field);
   }
 
 
@@ -803,6 +804,23 @@ public class Util
           }
         }
       );
+  }
+
+
+
+  /**
+   * Allows to write things like <code>to(value).apply(v -&gt; ...)</code>.
+   * This way you don't need to declare a variable for the value.
+   * @param value the given value.
+   * @param <T> the type of the given value.
+   * @param <R> the type of the returned value.
+   * @return The function that accepts a function to apply to the value.
+   */
+
+  public static <T,R> Function<FunctionWithException<T,R>,R>
+  to(final T value)
+  {
+    return fn -> tryToGetRethrow(() -> fn.apply(value)).orElse(null);
   }
 
 
