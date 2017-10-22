@@ -1048,6 +1048,23 @@ public class Json
 
 
   /**
+   * Returns a new object in which the value of the field designated by
+   * the dot-separated <code>path</code> is replaced with <code>value</code>.
+   * @param obj the given JSON object.
+   * @param path the dot-separated path.
+   * @param value the new value.
+   * @return The new object.
+   */
+
+  public static JsonObject
+  set(final JsonObject obj, final String path, final Object value)
+  {
+    return transform(obj, setTransformer(path, value));
+  }
+
+
+
+  /**
    * Returns a transformer that replaces the value of the field designated by
    * the dot-separated <code>path</code> with <code>value</code>.
    * @param path the dot-separated path.

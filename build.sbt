@@ -2,7 +2,7 @@ import com.github.tototoshi.sbt.automkcol.Plugin._
 
 name := """pincette-common"""
 organization := "net.pincette"
-version := "1.1.2"
+version := "1.1.3"
 
 scalaVersion := "2.11.11"
 

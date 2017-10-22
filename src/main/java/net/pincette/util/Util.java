@@ -483,22 +483,42 @@ public class Util
 
 
 
+  public static <T> T
+  must(final T o, final Predicate<T> predicate)
+  {
+    return must(o, predicate, null);
+  }
+
+
+
   /**
    * Throws an unchecked exception if the <code>predicate</code> is not met
    * and returns <code>o</code> otherwise.
    * @param o the object to test and return.
    * @param predicate the predicate to be met.
+   * @param report the function that is called to report the failed predicate.
    * @param <T> the type of the object.
    * @return Returns <code>o</code>.
    */
 
   public static <T> T
-  must(final T o, final Predicate<T> predicate)
+  must
+  (
+    final T o,
+    final Predicate<T> predicate,
+    final ConsumerWithException<T> report
+  )
   {
     if (!predicate.test(o))
     {
+      if (report != null)
+      {
+        tryToDoRethrow(() -> report.accept(o));
+      }
+
       throw new RuntimeException("Unmet predicate");
     }
+
 
     return o;
   }
