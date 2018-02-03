@@ -4,75 +4,51 @@ public class Field
 
 {
 
-  Attribute[]	attributes;
-  String	descriptor;
-  boolean	isDeprecated;
-  boolean	isSynthetic;
-  int		modifiers;
-  String	name;
-  Object	value;
-
-
+  Attribute[] attributes;
+  String descriptor;
+  boolean isDeprecated;
+  boolean isSynthetic;
+  int modifiers;
+  String name;
+  Object value;
 
   public Attribute[]
-  getAttribtutes()
-  {
+  getAttribtutes() {
     return attributes;
   }
 
-
-
   public String
-  getDescriptor()
-  {
+  getDescriptor() {
     return descriptor;
   }
 
-
-
   public int
-  getModifiers()
-  {
+  getModifiers() {
     return modifiers;
   }
 
-
-
   public String
-  getName()
-  {
+  getName() {
     return name;
   }
 
-
-
   public String
-  getType()
-  {
+  getType() {
     return Util.getType(descriptor);
   }
 
-
-
   public Object
-  getValue()
-  {
+  getValue() {
     return value;
   }
 
-
-
   public boolean
-  isDeprecated()
-  {
+  isDeprecated() {
     return isDeprecated;
   }
 
-
-
   public boolean
-  isSynthetic()
-  {
+  isSynthetic() {
     return isSynthetic;
   }
 

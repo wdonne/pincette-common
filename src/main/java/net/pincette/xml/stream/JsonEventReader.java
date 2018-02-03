@@ -1,19 +1,22 @@
 package net.pincette.xml.stream;
 
+import static net.pincette.util.Util.tryToGetRethrow;
+
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.NoSuchElementException;
+import java.util.Queue;
 import javax.json.stream.JsonParser;
+import javax.json.stream.JsonParser.Event;
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.XMLEvent;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Stack;
-
-
 
 /**
  * Converts a JSON-stream in an XML-stream. The provided parser will be
  * closed when this reader is closed.
+ *
  * @author Werner Donn\u00e9
  */
 
@@ -21,71 +24,49 @@ public class JsonEventReader implements XMLEventReader
 
 {
 
-  private boolean endDocument;
-  private final Stack<JsonParser.Event> events = new Stack<>();
+  private final Deque<Event> events = new LinkedList<>();
   private final XMLEventFactory factory = XMLEventFactory.newFactory();
-  private final Stack<String> keyNames = new Stack<>();
+  private final Deque<String> keyNames = new LinkedList<>();
   private final JsonParser parser;
-  private boolean parserEvent;
   private final Queue<XMLEvent> queue = new LinkedList<>();
+  private boolean endDocument;
+  private boolean parserEvent;
   private boolean startDocument;
 
-
-
-  public
-  JsonEventReader(final JsonParser parser)
-  {
+  public JsonEventReader(final JsonParser parser) {
     this.parser = parser;
     keyNames.push("doc");
   }
 
-
-
   private static String
-  cleanName(final String name)
-  {
+  cleanName(final String name) {
     return name.replace("$", "");
   }
 
 
-
   public void
-  close() throws XMLStreamException
-  {
+  close() {
     parser.close();
   }
 
-
-
   private XMLEvent
-  createEnd(final String name)
-  {
+  createEnd(final String name) {
     return factory.createEndElement("", "", name);
   }
 
-
-
   private XMLEvent
-  createNop()
-  {
+  createNop() {
     return factory.createCharacters("");
   }
 
-
-
   private XMLEvent
-  createStart(final String name)
-  {
+  createStart(final String name) {
     return factory.createStartElement("", "", name);
   }
 
-
-
   private XMLEvent
-  createValue(final String value)
-  {
-    final String name =
-      events.peek() == JsonParser.Event.START_ARRAY ? "value" : keyNames.peek();
+  createValue(final String value) {
+    final String name = events.peek() == JsonParser.Event.START_ARRAY ? "value" : keyNames.peek();
     final XMLEvent result = createStart(name);
 
     queue.add(factory.createCharacters(value));
@@ -94,132 +75,106 @@ public class JsonEventReader implements XMLEventReader
     return result;
   }
 
-
-
   public String
-  getElementText() throws XMLStreamException
-  {
+  getElementText() throws XMLStreamException {
     throw new XMLStreamException("Not supported");
   }
 
-
-
   public Object
-  getProperty(final String name)
-  {
+  getProperty(final String name) {
     throw
-      new IllegalArgumentException("Property " + name + " is not supported");
+        new IllegalArgumentException("Property " + name + " is not supported");
   }
 
+  private XMLEvent
+  handleEndObject() {
+    events.pop();
 
+    final Event parent = events.isEmpty() ? null : events.peek();
+
+    return createEnd(parent == Event.START_ARRAY ? "object" : keyNames.pop());
+  }
 
   private XMLEvent
-  handleEvent(final JsonParser.Event event)
-  {
-    switch (event)
-    {
-      case END_ARRAY: case END_OBJECT:
-      {
-        events.pop();
-
-        final JsonParser.Event parent =
-          events.empty() ? null : events.peek();
-
-        return
-          createEnd
-          (
-            parent == JsonParser.Event.START_ARRAY ? "object" : keyNames.pop()
-          );
-      }
+  handleEvent(final Event event) {
+    switch (event) {
+      case END_ARRAY:
+      case END_OBJECT:
+        return handleEndObject();
 
       case KEY_NAME:
         keyNames.push(cleanName(parser.getString()));
         return createNop();
 
-      case START_ARRAY: case START_OBJECT:
-      {
-        final JsonParser.Event parent =
-          events.empty() ? null : events.peek();
+      case START_ARRAY:
+      case START_OBJECT:
+        return handleStartObject(event);
 
-        events.push(event);
-
-        return
-          createStart
-          (
-            parent == JsonParser.Event.START_ARRAY ? "object" : keyNames.peek()
-          );
-      }
-
-      case VALUE_FALSE: return createValue("false");
+      case VALUE_FALSE:
+        return createValue("false");
 
       case VALUE_NUMBER:
         return
-          createValue
-          (
-            parser.isIntegralNumber() ?
-              String.valueOf(parser.getLong()) :
-              parser.getBigDecimal().toString()
-          );
+            createValue(
+                parser.isIntegralNumber() ?
+                    String.valueOf(parser.getLong()) : parser.getBigDecimal().toString()
+            );
 
-      case VALUE_TRUE: return createValue("true");
-      case VALUE_STRING: return createValue(parser.getString());
+      case VALUE_TRUE:
+        return createValue("true");
+      case VALUE_STRING:
+        return createValue(parser.getString());
 
-      default: return createNop();
+      default:
+        return createNop();
     }
   }
 
+  private XMLEvent
+  handleStartObject(final Event event) {
+    final Event parent = events.isEmpty() ? null : events.peek();
 
+    events.push(event);
+
+    return createStart(parent == Event.START_ARRAY ? "object" : keyNames.peek());
+  }
 
   public boolean
-  hasNext()
-  {
+  hasNext() {
     parserEvent = false;
 
-    return
-      !startDocument || queue.peek() != null ||
-        (parserEvent = parser.hasNext()) || !endDocument;
+    return !startDocument || queue.peek() != null || hasNextParserEvent() || !endDocument;
   }
 
+  private boolean
+  hasNextParserEvent() {
+    parserEvent = parser.hasNext();
 
-
-  public XMLEvent
-  next()
-  {
-    try
-    {
-      return nextEvent();
-    }
-
-    catch (XMLStreamException e)
-    {
-      throw new RuntimeException(e);
-    }
+    return parserEvent;
   }
 
-
+  public XMLEvent
+  next() {
+    return tryToGetRethrow(this::nextEvent).orElseThrow(NoSuchElementException::new);
+  }
 
   public XMLEvent
-  nextEvent() throws XMLStreamException
-  {
-    if (!startDocument)
-    {
+  nextEvent() throws XMLStreamException {
+    if (!startDocument) {
       startDocument = true;
 
       return factory.createStartDocument();
     }
 
-    if (queue.peek() != null)
-    {
+    if (queue.peek() != null) {
       return queue.poll();
     }
 
-    if (parserEvent)
-    {
+    if (parserEvent) {
       return handleEvent(parser.next());
     }
 
-    if (!endDocument)
-    {
+    if (!endDocument) {
       endDocument = true;
 
       return factory.createEndDocument();
@@ -228,38 +183,33 @@ public class JsonEventReader implements XMLEventReader
     throw new XMLStreamException("No more JSON events");
   }
 
-
-
   public XMLEvent
-  nextTag() throws XMLStreamException
-  {
+  nextTag() throws XMLStreamException {
     throw new XMLStreamException("Not supported");
   }
 
-
-
   public XMLEvent
-  peek() throws XMLStreamException
-  {
-    return
-      !startDocument ?
-        factory.createStartDocument() :
-        (
-          queue.peek() != null ?
-            queue.peek() :
-            (
-              parserEvent ?
-                peekParserEvent() :
-                (!endDocument ? factory.createEndDocument(): null)
-            )
-        );
+  peek() {
+    return !startDocument ? factory.createStartDocument() : peekNextAfterStart();
   }
 
-
+  private XMLEvent
+  peekEnd() {
+    return !endDocument ? factory.createEndDocument() : null;
+  }
 
   private XMLEvent
-  peekParserEvent()
-  {
+  peekNextAfterStart() {
+    return queue.peek() != null ? queue.peek() : peekNotQueued();
+  }
+
+  private XMLEvent
+  peekNotQueued() {
+    return parserEvent ? peekParserEvent() : peekEnd();
+  }
+
+  private XMLEvent
+  peekParserEvent() {
     parserEvent = false;
 
     final XMLEvent event = handleEvent(parser.next());

@@ -2,6 +2,7 @@ package net.pincette.function;
 
 /**
  * A supplier interface that allows lambda expressions to throw an exception.
+ *
  * @author Werner Donn\u00e9
  */
 
@@ -10,6 +11,7 @@ public interface SupplierWithException<T>
 
 {
 
-  public T get () throws Exception;
+  @SuppressWarnings("squid:S00112")
+  T get() throws Exception;
 
 } // SupplierWithException

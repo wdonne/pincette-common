@@ -2,6 +2,7 @@ package net.pincette.function;
 
 /**
  * An consumer interface that allows lambda expressions to throw an exception.
+ *
  * @author Werner Donn\u00e9
  */
 
@@ -10,14 +11,15 @@ public interface ConsumerWithException<T>
 
 {
 
-  public void accept (T t) throws Exception;
+  @SuppressWarnings("squid:S00112")
+  void accept(T t) throws Exception;
 
-
-
-  default public ConsumerWithException<T>
-  andThen(ConsumerWithException<T> after)
-  {
-    return a -> {this.accept(a); after.accept(a);};
+  default ConsumerWithException<T>
+  andThen(ConsumerWithException<T> after) {
+    return a -> {
+      this.accept(a);
+      after.accept(a);
+    };
   }
 
 } // ConsumerWithException

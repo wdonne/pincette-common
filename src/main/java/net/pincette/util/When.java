@@ -1,11 +1,8 @@
 package net.pincette.util;
 
-
-import net.pincette.function.RunnableWithException;
-
 import static net.pincette.util.Util.tryToDoRethrow;
 
-
+import net.pincette.function.RunnableWithException;
 
 /**
  * Lets you write conditional statements without blocks. which can be useful
@@ -16,6 +13,7 @@ import static net.pincette.util.Util.tryToDoRethrow;
  * when(<condition>).run(() -> <do something>).orElse(() -> <do something else>)
  * }
  * </p>
+ *
  * @author Werner Donn\u00e9
  */
 
@@ -23,46 +21,32 @@ public class When
 
 {
 
-  final private boolean condition;
+  private final boolean condition;
 
 
-
-  private
-  When(final boolean condition)
-  {
+  private When(final boolean condition) {
     this.condition = condition;
   }
 
-
+  public static When
+  when(final boolean condition) {
+    return new When(condition);
+  }
 
   public void
-  orElse(final RunnableWithException runnable)
-  {
-    if (!condition)
-    {
+  orElse(final RunnableWithException runnable) {
+    if (!condition) {
       tryToDoRethrow(runnable);
     }
   }
 
-
-
   public When
-  run(final RunnableWithException runnable)
-  {
-    if (condition)
-    {
+  run(final RunnableWithException runnable) {
+    if (condition) {
       tryToDoRethrow(runnable);
     }
 
     return this;
-  }
-
-
-
-  public static When
-  when(final boolean condition)
-  {
-    return new When(condition);
   }
 
 } // When

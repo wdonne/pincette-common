@@ -4,57 +4,39 @@ public class LocalVariable
 
 {
 
-  String	descriptor;
-  short		index;
-  short		length;
-  String	name;
-  short		startPC;
-
-
+  String descriptor;
+  short index;
+  short length;
+  String name;
+  short startPC;
 
   public String
-  getDescriptor()
-  {
+  getDescriptor() {
     return descriptor;
   }
 
-
-
   public short
-  getIndex()
-  {
+  getIndex() {
     return index;
   }
 
-
-
   public short
-  getLength()
-  {
+  getLength() {
     return length;
   }
 
-
-
   public String
-  getName()
-  {
+  getName() {
     return name;
   }
 
-
-
   public int
-  getStartProgramCounter()
-  {
+  getStartProgramCounter() {
     return startPC;
   }
 
-
-
   public String
-  getType()
-  {
+  getType() {
     return Util.getType(descriptor);
   }
 

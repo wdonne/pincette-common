@@ -4,58 +4,40 @@ public class Code
 
 {
 
-  Attribute[]		attributes;
-  byte[]		code;
-  ExceptionHandler[]	exceptions;
-  LocalVariable[]	localVariables;
-  short			maxLocals;
-  short			maxStack;
-
-
+  Attribute[] attributes;
+  byte[] theCode;
+  ExceptionHandler[] exceptions;
+  LocalVariable[] localVariables;
+  short maxLocals;
+  short maxStack;
 
   public Attribute[]
-  getAttributes()
-  {
+  getAttributes() {
     return attributes;
   }
 
-
-
   public byte[]
-  getCode()
-  {
-    return code;
+  getCode() {
+    return theCode;
   }
 
-
-
   public ExceptionHandler[]
-  getExceptionHandler()
-  {
+  getExceptionHandler() {
     return exceptions;
   }
 
-
-
   public LocalVariable[]
-  getLocalVariables()
-  {
+  getLocalVariables() {
     return localVariables;
   }
 
-
-
   public short
-  getMaxLocals()
-  {
+  getMaxLocals() {
     return maxLocals;
   }
 
-
-
   public short
-  getMaxStack()
-  {
+  getMaxStack() {
     return maxStack;
   }
 

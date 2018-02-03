@@ -2,12 +2,12 @@ import com.github.tototoshi.sbt.automkcol.Plugin._
 
 name := """pincette-common"""
 organization := "net.pincette"
-version := "1.1.3"
+version := "1.1.4"
 
-scalaVersion := "2.11.11"
+scalaVersion := "2.12.4"
 
 libraryDependencies ++= Seq(
-  "javax.json" % "javax.json-api" % "1.1"
+  "javax.json" % "javax.json-api" % "1.1.2"
 )
 
 publishTo := Some("Pincette" at "https://re.pincette.net/repo")

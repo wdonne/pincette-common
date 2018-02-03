@@ -4,48 +4,33 @@ public class ExceptionHandler
 
 {
 
-  short		endPC;
-  short		handlerPC;
-  short		startPC;
-  String	type;
-
-
+  short endPC;
+  short handlerPC;
+  short startPC;
+  String type;
 
   public short
-  getEndProgramCounter()
-  {
+  getEndProgramCounter() {
     return endPC;
   }
 
-
-
   public short
-  getHandlerProgramCounter()
-  {
+  getHandlerProgramCounter() {
     return handlerPC;
   }
 
-
-
   public String
-  getName()
-  {
+  getName() {
     return type;
   }
 
-
-
   public short
-  getStartProgramHandler()
-  {
+  getStartProgramHandler() {
     return startPC;
   }
 
-
-
   public String
-  getType()
-  {
+  getType() {
     return Util.getType(type);
   }
 

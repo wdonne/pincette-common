@@ -4,22 +4,16 @@ public class Attribute
 
 {
 
-  String	name;
-  byte[]	value;
-
-
+  String name;
+  byte[] value;
 
   public String
-  getName()
-  {
+  getName() {
     return name;
   }
 
-
-
   public byte[]
-  getValue()
-  {
+  getValue() {
     return value;
   }
 
