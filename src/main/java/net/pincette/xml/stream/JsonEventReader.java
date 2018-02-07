@@ -1,6 +1,9 @@
 package net.pincette.xml.stream;
 
+import static java.lang.Character.valueOf;
 import static net.pincette.util.Util.tryToGetRethrow;
+import static net.pincette.xml.Util.isName;
+import static net.pincette.xml.Util.isXmlChar;
 
 import java.util.Deque;
 import java.util.LinkedList;
@@ -14,8 +17,8 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.XMLEvent;
 
 /**
- * Converts a JSON-stream in an XML-stream. The provided parser will be
- * closed when this reader is closed.
+ * Converts a JSON-stream in an XML-stream. The provided parser will be closed when this reader is
+ * closed.
  *
  * @author Werner Donn\u00e9
  */
@@ -51,7 +54,7 @@ public class JsonEventReader implements XMLEventReader
 
   private XMLEvent
   createEnd(final String name) {
-    return factory.createEndElement("", "", name);
+    return factory.createEndElement("", "", toXmlName(name));
   }
 
   private XMLEvent
@@ -61,7 +64,7 @@ public class JsonEventReader implements XMLEventReader
 
   private XMLEvent
   createStart(final String name) {
-    return factory.createStartElement("", "", name);
+    return factory.createStartElement("", "", toXmlName(name));
   }
 
   private XMLEvent
@@ -217,6 +220,17 @@ public class JsonEventReader implements XMLEventReader
     queue.add(event);
 
     return event;
+  }
+
+  private static String
+  toXmlName(final String name) {
+    final char[] c = name.toCharArray();
+
+    for (int i = 0; i < c.length; ++i) {
+      c[i] = isXmlChar(c[i]) ? c[i] : '-';
+    }
+
+    return new String(c);
   }
 
 } // JsonEventReader

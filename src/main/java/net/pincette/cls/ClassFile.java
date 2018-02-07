@@ -1,6 +1,10 @@
 package net.pincette.cls;
 
 import static java.util.Comparator.comparing;
+import static java.util.stream.Stream.concat;
+import static java.util.stream.Stream.empty;
+import static net.pincette.util.Pair.pair;
+import static net.pincette.util.StreamUtil.takeWhile;
 import static net.pincette.util.Util.tryToGetRethrow;
 
 import java.io.ByteArrayInputStream;
@@ -11,6 +15,9 @@ import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Stream;
+import net.pincette.util.Pair;
 
 public class ClassFile
 
@@ -28,6 +35,7 @@ public class ClassFile
   private static final byte CONSTANT_NAME_AND_TYPE = 12;
   private static final byte CONSTANT_UTF_8 = 1;
   private static final String DEPRECATED = "Deprecated";
+  private static final Object EMPTY = new Object();
 
   private Attribute[] attributes;
   private Object[] constantPool;
@@ -42,6 +50,11 @@ public class ClassFile
   private String version;
 
   private ClassFile() {
+  }
+
+  private static boolean
+  isDoubleTag(final byte tag) {
+    return tag == CONSTANT_DOUBLE || tag == CONSTANT_LONG;
   }
 
   private static ClassFile
@@ -66,7 +79,7 @@ public class ClassFile
     c.methods = c.readMethods(in, in.readShort());
 
     final short attLength = in.readShort();
-    final List attributes = new ArrayList();
+    final List<Attribute> attributes = new ArrayList<>();
 
     for (short i = 0; i < attLength; ++i) {
       final String name = (String) c.constantPool[in.readShort()];
@@ -81,7 +94,7 @@ public class ClassFile
       }
     }
 
-    c.attributes = (Attribute[]) attributes.toArray(new Attribute[attributes.size()]);
+    c.attributes = attributes.toArray(new Attribute[attributes.size()]);
     c.constantPool = null;
 
     return c;
@@ -98,57 +111,79 @@ public class ClassFile
   }
 
   private static Object[]
-  readConstantPool(final DataInput in, final short size) throws IOException {
-    final Object[] result = new Object[size];
+  readConstantPool(final DataInput in, final short size) {
+    return
+        takeWhile(
+            readConstantPoolEntry(in, 1, size),
+            pair -> readConstantPoolEntry(in, pair.first + 1, size),
+            pair -> pair.first < size
+        )
+            .flatMap(pair -> pair.second)
+            .map(o -> o == EMPTY ? null : 0)
+            .toArray();
+  }
 
-    for (short i = 1; i < size; ++i) {
-      final byte tag = in.readByte();
+  private static Pair<Integer, Stream<Object>>
+  readConstantPoolEntry(final DataInput in, final int index, final short size) {
+    final Function<Byte, Stream<Object>> addExtra =
+        tag -> isDoubleTag(tag) ? Stream.of(EMPTY) : empty();
+    final Function<Byte, Integer> moveExtra = tag -> isDoubleTag(tag) ? 1 : 0;
 
-      switch (tag) {
-        case CONSTANT_CLASS:
-          result[i] = new ClassInfo(in.readShort());
-          break;
+    return
+        index < size ?
+            tryToGetRethrow(in::readByte)
+                .map(
+                    tag ->
+                        pair(
+                            index + 1 + moveExtra.apply(tag),
+                            concat(
+                                Stream.of(
+                                    tryToGetRethrow(() -> readConstantPoolEntry(in, tag))
+                                        .orElse(null)
+                                ),
+                                addExtra.apply(tag)
+                            )
+                        )
+                )
+                .orElse(null) :
+            pair(index + 1, null);
+  }
 
-        case CONSTANT_FIELDREF:
-        case CONSTANT_METHODREF:
-        case CONSTANT_INTERFACE_METHODREF:
-          result[i] = new RefInfo(tag, in.readShort(), in.readShort());
-          break;
+  private static Object
+  readConstantPoolEntry(final DataInput in, final byte tag) throws IOException {
+    switch (tag) {
+      case CONSTANT_CLASS:
+        return new ClassInfo(in.readShort());
 
-        case CONSTANT_STRING:
-          result[i] = new StringInfo(in.readShort());
-          break;
+      case CONSTANT_FIELDREF:
+      case CONSTANT_METHODREF:
+      case CONSTANT_INTERFACE_METHODREF:
+        return new RefInfo(tag, in.readShort(), in.readShort());
 
-        case CONSTANT_INTEGER:
-          result[i] = in.readInt();
-          break;
+      case CONSTANT_STRING:
+        return new StringInfo(in.readShort());
 
-        case CONSTANT_FLOAT:
-          result[i] = in.readFloat();
-          break;
+      case CONSTANT_INTEGER:
+        return in.readInt();
 
-        case CONSTANT_LONG:
-          result[i++] = in.readLong();
-          break;
+      case CONSTANT_FLOAT:
+        return in.readFloat();
 
-        case CONSTANT_DOUBLE:
-          result[i++] = in.readDouble();
-          break;
+      case CONSTANT_LONG:
+        return in.readLong();
 
-        case CONSTANT_NAME_AND_TYPE:
-          result[i] = new NameAndType(in.readShort(), in.readShort());
-          break;
+      case CONSTANT_DOUBLE:
+        return in.readDouble();
 
-        case CONSTANT_UTF_8:
-          result[i] = readString(in);
-          break;
+      case CONSTANT_NAME_AND_TYPE:
+        return new NameAndType(in.readShort(), in.readShort());
 
-        default:
-          result[i] = null;
-      }
+      case CONSTANT_UTF_8:
+        return readString(in);
+
+      default:
+        return null;
     }
-
-    return result;
   }
 
   private static String

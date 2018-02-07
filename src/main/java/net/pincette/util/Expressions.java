@@ -3,6 +3,7 @@ package net.pincette.util;
 import static java.util.stream.Collectors.toList;
 import static net.pincette.util.Or.tryWith;
 import static net.pincette.util.Pair.pair;
+import static net.pincette.util.StreamUtil.stream;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -225,7 +226,7 @@ public class Expressions
     final Matcher matcher = TOKENS.matcher(s);
 
     return
-        Util.stream(
+        stream(
             new Iterator<MatchedToken>() {
               public boolean hasNext() {
                 return matcher.find();

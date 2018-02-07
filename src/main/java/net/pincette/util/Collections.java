@@ -5,8 +5,8 @@ import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static net.pincette.util.Pair.pair;
 import static net.pincette.util.Util.countingIterator;
-import static net.pincette.util.Util.stream;
-import static net.pincette.util.Util.takeWhile;
+import static net.pincette.util.StreamUtil.stream;
+import static net.pincette.util.StreamUtil.takeWhile;
 
 import java.util.Arrays;
 import java.util.Collection;

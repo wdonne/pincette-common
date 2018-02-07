@@ -1,12 +1,12 @@
 package net.pincette.cls;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import java.util.regex.Pattern;
 
 public class Method
 
 {
+
+  private static final Pattern METHOD_PARAMETERS = Pattern.compile("\\[*(L[^;]+;|[ZBCSIFDJ])");
 
   Attribute[] attributes;
   String className;
@@ -63,23 +63,11 @@ public class Method
 
   public String[]
   getParameterTypes() {
-    boolean array = false;
-    final List<String> result = new ArrayList<>();
-
-    for (int i = 1; i < descriptor.length() && descriptor.charAt(i) != ')'; ) {
-      if (descriptor.charAt(i) != '[') {
-        int currentPos = i;
-
-        i = descriptor.charAt(i) == 'L' ? (descriptor.indexOf(';', i + 1) + 1) : (i + 1);
-        result.add(Util.getType(descriptor.substring(currentPos, i)) + (array ? "[]" : ""));
-        array = false;
-      } else {
-        ++i;
-        array = true;
-      }
-    }
-
-    return result.toArray(new String[result.size()]);
+    return
+        METHOD_PARAMETERS
+            .splitAsStream(descriptor.substring(1, descriptor.indexOf(')')))
+            .map(Util::getType)
+            .toArray(String[]::new);
   }
 
   public String

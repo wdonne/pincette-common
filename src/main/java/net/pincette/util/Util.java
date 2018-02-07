@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static net.pincette.io.StreamConnector.copy;
 import static net.pincette.util.Pair.pair;
+import static net.pincette.util.StreamUtil.takeWhile;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -23,16 +24,12 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -40,7 +37,6 @@ import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import net.pincette.function.ConsumerWithException;
@@ -617,40 +613,6 @@ public class Util
     throw new GeneralException(e);
   }
 
-  public static <T> Stream<T>
-  stream(final Iterator<T> iterator) {
-    return
-        StreamSupport.stream(
-            Spliterators.spliteratorUnknownSize(
-                iterator,
-                Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE
-            ),
-            false
-        );
-  }
-
-  public static <T> Stream<T>
-  stream(final Enumeration<T> enumeration) {
-    return
-        stream(
-            new Iterator<T>() {
-              public boolean
-              hasNext() {
-                return enumeration.hasMoreElements();
-              }
-
-              public T
-              next() {
-                if (!enumeration.hasMoreElements()) {
-                  throw new NoSuchElementException();
-                }
-
-                return enumeration.nextElement();
-              }
-            }
-        );
-  }
-
   private static String
   stripCondition(final String field) {
     return
@@ -659,44 +621,6 @@ public class Util
             .filter(i -> i != -1)
             .map(i -> field.substring(0, i))
             .orElse(field);
-  }
-
-  /**
-   * Iterates sequentially until the predicate returns <code>false</code>.
-   *
-   * @param seed the initial value.
-   * @param f the function that calculates the next value.
-   * @param p the predicate.
-   * @param <T> the value type.
-   * @return The generated stream.
-   */
-
-  public static <T> Stream<T>
-  takeWhile(final T seed, final UnaryOperator<T> f, final Predicate<T> p) {
-    return
-        stream(
-            new Iterator<T>() {
-              private T current = seed;
-
-              public boolean
-              hasNext() {
-                return p.test(current);
-              }
-
-              public T
-              next() {
-                if (!hasNext()) {
-                  throw new NoSuchElementException();
-                }
-
-                final T result = current;
-
-                current = f.apply(current);
-
-                return result;
-              }
-            }
-        );
   }
 
   /**
@@ -892,7 +816,7 @@ public class Util
     }
 
     public void
-    close() throws Exception {
+    close() {
       list.forEach(e -> tryToDo(e::close));
     }
 

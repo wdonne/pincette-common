@@ -29,9 +29,8 @@ import net.pincette.cls.Method;
 import net.pincette.function.SideEffect;
 
 /**
- * With this class loader you can load classes in isolation.
- * The classes are actually loaded as resources in order to reuse the parent
- * class loader mechanisms for fetching the byte array.
+ * With this class loader you can load classes in isolation. The classes are actually loaded as
+ * resources in order to reuse the parent class loader mechanisms for fetching the byte array.
  *
  * @author Werner Donn\u00e9
  */
@@ -76,30 +75,22 @@ public class IsolatingClassLoader extends ClassLoader
       final String[] prefixesNotForParent,
       final ClassLoader parent
   ) {
-    this(
-        parentClasses,
-        prefixesForParent,
-        prefixesNotForParent,
-        parent,
-        new File[0]
-    );
+    this(parentClasses, prefixesForParent, prefixesNotForParent, parent, new File[0]);
   }
 
   /**
-   * @param parentClasses classes which are to be loaded with the parent class
-   * loader.
-   * @param prefixesForParent classes that have one of the prefixes in their
-   * name are loaded with the parent class loader unless they also have one of
-   * the prefixes in <code>prefixesNotForParent</code>.
+   * @param parentClasses classes which are to be loaded with the parent class loader.
+   * @param prefixesForParent classes that have one of the prefixes in their name are loaded with
+   * the parent class loader unless they also have one of the prefixes in
+   * <code>prefixesNotForParent</code>.
    * @param prefixesNotForParent see <code>prefixesForParent</code>.
    * @param parent this class loader is only used for loading the classes in
-   * <code>parentClasses</code>, with their inferred classes, as well as
-   * resources. Note that the <code>getParent</code> method will always return
-   * <code>null</code>, no matter the value of <code>parent</code>.
-   * @param classPath this path is searched for class files that are not for
-   * the parent class loader and for resources. If nothing is found in the path
-   * the parent class loader will be consulted. The parameter may contains
-   * directories as well as JAR-files.
+   * <code>parentClasses</code>, with their inferred classes, as well as resources. Note that the
+   * <code>getParent</code> method will always return <code>null</code>, no matter the value of
+   * <code>parent</code>.
+   * @param classPath this path is searched for class files that are not for the parent class loader
+   * and for resources. If nothing is found in the path the parent class loader will be consulted.
+   * The parameter may contains directories as well as JAR-files.
    */
 
   public IsolatingClassLoader(
