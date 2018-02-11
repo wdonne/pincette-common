@@ -67,15 +67,19 @@ public class StreamUtil {
     return
         stream(
             new Iterator<T>() {
+              private boolean more;
+
               @Override
               public boolean
               hasNext() {
-                return enumeration.hasMoreElements();
+                more = enumeration.hasMoreElements();
+
+                return more;
               }
 
               @Override
               public T next() {
-                if (!enumeration.hasMoreElements()) {
+                if (!more) {
                   throw new NoSuchElementException();
                 }
 
@@ -101,15 +105,18 @@ public class StreamUtil {
         stream(
             new Iterator<T>() {
               private T current = seed;
+              private boolean ok;
 
               @Override
               public boolean hasNext() {
-                return p.test(current);
+                ok = p.test(current);
+
+                return ok;
               }
 
               @Override
               public T next() {
-                if (!hasNext()) {
+                if (!ok) {
                   throw new NoSuchElementException();
                 }
 
@@ -141,15 +148,18 @@ public class StreamUtil {
             new Iterator<Pair<T, U>>() {
               final Iterator<T> i1 = s1.iterator();
               final Iterator<U> i2 = s2.iterator();
+              private boolean more;
 
               @Override
               public boolean hasNext() {
-                return i1.hasNext() && i2.hasNext();
+                more = i1.hasNext() && i2.hasNext();
+
+                return more;
               }
 
               @Override
               public Pair<T, U> next() {
-                if (!hasNext()) {
+                if (!more) {
                   throw new NoSuchElementException();
                 }
 

@@ -4,11 +4,10 @@ import static java.util.stream.Collectors.toList;
 import static net.pincette.util.Or.tryWith;
 import static net.pincette.util.Pair.pair;
 import static net.pincette.util.StreamUtil.stream;
+import static net.pincette.util.Util.matcherIterator;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -226,21 +225,7 @@ public class Expressions
     final Matcher matcher = TOKENS.matcher(s);
 
     return
-        stream(
-            new Iterator<MatchedToken>() {
-              public boolean hasNext() {
-                return matcher.find();
-              }
-
-              public MatchedToken next() {
-                if (!hasNext()) {
-                  throw new NoSuchElementException();
-                }
-
-                return new MatchedToken(findGroup(matcher), matcher);
-              }
-            }
-        )
+        stream(matcherIterator(matcher, m -> new MatchedToken(findGroup(m), m)))
             .filter(token -> token.token != WHITESPACE)
             .map(
                 token ->

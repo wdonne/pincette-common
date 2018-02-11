@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -35,6 +36,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
@@ -62,24 +64,6 @@ public class Util
   }
 
   /**
-   * Adds an element to a collection that calls <code>close</code> on all
-   * elements when its own <code>close</code> method is called.
-   *
-   * @param autoClose the collection that implements
-   * {@link java.lang.AutoCloseable}.
-   * @param element the element that is to be added.
-   * @param <T> the element type.
-   * @return The added element.
-   */
-
-  public static <T> T
-  add(final AutoCloseCollection<T> autoClose, final T element) {
-    autoClose.add(element);
-
-    return element;
-  }
-
-  /**
    * Produces a stream with all paths from <code>path</code> up to the root
    * path, which is just the <code>delimiter</code>. A trailing
    * <code>delimiter</code> will be discarded.
@@ -91,8 +75,7 @@ public class Util
 
   public static Stream<String>
   allPaths(final String path, final String delimiter) {
-    final String[] segments =
-        getSegments(path, delimiter).toArray(String[]::new);
+    final String[] segments = getSegments(path, delimiter).toArray(String[]::new);
 
     return
         takeWhile(0, i -> i + 1, i -> i < segments.length).map(
@@ -111,35 +94,9 @@ public class Util
    * @return The wrapped resource.
    */
 
-  public static <T> AutoCloseable
-  autoClose(final T resource, final ConsumerWithException<T> close) {
-    return () -> close.accept(resource);
-  }
-
-  /**
-   * Creates an {@link AutoCloseCollection} where the added elements are
-   * supposed to have a <code>close</code> method.
-   *
-   * @return The new collection.
-   */
-
-  public static AutoCloseCollection
-  autoClose() {
-    return autoClose(null);
-  }
-
-  /**
-   * Creates an {@link AutoCloseCollection}.
-   *
-   * @param close the function that is called on each element when the
-   * collection is closed.
-   * @param <T> the element type.
-   * @return The new collection.
-   */
-
-  public static <T> AutoCloseCollection<T>
-  autoClose(final ConsumerWithException<T> close) {
-    return new AutoCloseList<>(close);
+  public static <T> AutoCloseWrapper<T>
+  autoClose(final SupplierWithException<T> resource, final ConsumerWithException<T> close) {
+    return new AutoCloseWrapper<>(resource, close);
   }
 
   /**
@@ -180,7 +137,7 @@ public class Util
 
           public Pair<T, Integer>
           next() {
-            return new Pair<>(iterator.next(), count++);
+            return pair(iterator.next(), count++);
           }
         };
   }
@@ -391,6 +348,30 @@ public class Util
             .map(line -> line.split("="))
             .filter(line -> line.length == 2)
             .collect(toMap(line -> line[0], line -> line[1]));
+  }
+
+  public static <T> Iterator<T>
+  matcherIterator(final Matcher matcher, final Function<Matcher,T> generator) {
+    return
+        new Iterator<T>() {
+          private boolean found;
+
+          @Override
+          public boolean hasNext() {
+            found = matcher.find();
+
+            return found;
+          }
+
+          @Override
+          public T next() {
+            if (!found) {
+              throw new NoSuchElementException();
+            }
+
+            return generator.apply(matcher);
+          }
+        };
   }
 
   public static <T> T
@@ -672,6 +653,12 @@ public class Util
   }
 
   public static <T> boolean
+  tryToDoWith(final AutoCloseWrapper<T> resource, final ConsumerWithException<T> fn
+  ) {
+    return tryToDoWith(resource, fn, null);
+  }
+
+  public static <T> boolean
   tryToDoWith(
       final SupplierWithException<T> resource,
       final ConsumerWithException<T> fn,
@@ -689,12 +676,39 @@ public class Util
   }
 
   public static <T> boolean
+  tryToDoWith(
+      final AutoCloseWrapper<T> resource,
+      final ConsumerWithException<T> fn,
+      final Consumer<Exception> error
+  ) {
+    try (final AutoCloseWrapper<T> r = resource) {
+      fn.accept(r.get());
+
+      return true;
+    } catch (Exception e) {
+      handleException(e, error);
+
+      return false;
+    }
+  }
+
+  public static <T> boolean
   tryToDoWithRethrow(final SupplierWithException<T> resource, final ConsumerWithException<T> fn) {
     return tryToDoWith(resource, fn, Util::rethrow);
   }
 
   public static <T> boolean
+  tryToDoWithRethrow(final AutoCloseWrapper<T> resource, final ConsumerWithException<T> fn) {
+    return tryToDoWith(resource, fn, Util::rethrow);
+  }
+
+  public static <T> boolean
   tryToDoWithSilent(final SupplierWithException<T> resource, final ConsumerWithException<T> fn) {
+    return tryToDoWith(resource, fn, Util::nop);
+  }
+
+  public static <T> boolean
+  tryToDoWithSilent(final AutoCloseWrapper<T> resource, final ConsumerWithException<T> fn) {
     return tryToDoWith(resource, fn, Util::nop);
   }
 
@@ -735,6 +749,11 @@ public class Util
     return tryToGetWith(resource, fn, null);
   }
 
+  public static <T, R> Optional<R>
+  tryToGetWith(final AutoCloseWrapper<T> resource, final FunctionWithException<T, R> fn) {
+    return tryToGetWith(resource, fn, null);
+  }
+
   /**
    * Tries to calculate a result with a resource that should implement
    * {@link java.lang.AutoCloseable}.
@@ -762,10 +781,35 @@ public class Util
   }
 
   public static <T, R> Optional<R>
+  tryToGetWith(
+      final AutoCloseWrapper<T> resource,
+      final FunctionWithException<T, R> fn,
+      final Function<Exception, R> error
+  ) {
+    try (final AutoCloseWrapper<T> r = resource) {
+      return Optional.ofNullable(fn.apply(r.get()));
+    } catch (Exception e) {
+      return handleException(e, error);
+    }
+  }
+
+  public static <T, R> Optional<R>
   tryToGetWithRethrow(
       final SupplierWithException<T> resource,
       final FunctionWithException<T, R> fn
   ) {
+    return
+        tryToGetWith(
+            resource,
+            fn,
+            e -> {
+              throw new GeneralException(e);
+            }
+        );
+  }
+
+  public static <T, R> Optional<R>
+  tryToGetWithRethrow(final AutoCloseWrapper<T> resource, final FunctionWithException<T, R> fn) {
     return
         tryToGetWith(
             resource,
@@ -784,43 +828,44 @@ public class Util
     return tryToGetWith(resource, fn, e -> null);
   }
 
-  private static class AutoCloseList<T> implements AutoCloseCollection<T>
+  public static <T, R> Optional<R>
+  tryToGetWithSilent(final AutoCloseWrapper<T> resource, final FunctionWithException<T, R> fn) {
+    return tryToGetWith(resource, fn, e -> null);
+  }
+
+  public static class AutoCloseWrapper<T> implements AutoCloseable
 
   {
 
     private final ConsumerWithException<T> close;
-    private final List<AutoCloseable> list = new ArrayList<>();
+    private final SupplierWithException<T> resource;
+    private T res;
 
-    private AutoCloseList(final ConsumerWithException<T> close) {
+    private AutoCloseWrapper(
+        final SupplierWithException<T> resource,
+        final ConsumerWithException<T> close
+    ) {
+      this.resource = resource;
       this.close = close;
     }
 
-    public <U> U
-    add(final U element, final ConsumerWithException<U> close) {
-      list.add(autoClose(element, close));
-
-      return element;
+    public void
+    close() throws Exception {
+      if (close != null) {
+        close.accept(res);
+      }
     }
 
-    public T
-    add(final T element) {
-      if (!(element instanceof AutoCloseable) && close == null) {
-        throw new GeneralException("No close function.");
+    private T
+    get() throws Exception {
+      if (res == null) {
+        res = resource.get();
       }
 
-      list.add(
-          element instanceof AutoCloseable ? (AutoCloseable) element : autoClose(element, close)
-      );
-
-      return element;
+      return res;
     }
 
-    public void
-    close() {
-      list.forEach(e -> tryToDo(e::close));
-    }
-
-  } // AutoCloseList
+  } // AutoCloseWrapper
 
   public static class GeneralException extends RuntimeException
 

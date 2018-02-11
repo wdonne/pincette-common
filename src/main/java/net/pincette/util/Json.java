@@ -15,6 +15,7 @@ import static javax.xml.stream.XMLOutputFactory.newInstance;
 import static net.pincette.util.Collections.difference;
 import static net.pincette.util.Pair.pair;
 import static net.pincette.util.StreamUtil.takeWhile;
+import static net.pincette.util.Util.autoClose;
 import static net.pincette.util.Util.pathSearch;
 import static net.pincette.util.Util.tryToDoWith;
 import static net.pincette.util.Util.tryToDoWithRethrow;
@@ -54,6 +55,7 @@ import javax.json.JsonString;
 import javax.json.JsonStructure;
 import javax.json.JsonValue;
 import javax.json.stream.JsonGenerator;
+import javax.xml.stream.XMLEventWriter;
 import net.pincette.function.SideEffect;
 import net.pincette.xml.stream.JsonEventReader;
 
@@ -71,7 +73,7 @@ public class Json
       value ->
           value.getValueType() == JsonValue.ValueType.NUMBER ?
               asNumber(value).longValue() : toString(value);
-  private static final String ERROR = "error";
+  private static final String ERROR = "_error";
 
   public static JsonObject
   add(final JsonObject obj, final String name, final JsonArrayBuilder value) {
@@ -469,7 +471,7 @@ public class Json
 
   /**
    * Returns <code>true</code> if <code>obj</code> contains an entry with the
-   * name ERROR and value <code>true</code>.
+   * name _error and value <code>true</code>.
    *
    * @param obj the given JSON object.
    * @return Whether the object contains errors or not.
@@ -482,7 +484,7 @@ public class Json
 
   /**
    * Returns <code>true</code> if any object in <code>array</code> contains an
-   * entry with the name ERROR and value <code>true</code>.
+   * entry with the name _error and value <code>true</code>.
    *
    * @param array the given JSON array.
    * @return Whether the array contains errors or not.
@@ -929,7 +931,10 @@ public class Json
                     SideEffect.<ByteArrayOutputStream>run(
                         () ->
                             tryToDoWithRethrow(
-                                () -> newInstance().createXMLEventWriter(out),
+                                autoClose(
+                                    () -> newInstance().createXMLEventWriter(out),
+                                    XMLEventWriter::close
+                                ),
                                 writer ->
                                     writer.add(
                                         new JsonEventReader(

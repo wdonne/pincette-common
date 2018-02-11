@@ -1,9 +1,8 @@
 package net.pincette.xml.stream;
 
-import static java.lang.Character.valueOf;
 import static net.pincette.util.Util.tryToGetRethrow;
-import static net.pincette.xml.Util.isName;
-import static net.pincette.xml.Util.isXmlChar;
+import static net.pincette.xml.Util.isNameChar;
+import static net.pincette.xml.Util.isNameStartChar;
 
 import java.util.Deque;
 import java.util.LinkedList;
@@ -227,10 +226,10 @@ public class JsonEventReader implements XMLEventReader
     final char[] c = name.toCharArray();
 
     for (int i = 0; i < c.length; ++i) {
-      c[i] = isXmlChar(c[i]) ? c[i] : '-';
+      c[i] = isNameChar(c[i]) ? c[i] : '-';
     }
 
-    return new String(c);
+    return (c.length > 0 && isNameStartChar(c[0]) ? "" : "_") + new String(c);
   }
 
 } // JsonEventReader
