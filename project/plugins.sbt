@@ -1,1 +1,0 @@
-addSbtPlugin("com.github.tototoshi" % "sbt-automkcol" % "2.1.0")
