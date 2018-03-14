@@ -164,13 +164,12 @@ public class Json
   }
 
   /**
-   * Returns a copy of the object where the values of the fields in
-   * <code>values</code> are replaced. The first entry of a pair is the
-   * name path and the second entry is the new value.
+   * Returns a copy of the object where the values of the fields in <code>values</code> are
+   * replaced. The first entry of a pair is the name path and the second entry is the new value.
    *
    * @param obj the given JSON object.
-   * @param values the list of pairs, where the first entry is the
-   * name and the second entry is the new value.
+   * @param values the list of pairs, where the first entry is the name and the second entry is the
+   * new value.
    * @return The new object.
    */
 
@@ -423,9 +422,24 @@ public class Json
 
   public static String
   getKey(final String path) {
-    final String[] parts = path.split("\\.");
+    return getKey(path, null);
+  }
 
-    return parts.length > 0 ? parts[parts.length - 1] : path;
+  private static String
+  getKey(final String path, final String originalKey) {
+    return
+        Optional
+            .ofNullable(originalKey)
+            .map(path::lastIndexOf)
+            .filter(index -> index != -1)
+            .map(index -> originalKey)
+            .orElse(
+                Optional
+                    .of(path.split("\\."))
+                    .filter(parts -> parts.length > 0)
+                    .map(parts -> parts[parts.length - 1])
+                    .orElse(path)
+            );
   }
 
   private static Set<String>
@@ -470,8 +484,8 @@ public class Json
   }
 
   /**
-   * Returns <code>true</code> if <code>obj</code> contains an entry with the
-   * name _error and value <code>true</code>.
+   * Returns <code>true</code> if <code>obj</code> contains an entry with the name _error and value
+   * <code>true</code>.
    *
    * @param obj the given JSON object.
    * @return Whether the object contains errors or not.
@@ -483,8 +497,8 @@ public class Json
   }
 
   /**
-   * Returns <code>true</code> if any object in <code>array</code> contains an
-   * entry with the name _error and value <code>true</code>.
+   * Returns <code>true</code> if any object in <code>array</code> contains an entry with the name
+   * _error and value <code>true</code>.
    *
    * @param array the given JSON array.
    * @return Whether the array contains errors or not.
@@ -691,8 +705,8 @@ public class Json
   }
 
   /**
-   * Returns a new object in which the value of the field designated by
-   * the dot-separated <code>path</code> is replaced with <code>value</code>.
+   * Returns a new object in which the value of the field designated by the dot-separated
+   * <code>path</code> is replaced with <code>value</code>.
    *
    * @param obj the given JSON object.
    * @param path the dot-separated path.
@@ -706,8 +720,8 @@ public class Json
   }
 
   /**
-   * Returns a transformer that replaces the value of the field designated by
-   * the dot-separated <code>path</code> with <code>value</code>.
+   * Returns a transformer that replaces the value of the field designated by the dot-separated
+   * <code>path</code> with <code>value</code>.
    *
    * @param path the dot-separated path.
    * @param value the new value.
@@ -805,9 +819,8 @@ public class Json
   }
 
   /**
-   * Returns a new value where recursively entries that <code>match</code>
-   * are transformed by <code>transformer</code>. If the latter is empty
-   * the entry is removed from the result.
+   * Returns a new value where recursively entries that <code>match</code> are transformed by
+   * <code>transformer</code>. If the latter is empty the entry is removed from the result.
    *
    * @param json the given JSON value.
    * @param transformer the applied transformer.
@@ -826,9 +839,8 @@ public class Json
   }
 
   /**
-   * Returns a new structure where recursively entries that <code>match</code>
-   * are transformed by <code>transformer</code>. If the latter is empty
-   * the entry is removed from the result.
+   * Returns a new structure where recursively entries that <code>match</code> are transformed by
+   * <code>transformer</code>. If the latter is empty the entry is removed from the result.
    *
    * @param json the given JSON structure.
    * @param transformer the applied transformer.
@@ -849,9 +861,8 @@ public class Json
   }
 
   /**
-   * Returns a new array where entries of objects that <code>match</code>
-   * are transformed by <code>transformer</code>. If the latter is empty
-   * the entry is removed from the result.
+   * Returns a new array where entries of objects that <code>match</code> are transformed by
+   * <code>transformer</code>. If the latter is empty the entry is removed from the result.
    *
    * @param array the given JSON array.
    * @param transformer the applied transformer.
@@ -878,9 +889,8 @@ public class Json
   }
 
   /**
-   * Returns a new object where entries that <code>match</code> are transformed
-   * by <code>transformer</code>. If the latter is empty the
-   * entry is removed from the result.
+   * Returns a new object where entries that <code>match</code> are transformed by
+   * <code>transformer</code>. If the latter is empty the entry is removed from the result.
    *
    * @param obj the given JSON object.
    * @param transformer the applied transformer.
@@ -906,15 +916,15 @@ public class Json
                         .map(
                             entry ->
                                 new JsonEntry(
-                                    getPath(parent, getKey(entry.path)),
+                                    getPath(parent, getKey(entry.path, k)),
                                     transform(
                                         entry.value,
-                                        getPath(parent, getKey(entry.path)),
+                                        getPath(parent, getKey(entry.path, k)),
                                         transformer
                                     )
                                 )
                         )
-                        .map(entry -> b.add(getKey(entry.path), entry.value))
+                        .map(entry -> b.add(getKey(entry.path, k), entry.value))
                         .orElse(b),
                 (b1, b2) -> b1
             )
