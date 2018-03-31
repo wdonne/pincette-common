@@ -483,6 +483,11 @@ public class Json
             .orElse(null);
   }
 
+  public static Optional<JsonValue>
+  getValue(final JsonStructure json, final String jsonPointer) {
+    return tryToGetSilent(() -> json.getValue(jsonPointer));
+  }
+
   /**
    * Returns <code>true</code> if <code>obj</code> contains an entry with the name _error and value
    * <code>true</code>.
