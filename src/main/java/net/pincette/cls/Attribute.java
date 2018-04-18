@@ -1,20 +1,15 @@
 package net.pincette.cls;
 
-public class Attribute
-
-{
+public class Attribute {
 
   String name;
   byte[] value;
 
-  public String
-  getName() {
+  public String getName() {
     return name;
   }
 
-  public byte[]
-  getValue() {
+  public byte[] getValue() {
     return value;
   }
-
-} // Attribute
+}

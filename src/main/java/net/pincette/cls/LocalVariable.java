@@ -1,8 +1,6 @@
 package net.pincette.cls;
 
-public class LocalVariable
-
-{
+public class LocalVariable {
 
   String descriptor;
   short index;
@@ -10,34 +8,27 @@ public class LocalVariable
   String name;
   short startPC;
 
-  public String
-  getDescriptor() {
+  public String getDescriptor() {
     return descriptor;
   }
 
-  public short
-  getIndex() {
+  public short getIndex() {
     return index;
   }
 
-  public short
-  getLength() {
+  public short getLength() {
     return length;
   }
 
-  public String
-  getName() {
+  public String getName() {
     return name;
   }
 
-  public int
-  getStartProgramCounter() {
+  public int getStartProgramCounter() {
     return startPC;
   }
 
-  public String
-  getType() {
+  public String getType() {
     return Util.getType(descriptor);
   }
-
-} // LocalVariable
+}

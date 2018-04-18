@@ -8,10 +8,7 @@ import org.xml.sax.helpers.AttributesImpl;
  *
  * @author Werner Donn\u00e9
  */
-
-public class AttributeBuilder
-
-{
+public class AttributeBuilder {
 
   private final AttributesImpl atts;
 
@@ -27,85 +24,72 @@ public class AttributeBuilder
     this.atts = atts;
   }
 
-  public AttributeBuilder
-  add(
+  public AttributeBuilder add(
       final String uri,
       final String localName,
       final String qName,
       final String type,
-      final String value
-  ) {
+      final String value) {
     atts.addAttribute(uri, localName, qName, type, value);
 
     return this;
   }
 
-  public Attributes
-  build() {
+  public Attributes build() {
     return atts;
   }
 
-  public AttributeBuilder
-  remove(final int index) {
+  public AttributeBuilder remove(final int index) {
     atts.removeAttribute(index);
 
     return this;
   }
 
-  public AttributeBuilder
-  set(
+  public AttributeBuilder set(
       final int index,
       final String uri,
       final String localName,
       final String qName,
       final String type,
-      final String value
-  ) {
+      final String value) {
     atts.setAttribute(index, uri, localName, qName, type, value);
 
     return this;
   }
 
-  public AttributeBuilder
-  set(final Attributes atts) {
+  public AttributeBuilder set(final Attributes atts) {
     this.atts.setAttributes(atts);
 
     return this;
   }
 
-  public AttributeBuilder
-  setLocalName(final int index, final String localName) {
+  public AttributeBuilder setLocalName(final int index, final String localName) {
     atts.setLocalName(index, localName);
 
     return this;
   }
 
-  public AttributeBuilder
-  setQName(final int index, final String qName) {
+  public AttributeBuilder setQName(final int index, final String qName) {
     atts.setQName(index, qName);
 
     return this;
   }
 
-  public AttributeBuilder
-  setType(final int index, final String type) {
+  public AttributeBuilder setType(final int index, final String type) {
     atts.setType(index, type);
 
     return this;
   }
 
-  public AttributeBuilder
-  setURI(final int index, final String uri) {
+  public AttributeBuilder setURI(final int index, final String uri) {
     atts.setURI(index, uri);
 
     return this;
   }
 
-  public AttributeBuilder
-  setValue(final int index, final String value) {
+  public AttributeBuilder setValue(final int index, final String value) {
     atts.setValue(index, value);
 
     return this;
   }
-
-} // AttributeBuilder
+}

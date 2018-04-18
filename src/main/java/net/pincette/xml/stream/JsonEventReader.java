@@ -21,10 +21,7 @@ import javax.xml.stream.events.XMLEvent;
  *
  * @author Werner Donn\u00e9
  */
-
-public class JsonEventReader implements XMLEventReader
-
-{
+public class JsonEventReader implements XMLEventReader {
 
   private final Deque<Event> events = new LinkedList<>();
   private final XMLEventFactory factory = XMLEventFactory.newFactory();
@@ -40,34 +37,37 @@ public class JsonEventReader implements XMLEventReader
     keyNames.push("doc");
   }
 
-  private static String
-  cleanName(final String name) {
+  private static String cleanName(final String name) {
     return name.replace("$", "");
   }
 
+  private static String toXmlName(final String name) {
+    final char[] c = name.toCharArray();
 
-  public void
-  close() {
+    for (int i = 0; i < c.length; ++i) {
+      c[i] = isNameChar(c[i]) ? c[i] : '-';
+    }
+
+    return (c.length > 0 && isNameStartChar(c[0]) ? "" : "_") + new String(c);
+  }
+
+  public void close() {
     parser.close();
   }
 
-  private XMLEvent
-  createEnd(final String name) {
+  private XMLEvent createEnd(final String name) {
     return factory.createEndElement("", "", toXmlName(name));
   }
 
-  private XMLEvent
-  createNop() {
+  private XMLEvent createNop() {
     return factory.createCharacters("");
   }
 
-  private XMLEvent
-  createStart(final String name) {
+  private XMLEvent createStart(final String name) {
     return factory.createStartElement("", "", toXmlName(name));
   }
 
-  private XMLEvent
-  createValue(final String value) {
+  private XMLEvent createValue(final String value) {
     final String name = events.peek() == JsonParser.Event.START_ARRAY ? "value" : keyNames.peek();
     final XMLEvent result = createStart(name);
 
@@ -77,19 +77,15 @@ public class JsonEventReader implements XMLEventReader
     return result;
   }
 
-  public String
-  getElementText() throws XMLStreamException {
+  public String getElementText() throws XMLStreamException {
     throw new XMLStreamException("Not supported");
   }
 
-  public Object
-  getProperty(final String name) {
-    throw
-        new IllegalArgumentException("Property " + name + " is not supported");
+  public Object getProperty(final String name) {
+    throw new IllegalArgumentException("Property " + name + " is not supported");
   }
 
-  private XMLEvent
-  handleEndObject() {
+  private XMLEvent handleEndObject() {
     events.pop();
 
     final Event parent = events.isEmpty() ? null : events.peek();
@@ -97,8 +93,7 @@ public class JsonEventReader implements XMLEventReader
     return createEnd(parent == Event.START_ARRAY ? "object" : keyNames.pop());
   }
 
-  private XMLEvent
-  handleEvent(final Event event) {
+  private XMLEvent handleEvent(final Event event) {
     switch (event) {
       case END_ARRAY:
       case END_OBJECT:
@@ -116,11 +111,10 @@ public class JsonEventReader implements XMLEventReader
         return createValue("false");
 
       case VALUE_NUMBER:
-        return
-            createValue(
-                parser.isIntegralNumber() ?
-                    String.valueOf(parser.getLong()) : parser.getBigDecimal().toString()
-            );
+        return createValue(
+            parser.isIntegralNumber()
+                ? String.valueOf(parser.getLong())
+                : parser.getBigDecimal().toString());
 
       case VALUE_TRUE:
         return createValue("true");
@@ -132,8 +126,7 @@ public class JsonEventReader implements XMLEventReader
     }
   }
 
-  private XMLEvent
-  handleStartObject(final Event event) {
+  private XMLEvent handleStartObject(final Event event) {
     final Event parent = events.isEmpty() ? null : events.peek();
 
     events.push(event);
@@ -141,27 +134,23 @@ public class JsonEventReader implements XMLEventReader
     return createStart(parent == Event.START_ARRAY ? "object" : keyNames.peek());
   }
 
-  public boolean
-  hasNext() {
+  public boolean hasNext() {
     parserEvent = false;
 
     return !startDocument || queue.peek() != null || hasNextParserEvent() || !endDocument;
   }
 
-  private boolean
-  hasNextParserEvent() {
+  private boolean hasNextParserEvent() {
     parserEvent = parser.hasNext();
 
     return parserEvent;
   }
 
-  public XMLEvent
-  next() {
+  public XMLEvent next() {
     return tryToGetRethrow(this::nextEvent).orElseThrow(NoSuchElementException::new);
   }
 
-  public XMLEvent
-  nextEvent() throws XMLStreamException {
+  public XMLEvent nextEvent() throws XMLStreamException {
     if (!startDocument) {
       startDocument = true;
 
@@ -185,33 +174,27 @@ public class JsonEventReader implements XMLEventReader
     throw new XMLStreamException("No more JSON events");
   }
 
-  public XMLEvent
-  nextTag() throws XMLStreamException {
+  public XMLEvent nextTag() throws XMLStreamException {
     throw new XMLStreamException("Not supported");
   }
 
-  public XMLEvent
-  peek() {
+  public XMLEvent peek() {
     return !startDocument ? factory.createStartDocument() : peekNextAfterStart();
   }
 
-  private XMLEvent
-  peekEnd() {
+  private XMLEvent peekEnd() {
     return !endDocument ? factory.createEndDocument() : null;
   }
 
-  private XMLEvent
-  peekNextAfterStart() {
+  private XMLEvent peekNextAfterStart() {
     return queue.peek() != null ? queue.peek() : peekNotQueued();
   }
 
-  private XMLEvent
-  peekNotQueued() {
+  private XMLEvent peekNotQueued() {
     return parserEvent ? peekParserEvent() : peekEnd();
   }
 
-  private XMLEvent
-  peekParserEvent() {
+  private XMLEvent peekParserEvent() {
     parserEvent = false;
 
     final XMLEvent event = handleEvent(parser.next());
@@ -220,16 +203,4 @@ public class JsonEventReader implements XMLEventReader
 
     return event;
   }
-
-  private static String
-  toXmlName(final String name) {
-    final char[] c = name.toCharArray();
-
-    for (int i = 0; i < c.length; ++i) {
-      c[i] = isNameChar(c[i]) ? c[i] : '-';
-    }
-
-    return (c.length > 0 && isNameStartChar(c[0]) ? "" : "_") + new String(c);
-  }
-
-} // JsonEventReader
+}

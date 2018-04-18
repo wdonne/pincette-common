@@ -9,6 +9,7 @@ import java.util.Optional;
 
 /**
  * An simple args utility for main methods.
+ *
  * @author Werner Donn\u00e9
  */
 public class ArgsBuilder {
@@ -19,11 +20,11 @@ public class ArgsBuilder {
   /**
    * Adds <code>arg</code> as a key, with the empty string as the value, if there is no pending arg
    * and as a value for the pending key otherwise.
+   *
    * @param arg the key or the value.
    * @return The builder.
    */
-  public ArgsBuilder
-  add(final String arg) {
+  public ArgsBuilder add(final String arg) {
     if (pending != null) {
       args.put(pending, arg);
       pending = null;
@@ -36,11 +37,11 @@ public class ArgsBuilder {
 
   /**
    * Expects another arg, which will be the value for <code>arg</code>.
+   *
    * @param arg the key.
    * @return The builder.
    */
-  public ArgsBuilder
-  addPending(final String arg) {
+  public ArgsBuilder addPending(final String arg) {
     pending = arg;
 
     return this;
@@ -48,11 +49,10 @@ public class ArgsBuilder {
 
   /**
    * Return an empty optional is there is a pending arg, a map otherwise.
+   *
    * @return The map.
    */
-  public Optional<Map<String, String>>
-  build() {
+  public Optional<Map<String, String>> build() {
     return pending != null ? empty() : of(args);
   }
-
-} // ArgsBuilder
+}

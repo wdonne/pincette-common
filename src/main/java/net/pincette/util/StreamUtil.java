@@ -14,79 +14,65 @@ import java.util.stream.StreamSupport;
 
 public class StreamUtil {
 
-  private StreamUtil() {
-  }
+  private StreamUtil() {}
 
   /**
-   * Produces a sequential integer stream. If <code>from</code> is larger than
-   * <code>toInclusive</code> then the stream will count down.
+   * Produces a sequential integer stream. If <code>from</code> is larger than <code>toInclusive
+   * </code> then the stream will count down.
    *
    * @param from first value of the range.
    * @param toInclusive last value of the range.
    * @return the integer stream.
    */
+  public static Stream<Integer> range(final int from, final int toInclusive) {
+    return stream(
+        new Iterator<Integer>() {
+          private int index = from;
 
-  public static Stream<Integer>
-  range(final int from, final int toInclusive) {
-    return
-        stream(
-            new Iterator<Integer>() {
-              private int index = from;
+          @Override
+          public boolean hasNext() {
+            return from < toInclusive ? index <= toInclusive : index >= toInclusive;
+          }
 
-              @Override
-              public boolean hasNext() {
-                return from < toInclusive ? index <= toInclusive : index >= toInclusive;
-              }
-
-              @Override
-              public Integer next() {
-                if (!hasNext()) {
-                  throw new NoSuchElementException();
-                }
-
-                return from < toInclusive ? index++ : index--;
-              }
+          @Override
+          public Integer next() {
+            if (!hasNext()) {
+              throw new NoSuchElementException();
             }
-        );
+
+            return from < toInclusive ? index++ : index--;
+          }
+        });
   }
 
-  public static <T> Stream<T>
-  stream(final Iterator<T> iterator) {
-    return
-        StreamSupport.stream(
-            Spliterators.spliteratorUnknownSize(
-                iterator,
-                Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE
-            ),
-            false
-        );
+  public static <T> Stream<T> stream(final Iterator<T> iterator) {
+    return StreamSupport.stream(
+        Spliterators.spliteratorUnknownSize(
+            iterator, Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE),
+        false);
   }
 
-  public static <T> Stream<T>
-  stream(final Enumeration<T> enumeration) {
-    return
-        stream(
-            new Iterator<T>() {
-              private boolean more;
+  public static <T> Stream<T> stream(final Enumeration<T> enumeration) {
+    return stream(
+        new Iterator<T>() {
+          private boolean more;
 
-              @Override
-              public boolean
-              hasNext() {
-                more = enumeration.hasMoreElements();
+          @Override
+          public boolean hasNext() {
+            more = enumeration.hasMoreElements();
 
-                return more;
-              }
+            return more;
+          }
 
-              @Override
-              public T next() {
-                if (!more) {
-                  throw new NoSuchElementException();
-                }
-
-                return enumeration.nextElement();
-              }
+          @Override
+          public T next() {
+            if (!more) {
+              throw new NoSuchElementException();
             }
-        );
+
+            return enumeration.nextElement();
+          }
+        });
   }
 
   /**
@@ -98,36 +84,33 @@ public class StreamUtil {
    * @param <T> the value type.
    * @return The generated stream.
    */
+  public static <T> Stream<T> takeWhile(
+      final T seed, final UnaryOperator<T> f, final Predicate<T> p) {
+    return stream(
+        new Iterator<T>() {
+          private T current = seed;
+          private boolean ok;
 
-  public static <T> Stream<T>
-  takeWhile(final T seed, final UnaryOperator<T> f, final Predicate<T> p) {
-    return
-        stream(
-            new Iterator<T>() {
-              private T current = seed;
-              private boolean ok;
+          @Override
+          public boolean hasNext() {
+            ok = p.test(current);
 
-              @Override
-              public boolean hasNext() {
-                ok = p.test(current);
+            return ok;
+          }
 
-                return ok;
-              }
-
-              @Override
-              public T next() {
-                if (!ok) {
-                  throw new NoSuchElementException();
-                }
-
-                final T result = current;
-
-                current = f.apply(current);
-
-                return result;
-              }
+          @Override
+          public T next() {
+            if (!ok) {
+              throw new NoSuchElementException();
             }
-        );
+
+            final T result = current;
+
+            current = f.apply(current);
+
+            return result;
+          }
+        });
   }
 
   /**
@@ -140,33 +123,28 @@ public class StreamUtil {
    * @param <U> the element type of the second stream.
    * @return The paired stream.
    */
+  public static <T, U> Stream<Pair<T, U>> zip(final Stream<T> s1, final Stream<U> s2) {
+    return stream(
+        new Iterator<Pair<T, U>>() {
+          final Iterator<T> i1 = s1.iterator();
+          final Iterator<U> i2 = s2.iterator();
+          private boolean more;
 
-  public static <T, U> Stream<Pair<T, U>>
-  zip(final Stream<T> s1, final Stream<U> s2) {
-    return
-        stream(
-            new Iterator<Pair<T, U>>() {
-              final Iterator<T> i1 = s1.iterator();
-              final Iterator<U> i2 = s2.iterator();
-              private boolean more;
+          @Override
+          public boolean hasNext() {
+            more = i1.hasNext() && i2.hasNext();
 
-              @Override
-              public boolean hasNext() {
-                more = i1.hasNext() && i2.hasNext();
+            return more;
+          }
 
-                return more;
-              }
-
-              @Override
-              public Pair<T, U> next() {
-                if (!more) {
-                  throw new NoSuchElementException();
-                }
-
-                return pair(i1.next(), i2.next());
-              }
+          @Override
+          public Pair<T, U> next() {
+            if (!more) {
+              throw new NoSuchElementException();
             }
-        );
-  }
 
-} // StreamUtil
+            return pair(i1.next(), i2.next());
+          }
+        });
+  }
+}

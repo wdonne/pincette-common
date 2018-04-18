@@ -9,20 +9,15 @@ import java.io.OutputStream;
  *
  * @author Werner Donn\u00e9
  */
-
 @SuppressWarnings("squid:S4349")
-public class DontCloseOutputStream extends FilterOutputStream
-
-{
+public class DontCloseOutputStream extends FilterOutputStream {
 
   public DontCloseOutputStream(final OutputStream in) {
     super(in);
   }
 
   @Override
-  public void
-  close() throws IOException {
+  public void close() throws IOException {
     flush();
   }
-
-} // DontCloseOutputStream
+}

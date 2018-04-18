@@ -7,17 +7,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-
 /**
- * Deletes the file after the stream has been closed, which is interesting when
- * working with temporary files.
+ * Deletes the file after the stream has been closed, which is interesting when working with
+ * temporary files.
  *
  * @author Werner Donn\u00e9
  */
-
-public class DeleteFileInputStream extends FileInputStream
-
-{
+public class DeleteFileInputStream extends FileInputStream {
 
   private final File file;
 
@@ -27,10 +23,8 @@ public class DeleteFileInputStream extends FileInputStream
   }
 
   @Override
-  public void
-  close() throws IOException {
+  public void close() throws IOException {
     super.close();
     delete(file.toPath());
   }
-
-} // DeleteFileInputStream
+}

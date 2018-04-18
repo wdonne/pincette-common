@@ -8,15 +8,12 @@ import java.io.Reader;
 import java.util.function.UnaryOperator;
 
 /**
- * This reader converts java-style Unicode escape codes to characters. It is a
- * filter in order to provide a combination with a physical encoding.
+ * This reader converts java-style Unicode escape codes to characters. It is a filter in order to
+ * provide a combination with a physical encoding.
  *
  * @author Werner Donn\u00e9
  */
-
-public class EscapedUnicodeFilterReader extends FilterReader
-
-{
+public class EscapedUnicodeFilterReader extends FilterReader {
 
   // Alphabet.
 
@@ -36,12 +33,12 @@ public class EscapedUnicodeFilterReader extends FilterReader
   private static final int ACCEPT = 6;
 
   private static final int[][] FSM = {
-      {U1, START, START, START}, // START
-      {START, U2, START, START}, // U1
-      {START, START, H1, START}, // U2
-      {START, START, H2, START}, // H1
-      {START, START, H3, START}, // H2
-      {START, START, ACCEPT, START} // H3
+    {U1, START, START, START}, // START
+    {START, U2, START, START}, // U1
+    {START, START, H1, START}, // U2
+    {START, START, H2, START}, // H1
+    {START, START, H3, START}, // H2
+    {START, START, ACCEPT, START} // H3
   };
 
   private boolean end = false;
@@ -50,34 +47,31 @@ public class EscapedUnicodeFilterReader extends FilterReader
     super(new PushbackReader(new BufferedReader(in), 1024));
   }
 
-  private static int
-  category(final int c) {
+  private static int category(final int c) {
     final UnaryOperator<Integer> hexOrOther =
         ch ->
-            (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F') ?
-                HEX : OTHER;
+            (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F')
+                ? HEX
+                : OTHER;
     final UnaryOperator<Integer> uOr = ch -> c == 'u' ? U : hexOrOther.apply(ch);
 
     return c == '\\' ? BACK_SLASH : uOr.apply(c);
   }
 
   @Override
-  public int
-  read() throws IOException {
+  public int read() throws IOException {
     final char[] b = new char[1];
 
     return read(b, 0, b.length) == -1 ? -1 : (0xffff & b[0]);
   }
 
   @Override
-  public int
-  read(final char[] b) throws IOException {
+  public int read(final char[] b) throws IOException {
     return read(b, 0, b.length);
   }
 
   @Override
-  public int
-  read(final char[] b, final int off, final int len) throws IOException {
+  public int read(final char[] b, final int off, final int len) throws IOException {
     if (end) {
       return -1;
     }
@@ -98,25 +92,19 @@ public class EscapedUnicodeFilterReader extends FilterReader
     return i == 0 && end ? -1 : i;
   }
 
-  private int
-  readOneCharacter() throws IOException {
+  private int readOneCharacter() throws IOException {
     final StringBuilder buffer = new StringBuilder();
     int c;
     int state = START;
 
-    for
-        (
-        c = in.read();
+    for (c = in.read();
         c != -1 && (state = FSM[state][category(c)]) != START && state != ACCEPT;
-        c = in.read()
-        ) {
+        c = in.read()) {
       buffer.append(c);
     }
 
     if (state == ACCEPT) {
-      return
-          Integer.
-              parseInt(buffer.substring(2) + new String(new char[]{(char) c}), 16);
+      return Integer.parseInt(buffer.substring(2) + new String(new char[] {(char) c}), 16);
     }
 
     if (buffer.length() == 0) {
@@ -131,5 +119,4 @@ public class EscapedUnicodeFilterReader extends FilterReader
 
     return buffer.length() > 0 ? buffer.charAt(0) : -1;
   }
-
-} // EscapedUnicodeFilterReader
+}

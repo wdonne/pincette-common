@@ -5,21 +5,16 @@ package net.pincette.function;
  *
  * @author Werner Donn\u00e9
  */
-
 @FunctionalInterface
-public interface ConsumerWithException<T>
-
-{
+public interface ConsumerWithException<T> {
 
   @SuppressWarnings("squid:S00112")
   void accept(T t) throws Exception;
 
-  default ConsumerWithException<T>
-  andThen(ConsumerWithException<T> after) {
+  default ConsumerWithException<T> andThen(ConsumerWithException<T> after) {
     return a -> {
       this.accept(a);
       after.accept(a);
     };
   }
-
-} // ConsumerWithException
+}

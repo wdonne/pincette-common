@@ -1,8 +1,6 @@
 package net.pincette.cls;
 
-public class Field
-
-{
+public class Field {
 
   Attribute[] attributes;
   String descriptor;
@@ -12,44 +10,35 @@ public class Field
   String name;
   Object value;
 
-  public Attribute[]
-  getAttribtutes() {
+  public Attribute[] getAttribtutes() {
     return attributes;
   }
 
-  public String
-  getDescriptor() {
+  public String getDescriptor() {
     return descriptor;
   }
 
-  public int
-  getModifiers() {
+  public int getModifiers() {
     return modifiers;
   }
 
-  public String
-  getName() {
+  public String getName() {
     return name;
   }
 
-  public String
-  getType() {
+  public String getType() {
     return Util.getType(descriptor);
   }
 
-  public Object
-  getValue() {
+  public Object getValue() {
     return value;
   }
 
-  public boolean
-  isDeprecated() {
+  public boolean isDeprecated() {
     return isDeprecated;
   }
 
-  public boolean
-  isSynthetic() {
+  public boolean isSynthetic() {
     return isSynthetic;
   }
-
-} // Field
+}

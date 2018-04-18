@@ -17,44 +17,37 @@ public class SetBuilder<E> {
     this.set = new HashSet<>(set);
   }
 
-  public Set<E>
-  build() {
+  public Set<E> build() {
     return set;
   }
 
-  public SetBuilder<E>
-  add(final E e) {
+  public SetBuilder<E> add(final E e) {
     set.add(e);
 
     return this;
   }
 
-  public SetBuilder<E>
-  addAll(final Collection<? extends E> c) {
+  public SetBuilder<E> addAll(final Collection<? extends E> c) {
     set.addAll(c);
 
     return this;
   }
 
-  public SetBuilder<E>
-  remove(final Object o) {
+  public SetBuilder<E> remove(final Object o) {
     set.remove(o);
 
     return this;
   }
 
-  public SetBuilder<E>
-  removeAll(final Collection<?> c) {
+  public SetBuilder<E> removeAll(final Collection<?> c) {
     set.removeAll(c);
 
     return this;
   }
 
-  public SetBuilder<E>
-  retainAll(Collection<?> c) {
+  public SetBuilder<E> retainAll(Collection<?> c) {
     set.retainAll(c);
 
     return this;
   }
-
-} // SetBuilder
+}

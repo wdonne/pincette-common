@@ -5,13 +5,9 @@ package net.pincette.function;
  *
  * @author Werner Donn\u00e9
  */
-
 @FunctionalInterface
-public interface SupplierWithException<T>
-
-{
+public interface SupplierWithException<T> {
 
   @SuppressWarnings("squid:S00112")
   T get() throws Exception;
-
-} // SupplierWithException
+}

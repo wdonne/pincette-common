@@ -9,19 +9,14 @@ import java.io.InputStream;
  *
  * @author Werner Donn\u00e9
  */
-
-public class DontCloseInputStream extends FilterInputStream
-
-{
+public class DontCloseInputStream extends FilterInputStream {
 
   public DontCloseInputStream(final InputStream in) {
     super(in);
   }
 
   @Override
-  public void
-  close() throws IOException {
+  public void close() throws IOException {
     // Purpose of class.
   }
-
-} // DontCloseInputStream
+}

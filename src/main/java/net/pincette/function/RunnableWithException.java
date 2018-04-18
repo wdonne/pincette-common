@@ -5,13 +5,9 @@ package net.pincette.function;
  *
  * @author Werner Donn\u00e9
  */
-
 @FunctionalInterface
-public interface RunnableWithException
-
-{
+public interface RunnableWithException {
 
   @SuppressWarnings("squid:S00112")
   void run() throws Exception;
-
-} // RunnableWithException
+}

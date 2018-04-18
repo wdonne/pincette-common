@@ -19,9 +19,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import net.pincette.util.Pair;
 
-public class ClassFile
-
-{
+public class ClassFile {
 
   private static final byte CONSTANT_CLASS = 7;
   private static final byte CONSTANT_FIELDREF = 9;
@@ -49,16 +47,13 @@ public class ClassFile
   private String superClass;
   private String version;
 
-  private ClassFile() {
-  }
+  private ClassFile() {}
 
-  private static boolean
-  isDoubleTag(final byte tag) {
+  private static boolean isDoubleTag(final byte tag) {
     return tag == CONSTANT_DOUBLE || tag == CONSTANT_LONG;
   }
 
-  private static ClassFile
-  parse(final DataInputStream in) throws IOException {
+  private static ClassFile parse(final DataInputStream in) throws IOException {
     if (in.readInt() != 0xcafebabe) {
       throw new NotAClassException();
     }
@@ -100,57 +95,46 @@ public class ClassFile
     return c;
   }
 
-  public static ClassFile
-  parse(final InputStream in) throws IOException {
+  public static ClassFile parse(final InputStream in) throws IOException {
     return parse(new DataInputStream(in));
   }
 
-  public static ClassFile
-  parse(final byte[] b) throws IOException {
+  public static ClassFile parse(final byte[] b) throws IOException {
     return parse(new ByteArrayInputStream(b));
   }
 
-  private static Object[]
-  readConstantPool(final DataInput in, final short size) {
-    return
-        takeWhile(
+  private static Object[] readConstantPool(final DataInput in, final short size) {
+    return takeWhile(
             readConstantPoolEntry(in, 1, size),
             pair -> readConstantPoolEntry(in, pair.first + 1, size),
-            pair -> pair.first < size
-        )
-            .flatMap(pair -> pair.second)
-            .map(o -> o == EMPTY ? null : 0)
-            .toArray();
+            pair -> pair.first < size)
+        .flatMap(pair -> pair.second)
+        .map(o -> o == EMPTY ? null : 0)
+        .toArray();
   }
 
-  private static Pair<Integer, Stream<Object>>
-  readConstantPoolEntry(final DataInput in, final int index, final short size) {
+  private static Pair<Integer, Stream<Object>> readConstantPoolEntry(
+      final DataInput in, final int index, final short size) {
     final Function<Byte, Stream<Object>> addExtra =
         tag -> isDoubleTag(tag) ? Stream.of(EMPTY) : empty();
     final Function<Byte, Integer> moveExtra = tag -> isDoubleTag(tag) ? 1 : 0;
 
-    return
-        index < size ?
-            tryToGetRethrow(in::readByte)
-                .map(
-                    tag ->
-                        pair(
-                            index + 1 + moveExtra.apply(tag),
-                            concat(
-                                Stream.of(
-                                    tryToGetRethrow(() -> readConstantPoolEntry(in, tag))
-                                        .orElse(null)
-                                ),
-                                addExtra.apply(tag)
-                            )
-                        )
-                )
-                .orElse(null) :
-            pair(index + 1, null);
+    return index < size
+        ? tryToGetRethrow(in::readByte)
+            .map(
+                tag ->
+                    pair(
+                        index + 1 + moveExtra.apply(tag),
+                        concat(
+                            Stream.of(
+                                tryToGetRethrow(() -> readConstantPoolEntry(in, tag)).orElse(null)),
+                            addExtra.apply(tag))))
+            .orElse(null)
+        : pair(index + 1, null);
   }
 
-  private static Object
-  readConstantPoolEntry(final DataInput in, final byte tag) throws IOException {
+  private static Object readConstantPoolEntry(final DataInput in, final byte tag)
+      throws IOException {
     switch (tag) {
       case CONSTANT_CLASS:
         return new ClassInfo(in.readShort());
@@ -186,8 +170,7 @@ public class ClassFile
     }
   }
 
-  private static String
-  readString(final DataInput in) throws IOException {
+  private static String readString(final DataInput in) throws IOException {
     final byte[] b = new byte[in.readShort()];
 
     in.readFully(b);
@@ -195,28 +178,23 @@ public class ClassFile
     return tryToGetRethrow(() -> new String(b, "UTF-8")).orElse(null);
   }
 
-  public Attribute[]
-  getAttributes() {
+  public Attribute[] getAttributes() {
     return attributes;
   }
 
-  private String
-  getClassName(final short index) {
+  private String getClassName(final short index) {
     return (String) constantPool[((ClassInfo) constantPool[index]).name];
   }
 
-  public Field[]
-  getFields() {
+  public Field[] getFields() {
     return fields;
   }
 
-  public String[]
-  getInterfaceNames() {
+  public String[] getInterfaceNames() {
     return interfaces;
   }
 
-  public String[]
-  getInterfaceTypes() {
+  public String[] getInterfaceTypes() {
     final String[] result = new String[interfaces.length];
 
     for (int i = 0; i < interfaces.length; ++i) {
@@ -226,63 +204,52 @@ public class ClassFile
     return result;
   }
 
-  public Method[]
-  getMethods() {
+  public Method[] getMethods() {
     return methods;
   }
 
-  public int
-  getModifiers() {
+  public int getModifiers() {
     return modifiers;
   }
 
-  public String
-  getName() {
+  public String getName() {
     return name;
   }
 
-  public String
-  getSourceFile() {
+  public String getSourceFile() {
     return sourceFile;
   }
 
-  public String
-  getSuperClassName() {
+  public String getSuperClassName() {
     return superClass;
   }
 
-  public String
-  getSuperClassType() {
+  public String getSuperClassType() {
     return superClass == null ? null : Util.getType(superClass);
   }
 
-  public String
-  getType() {
+  public String getType() {
     return Util.getType(name);
   }
 
-  public String
-  getVersion() {
+  public String getVersion() {
     return version;
   }
 
-  public boolean
-  isArray() {
+  public boolean isArray() {
     return name.charAt(0) == '[';
   }
 
-  public boolean
-  isDeprecated() {
+  public boolean isDeprecated() {
     return isDeprecated;
   }
 
-  public boolean
-  isInterface() {
+  public boolean isInterface() {
     return Modifier.isInterface(getModifiers());
   }
 
-  private Attribute
-  readAttribute(final DataInput in, final String name, final int length) throws IOException {
+  private Attribute readAttribute(final DataInput in, final String name, final int length)
+      throws IOException {
     final Attribute attribute = new Attribute();
 
     attribute.name = name;
@@ -292,8 +259,7 @@ public class ClassFile
     return attribute;
   }
 
-  private String[]
-  readClassNames(final DataInput in, final short size) throws IOException {
+  private String[] readClassNames(final DataInput in, final short size) throws IOException {
     final String[] result = new String[size];
 
     for (short i = 0; i < size; ++i) {
@@ -303,8 +269,7 @@ public class ClassFile
     return result;
   }
 
-  private Code
-  readCode(final DataInput in) throws IOException {
+  private Code readCode(final DataInput in) throws IOException {
     final Code result = new Code();
 
     result.maxStack = in.readShort();
@@ -335,8 +300,8 @@ public class ClassFile
     return result;
   }
 
-  private ExceptionHandler[]
-  readExceptionHandlers(final DataInput in, final short size) throws IOException {
+  private ExceptionHandler[] readExceptionHandlers(final DataInput in, final short size)
+      throws IOException {
     final ExceptionHandler[] result = new ExceptionHandler[size];
 
     for (short i = 0; i < size; ++i) {
@@ -353,8 +318,7 @@ public class ClassFile
     return result;
   }
 
-  private Field[]
-  readFields(final DataInput in, final short size) throws IOException {
+  private Field[] readFields(final DataInput in, final short size) throws IOException {
     final Field[] result = new Field[size];
 
     for (int i = 0; i < size; ++i) {
@@ -387,8 +351,8 @@ public class ClassFile
     return result;
   }
 
-  private List<LocalVariable>
-  readLocalVariables(final DataInput in, final short size) throws IOException {
+  private List<LocalVariable> readLocalVariables(final DataInput in, final short size)
+      throws IOException {
     final List<LocalVariable> result = new ArrayList<>();
 
     for (short i = 0; i < size; ++i) {
@@ -405,8 +369,7 @@ public class ClassFile
     return result;
   }
 
-  private Method[]
-  readMethods(final DataInput in, final short size) throws IOException {
+  private Method[] readMethods(final DataInput in, final short size) throws IOException {
     final Method[] result = new Method[size];
 
     for (short i = 0; i < size; ++i) {
@@ -443,21 +406,16 @@ public class ClassFile
     return result;
   }
 
-  private static class ClassInfo
-
-  {
+  private static class ClassInfo {
 
     private short name;
 
     private ClassInfo(final short name) {
       this.name = name;
     }
+  }
 
-  } // ClassInfo
-
-  private static class NameAndType
-
-  {
+  private static class NameAndType {
 
     short name;
     short type;
@@ -466,12 +424,9 @@ public class ClassFile
       this.name = name;
       this.type = type;
     }
+  }
 
-  } // NameAndType
-
-  private static class RefInfo
-
-  {
+  private static class RefInfo {
 
     short classInfo;
     short nameAndType;
@@ -482,19 +437,14 @@ public class ClassFile
       this.classInfo = classInfo;
       this.nameAndType = nameAndType;
     }
+  }
 
-  } // RefInfo
-
-  private static class StringInfo
-
-  {
+  private static class StringInfo {
 
     short name;
 
     private StringInfo(final short name) {
       this.name = name;
     }
-
-  } // StringInfo
-
-} // ClassFile
+  }
+}

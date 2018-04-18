@@ -17,10 +17,7 @@ import java.util.zip.GZIPOutputStream;
  *
  * @author Werner Donn\u00e9
  */
-
-public class FileRotateOutputStream extends OutputStream
-
-{
+public class FileRotateOutputStream extends OutputStream {
 
   private final int depth;
   private final long size;
@@ -38,23 +35,20 @@ public class FileRotateOutputStream extends OutputStream
   }
 
   @Override
-  public void
-  close() throws IOException {
+  public void close() throws IOException {
     if (out != null) {
       out.close();
     }
   }
 
   @Override
-  public void
-  flush() throws IOException {
+  public void flush() throws IOException {
     if (out != null) {
       out.flush();
     }
   }
 
-  private OutputStream
-  rotate() throws IOException {
+  private OutputStream rotate() throws IOException {
     if (out != null) {
       out.close();
     }
@@ -73,8 +67,7 @@ public class FileRotateOutputStream extends OutputStream
 
     copy(
         new FileInputStream(file),
-        new GZIPOutputStream(new FileOutputStream(file.getAbsolutePath() + ".1.gz"))
-    );
+        new GZIPOutputStream(new FileOutputStream(file.getAbsolutePath() + ".1.gz")));
 
     delete(file.toPath());
 
@@ -82,29 +75,26 @@ public class FileRotateOutputStream extends OutputStream
   }
 
   @Override
-  public void
-  write(final byte[] b) throws IOException {
+  public void write(final byte[] b) throws IOException {
     write(b, 0, b.length);
   }
 
   @Override
-  public void
-  write(final byte[] b, final int off, final int len) throws IOException {
+  public void write(final byte[] b, final int off, final int len) throws IOException {
     final Supplier<OutputStream> ifExceeded =
         () -> file.length() + len > size ? tryToGetRethrow(this::rotate).orElse(null) : out;
 
     out =
-        !file.exists() || (out == null && file.length() + len <= size) ?
-            new FileOutputStream(file, true) : ifExceeded.get();
+        !file.exists() || (out == null && file.length() + len <= size)
+            ? new FileOutputStream(file, true)
+            : ifExceeded.get();
 
     if (out != null) {
       out.write(b, off, len);
     }
   }
 
-  public void
-  write(final int b) throws IOException {
-    write(new byte[]{(byte) b}, 0, 1);
+  public void write(final int b) throws IOException {
+    write(new byte[] {(byte) b}, 0, 1);
   }
-
-} // FileRotateOutputStream
+}

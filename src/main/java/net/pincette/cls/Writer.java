@@ -6,15 +6,11 @@ import static java.util.Comparator.comparing;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 
-public class Writer
+public class Writer {
 
-{
+  private Writer() {}
 
-  private Writer() {
-  }
-
-  private static String
-  getConstructors(final Method[] methods) {
+  private static String getConstructors(final Method[] methods) {
     final StringBuilder result = new StringBuilder();
 
     for (int i = 0; i < methods.length; ++i) {
@@ -26,9 +22,9 @@ public class Writer
             .append(methods[i].getName())
             .append(getParameters(methods[i]))
             .append(
-                (methods[i].getExceptionTypes().length > 0) ?
-                    ("\n    " + getThrows(methods[i].getExceptionTypes())) : ""
-            )
+                (methods[i].getExceptionTypes().length > 0)
+                    ? ("\n    " + getThrows(methods[i].getExceptionTypes()))
+                    : "")
             .append("\n  {\n  }\n\n");
       }
     }
@@ -36,8 +32,7 @@ public class Writer
     return result.toString();
   }
 
-  private static String
-  getFields(final Field[] fields) {
+  private static String getFields(final Field[] fields) {
     sort(fields, comparing(Field::getName));
 
     final StringBuilder result = new StringBuilder();
@@ -57,19 +52,13 @@ public class Writer
     return result.toString();
   }
 
-  private static String
-  getMethods(final Method[] methods, final boolean isInterface) {
+  private static String getMethods(final Method[] methods, final boolean isInterface) {
     sort(methods, comparing(Method::getName));
 
     final StringBuilder result = new StringBuilder();
 
     for (int i = 0; i < methods.length; ++i) {
-      if
-          (
-          !methods[i].isConstructor() &&
-              !methods[i].isInitializer() &&
-              !methods[i].isSynthetic()
-          ) {
+      if (!methods[i].isConstructor() && !methods[i].isInitializer() && !methods[i].isSynthetic()) {
         result
             .append("  ")
             .append(getModifiers(methods[i].getModifiers()))
@@ -78,26 +67,24 @@ public class Writer
             .append(methods[i].getName())
             .append(getParameters(methods[i]))
             .append(
-                (methods[i].getExceptionTypes().length > 0) ?
-                    ("\n    " + getThrows(methods[i].getExceptionTypes())) : ""
-            )
+                (methods[i].getExceptionTypes().length > 0)
+                    ? ("\n    " + getThrows(methods[i].getExceptionTypes()))
+                    : "")
             .append(
-                isInterface || Modifier.isNative(methods[i].getModifiers()) ?
-                    ";\n\n" : "\n  {\n  }\n\n"
-            );
+                isInterface || Modifier.isNative(methods[i].getModifiers())
+                    ? ";\n\n"
+                    : "\n  {\n  }\n\n");
       }
     }
 
     return result.toString();
   }
 
-  private static String
-  getModifiers(final int modifiers) {
+  private static String getModifiers(final int modifiers) {
     return modifiers == 0 ? "" : (Modifier.toString(modifiers) + " ");
   }
 
-  private static String
-  getParameters(final Method method) {
+  private static String getParameters(final Method method) {
     final int staticCode = Modifier.isStatic(method.getModifiers()) ? 0 : 1;
     final StringBuilder result = new StringBuilder();
     final String[] types = method.getParameterTypes();
@@ -110,10 +97,10 @@ public class Writer
           .append(types[i])
           .append(' ')
           .append(
-              method.getCode() != null &&
-                  method.getCode().getLocalVariables().length >= types.length ?
-                  method.getCode().getLocalVariables()[i + staticCode].getName() : ("p" + i)
-          );
+              method.getCode() != null
+                      && method.getCode().getLocalVariables().length >= types.length
+                  ? method.getCode().getLocalVariables()[i + staticCode].getName()
+                  : ("p" + i));
     }
 
     result.append(')');
@@ -121,8 +108,7 @@ public class Writer
     return result.toString();
   }
 
-  private static String
-  getThrows(final String[] types) {
+  private static String getThrows(final String[] types) {
     if (types.length == 0) {
       return "";
     }
@@ -138,8 +124,7 @@ public class Writer
     return result.toString();
   }
 
-  public static void
-  write(final java.io.Writer out, final ClassFile c) throws IOException {
+  public static void write(final java.io.Writer out, final ClassFile c) throws IOException {
     if (c.getType().indexOf('.') != -1) {
       out.write("package " + c.getType().substring(0, c.getType().lastIndexOf('.')) + ";\n\n");
     }
@@ -148,9 +133,10 @@ public class Writer
     // This also indicated ACC_SUPER.
 
     out.write(
-        getModifiers(modifiers) + (c.isInterface() ? "" : "class ") +
-            c.getType().substring(c.getType().lastIndexOf('.') + 1) + "\n"
-    );
+        getModifiers(modifiers)
+            + (c.isInterface() ? "" : "class ")
+            + c.getType().substring(c.getType().lastIndexOf('.') + 1)
+            + "\n");
 
     if (c.getSuperClassName() != null && !c.getSuperClassType().equals("java.lang.Object")) {
       out.write("  extends " + c.getSuperClassType() + "\n");
@@ -167,11 +153,14 @@ public class Writer
     }
 
     out.write(
-        "{\n" + getFields(c.getFields()) + "\n" +
-            getConstructors(c.getMethods()) + "\n" +
-            getMethods(c.getMethods(), c.isInterface()) + "} // " +
-            c.getType().substring(c.getType().lastIndexOf('.') + 1) + "\n"
-    );
+        "{\n"
+            + getFields(c.getFields())
+            + "\n"
+            + getConstructors(c.getMethods())
+            + "\n"
+            + getMethods(c.getMethods(), c.isInterface())
+            + "} // "
+            + c.getType().substring(c.getType().lastIndexOf('.') + 1)
+            + "\n");
   }
-
-} // Writer
+}
