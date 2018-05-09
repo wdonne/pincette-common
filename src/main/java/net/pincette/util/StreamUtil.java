@@ -7,42 +7,42 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+/**
+ * Some stream API untilities.
+ *
+ * @author Werner Donn\u00e9
+ */
 public class StreamUtil {
-
   private StreamUtil() {}
 
   /**
-   * Produces a sequential integer stream. If <code>from</code> is larger than <code>toInclusive
-   * </code> then the stream will count down.
+   * Produces a sequential integer stream. If <code>from</code> is larger than <code>to</code> then
+   * the stream will count down.
    *
    * @param from first value of the range.
-   * @param toInclusive last value of the range.
+   * @param to last value of the range, which is excluded.
    * @return the integer stream.
    */
-  public static Stream<Integer> range(final int from, final int toInclusive) {
-    return stream(
-        new Iterator<Integer>() {
-          private int index = from;
+  public static Stream<Integer> rangeExclusive(final int from, final int to) {
+    return stream(new RangeIterator(from, to, false));
+  }
 
-          @Override
-          public boolean hasNext() {
-            return from < toInclusive ? index <= toInclusive : index >= toInclusive;
-          }
-
-          @Override
-          public Integer next() {
-            if (!hasNext()) {
-              throw new NoSuchElementException();
-            }
-
-            return from < toInclusive ? index++ : index--;
-          }
-        });
+  /**
+   * Produces a sequential integer stream. If <code>from</code> is larger than <code>to</code> then
+   * the stream will count down.
+   *
+   * @param from first value of the range.
+   * @param to last value of the range, which is included.
+   * @return the integer stream.
+   */
+  public static Stream<Integer> rangeInclusive(final int from, final int to) {
+    return stream(new RangeIterator(from, to, true));
   }
 
   public static <T> Stream<T> stream(final Iterator<T> iterator) {
@@ -146,5 +146,34 @@ public class StreamUtil {
             return pair(i1.next(), i2.next());
           }
         });
+  }
+
+  private static class RangeIterator implements Iterator<Integer> {
+    private final UnaryOperator<Integer> step;
+    private final Function<Integer, Boolean> test;
+    private int index;
+
+    private RangeIterator(final int from, final int to, final boolean inclusive) {
+      final Function<Integer, Boolean> less = inclusive ? (i -> i + 1 <= to) : (i -> i + 1 < to);
+      final Function<Integer, Boolean> more = inclusive ? (i -> i - 1 >= to) : (i -> i - 1 > to);
+
+      this.test = from < to ? less : more;
+      this.step = from < to ? (i -> i + 1) : (i -> i - 1);
+      this.index = from + (from < to ? -1 : + 1);
+    }
+
+    public boolean hasNext() {
+      return test.apply(index);
+    }
+
+    public Integer next() {
+      if (!hasNext()) {
+        throw new NoSuchElementException();
+      }
+
+      index = step.apply(index);
+
+      return index;
+    }
   }
 }

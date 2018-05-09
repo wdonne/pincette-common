@@ -1,5 +1,6 @@
 package net.pincette.util;
 
+import static java.time.Instant.parse;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -242,6 +243,10 @@ public class Json {
     return (JsonArray) value;
   }
 
+  public static Instant asInstant(final JsonValue value) {
+    return parse(asString(value).getString());
+  }
+
   public static JsonNumber asNumber(final JsonValue value) {
     if (value.getValueType() != JsonValue.ValueType.NUMBER) {
       throw new JsonException("Not a number");
@@ -331,6 +336,12 @@ public class Json {
     return tryToGetSilent(() -> createReader(new StringReader(json)).read());
   }
 
+  public static Optional<JsonArray> getArray(final JsonStructure json, final String jsonPointer) {
+    return getValue(json, jsonPointer)
+        .filter(Json::isArray)
+        .map(JsonValue::asJsonArray);
+  }
+
   /**
    * Returns the value for <code>field</code>, which may be dot-separated.
    *
@@ -347,6 +358,12 @@ public class Json {
 
     return takeWhile(0, i -> i + 1, i -> i < parts.length)
         .map(i -> Arrays.stream(parts, i, parts.length).collect(joining(".")));
+  }
+
+  public static Optional<Instant> getInstant(final JsonStructure json, final String jsonPointer) {
+    return getValue(json, jsonPointer)
+        .filter(Json::isInstant)
+        .map(Json::asInstant);
   }
 
   /**
@@ -389,6 +406,19 @@ public class Json {
         .orElse("Error");
   }
 
+  public static Optional<Double> getNumber(final JsonStructure json, final String jsonPointer) {
+    return getValue(json, jsonPointer)
+        .filter(Json::isNumber)
+        .map(Json::asNumber)
+        .map(JsonNumber::doubleValue);
+  }
+
+  public static Optional<JsonObject> getObject(final JsonStructure json, final String jsonPointer) {
+    return getValue(json, jsonPointer)
+        .filter(Json::isObject)
+        .map(JsonValue::asJsonObject);
+  }
+
   private static String getPath(final String parent, final String key) {
     return (parent != null ? (parent + ".") : "") + key;
   }
@@ -400,6 +430,13 @@ public class Json {
         .map(validators::get)
         .findFirst()
         .orElse(null);
+  }
+
+  public static Optional<String> getString(final JsonStructure json, final String jsonPointer) {
+    return getValue(json, jsonPointer)
+        .filter(Json::isString)
+        .map(Json::asString)
+        .map(JsonString::getString);
   }
 
   public static Optional<JsonValue> getValue(final JsonStructure json, final String jsonPointer) {
