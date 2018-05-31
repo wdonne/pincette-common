@@ -337,9 +337,7 @@ public class Json {
   }
 
   public static Optional<JsonArray> getArray(final JsonStructure json, final String jsonPointer) {
-    return getValue(json, jsonPointer)
-        .filter(Json::isArray)
-        .map(JsonValue::asJsonArray);
+    return getValue(json, jsonPointer).filter(Json::isArray).map(JsonValue::asJsonArray);
   }
 
   /**
@@ -361,9 +359,7 @@ public class Json {
   }
 
   public static Optional<Instant> getInstant(final JsonStructure json, final String jsonPointer) {
-    return getValue(json, jsonPointer)
-        .filter(Json::isInstant)
-        .map(Json::asInstant);
+    return getValue(json, jsonPointer).filter(Json::isInstant).map(Json::asInstant);
   }
 
   /**
@@ -414,9 +410,7 @@ public class Json {
   }
 
   public static Optional<JsonObject> getObject(final JsonStructure json, final String jsonPointer) {
-    return getValue(json, jsonPointer)
-        .filter(Json::isObject)
-        .map(JsonValue::asJsonObject);
+    return getValue(json, jsonPointer).filter(Json::isObject).map(JsonValue::asJsonObject);
   }
 
   private static String getPath(final String parent, final String key) {
@@ -993,7 +987,7 @@ public class Json {
       this.path = path;
       this.value = value;
     }
-  } // JsonEntry
+  }
 
   public static class Transformer {
 
@@ -1012,7 +1006,7 @@ public class Json {
     private Transformer(final Transformer me, final Transformer next) {
       this.match = me.match;
       this.transform = me.transform;
-      this.next = next;
+      this.next = me.next != null ? new Transformer(me.next, next) : next;
     }
 
     public Optional<JsonEntry> run(final JsonEntry entry) {
@@ -1026,7 +1020,7 @@ public class Json {
     public Transformer thenApply(final Transformer transformer) {
       return new Transformer(this, transformer);
     }
-  } // Transformer
+  }
 
   public static class ValidationContext {
 
@@ -1057,7 +1051,7 @@ public class Json {
     private ValidationContext with(final JsonValue value) {
       return new ValidationContext(oldJson, newJson, field, value);
     }
-  } // ValidationContext
+  }
 
   public static class ValidationResult {
 
