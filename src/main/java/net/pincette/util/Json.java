@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.concat;
+import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 import static javax.json.Json.createArrayBuilder;
 import static javax.json.Json.createObjectBuilder;
@@ -17,6 +18,7 @@ import static net.pincette.util.Collections.difference;
 import static net.pincette.util.Pair.pair;
 import static net.pincette.util.StreamUtil.takeWhile;
 import static net.pincette.util.Util.autoClose;
+import static net.pincette.util.Util.getLastSegment;
 import static net.pincette.util.Util.pathSearch;
 import static net.pincette.util.Util.tryToDoWith;
 import static net.pincette.util.Util.tryToDoWithRethrow;
@@ -84,36 +86,30 @@ public class Json {
     return add(obj, builder -> builder.add(name, value));
   }
 
-  public static JsonObject add(final JsonObject obj, final String name, final JsonValue value) {
-    return add(obj, builder -> builder.add(name, value));
+  /**
+   * Returns a new object in which the value of the field designated by the dot-separated <code>path
+   * </code> is added or replaced with <code>value</code>.
+   *
+   * @param obj the given JSON object.
+   * @param path the dot-separated path.
+   * @param value the new value.
+   * @return The new object.
+   */
+  public static JsonObject add(final JsonObject obj, final String path, final JsonValue value) {
+    return transform(obj, addTransformer(path, value));
   }
 
-  public static JsonObject add(final JsonObject obj, final String name, final String value) {
-    return add(obj, builder -> builder.add(name, value));
-  }
-
-  public static JsonObject add(final JsonObject obj, final String name, final boolean value) {
-    return add(obj, builder -> builder.add(name, value));
-  }
-
-  public static JsonObject add(final JsonObject obj, final String name, final double value) {
-    return add(obj, builder -> builder.add(name, value));
-  }
-
-  public static JsonObject add(final JsonObject obj, final String name, final int value) {
-    return add(obj, builder -> builder.add(name, value));
-  }
-
-  public static JsonObject add(final JsonObject obj, final String name, final long value) {
-    return add(obj, builder -> builder.add(name, value));
-  }
-
-  public static JsonObject add(final JsonObject obj, final String name, final BigDecimal value) {
-    return add(obj, builder -> builder.add(name, value));
-  }
-
-  public static JsonObject add(final JsonObject obj, final String name, final BigInteger value) {
-    return add(obj, builder -> builder.add(name, value));
+  /**
+   * Returns a new object in which the value of the field designated by the dot-separated <code>path
+   * </code> is added or replaced with <code>value</code>.
+   *
+   * @param obj the given JSON object.
+   * @param path the dot-separated path.
+   * @param value the new value.
+   * @return The new object.
+   */
+  public static JsonObject add(final JsonObject obj, final String path, final Object value) {
+    return add(obj, path, createValue(value));
   }
 
   public static JsonObject add(final JsonObject obj, final UnaryOperator<JsonObjectBuilder> add) {
@@ -146,7 +142,7 @@ public class Json {
 
   /**
    * Returns a copy of the object where the values of the fields in <code>values</code> are
-   * replaced. The first entry of a pair is the name path and the second entry is the new value.
+   * replaced. The first entry of a pair is the name and the second entry is the new value.
    *
    * @param obj the given JSON object.
    * @param values the list of pairs, where the first entry is the name and the second entry is the
@@ -180,59 +176,45 @@ public class Json {
 
   public static JsonObjectBuilder addJsonField(
       final JsonObjectBuilder builder, final String name, final Object value) {
-    if (value instanceof Boolean) {
-      builder.add(name, (boolean) value);
-    } else if (value instanceof Integer) {
-      builder.add(name, (int) value);
-    } else if (value instanceof Long) {
-      builder.add(name, (long) value);
-    } else if (value instanceof BigInteger) {
-      builder.add(name, (BigInteger) value);
-    } else if (value instanceof BigDecimal) {
-      builder.add(name, (BigDecimal) value);
-    } else if (value instanceof Double) {
-      builder.add(name, (double) value);
-    } else if (value instanceof Float) {
-      builder.add(name, (float) value);
-    } else if (value instanceof Date) {
-      builder.add(name, ((Date) value).toInstant().toString());
-    } else if (value instanceof Map) {
-      builder.add(name, from((Map) value));
-    } else if (value instanceof List) {
-      builder.add(name, from((List) value));
-    } else {
-      builder.add(name, value.toString());
-    }
-
-    return builder;
+    return builder.add(name, createValue(value));
   }
 
   public static JsonArrayBuilder addJsonField(final JsonArrayBuilder builder, final Object value) {
-    if (value instanceof Boolean) {
-      builder.add((boolean) value);
-    } else if (value instanceof Integer) {
-      builder.add((int) value);
-    } else if (value instanceof Long) {
-      builder.add((long) value);
-    } else if (value instanceof BigInteger) {
-      builder.add((BigInteger) value);
-    } else if (value instanceof BigDecimal) {
-      builder.add((BigDecimal) value);
-    } else if (value instanceof Double) {
-      builder.add((double) value);
-    } else if (value instanceof Float) {
-      builder.add((float) value);
-    } else if (value instanceof Date) {
-      builder.add(Instant.ofEpochMilli(((Date) value).getTime()).toString());
-    } else if (value instanceof Map) {
-      builder.add(from((Map) value));
-    } else if (value instanceof List) {
-      builder.add(from((List) value));
-    } else {
-      builder.add(value.toString());
-    }
+    return builder.add(createValue(value));
+  }
 
-    return builder;
+  /**
+   * Returns a transformer that adds or replaces the value of the field designated by the
+   * dot-separated <code>path</code> with <code>value</code>.
+   *
+   * @param path the dot-separated path.
+   * @param value the new value.
+   * @return The transformer.
+   */
+  public static Transformer addTransformer(final String path, final JsonValue value) {
+    final String parent = getParentPath(path);
+
+    return new Transformer(
+        e -> e.path.equals(parent) && isObject(e.value),
+        e ->
+            getLastSegment(path, ".")
+                .map(
+                    s ->
+                        new JsonEntry(
+                            e.path,
+                            createObjectBuilder(e.value.asJsonObject()).add(s, value).build())));
+  }
+
+  /**
+   * Returns a transformer that adds or replaces the value of the field designated by the
+   * dot-separated <code>path</code> with <code>value</code>.
+   *
+   * @param path the dot-separated path.
+   * @param value the new value.
+   * @return The transformer.
+   */
+  public static Transformer addTransformer(final String path, final Object value) {
+    return addTransformer(path, createValue(value));
   }
 
   public static JsonArray asArray(final JsonValue value) {
@@ -305,9 +287,47 @@ public class Json {
   }
 
   public static JsonValue createValue(final Object value) {
-    return addJsonField(createObjectBuilder(), "__synthetic_key__", value)
-        .build()
-        .get("__synthetic_key__");
+    if (value == null) {
+      return JsonValue.NULL;
+    }
+
+    if (value instanceof Boolean) {
+      return ((boolean) value) ? JsonValue.TRUE : JsonValue.FALSE;
+    }
+
+    if (value instanceof Integer) {
+      return javax.json.Json.createValue((int) value);
+    }
+
+    if (value instanceof Long) {
+      return javax.json.Json.createValue((long) value);
+    }
+
+    if (value instanceof BigInteger) {
+      return javax.json.Json.createValue((BigInteger) value);
+    }
+
+    if (value instanceof BigDecimal) {
+      return javax.json.Json.createValue((BigDecimal) value);
+    }
+
+    if (value instanceof Double || value instanceof Float) {
+      return javax.json.Json.createValue((double) value);
+    }
+
+    if (value instanceof Date) {
+      return javax.json.Json.createValue(((Date) value).toInstant().toString());
+    }
+
+    if (value instanceof Map) {
+      return from((Map) value);
+    }
+
+    if (value instanceof List) {
+      return from((List) value);
+    }
+
+    return javax.json.Json.createValue(value.toString());
   }
 
   public static JsonArray emptyArray() {
@@ -413,8 +433,22 @@ public class Json {
     return getValue(json, jsonPointer).filter(Json::isObject).map(JsonValue::asJsonObject);
   }
 
+  /**
+   * Returns the parent path of a dot-separated path, or the empty string if the path has only one
+   * segment.
+   *
+   * @param path the given dot-separated path.
+   * @return The dot-separated parent path.
+   */
+  public static String getParentPath(final String path) {
+    return Optional.of(path.lastIndexOf('.'))
+        .filter(i -> i != -1)
+        .map(i -> path.substring(0, i))
+        .orElse("");
+  }
+
   private static String getPath(final String parent, final String key) {
-    return (parent != null ? (parent + ".") : "") + key;
+    return (parent != null && !"".equals(parent) ? (parent + ".") : "") + key;
   }
 
   private static Validator getValidator(
@@ -610,8 +644,21 @@ public class Json {
   }
 
   /**
-   * Returns a new object in which the value of the field designated by the dot-separated <code>path
-   * </code> is replaced with <code>value</code>.
+   * Returns a new object in which the value of the existing field designated by the dot-separated
+   * <code>path</code> is replaced with <code>value</code>.
+   *
+   * @param obj the given JSON object.
+   * @param path the dot-separated path.
+   * @param value the new value.
+   * @return The new object.
+   */
+  public static JsonObject set(final JsonObject obj, final String path, final JsonValue value) {
+    return transform(obj, setTransformer(path, value));
+  }
+
+  /**
+   * Returns a new object in which the value of the existing field designated by the dot-separated
+   * <code>path</code> is replaced with <code>value</code>.
    *
    * @param obj the given JSON object.
    * @param path the dot-separated path.
@@ -619,20 +666,32 @@ public class Json {
    * @return The new object.
    */
   public static JsonObject set(final JsonObject obj, final String path, final Object value) {
-    return transform(obj, setTransformer(path, value));
+    return set(obj, path, createValue(value));
   }
 
   /**
-   * Returns a transformer that replaces the value of the field designated by the dot-separated
-   * <code>path</code> with <code>value</code>.
+   * Returns a transformer that replaces the value of the existing field designated by the
+   * dot-separated <code>path</code> with <code>value</code>.
+   *
+   * @param path the dot-separated path.
+   * @param value the new value.
+   * @return The transformer.
+   */
+  public static Transformer setTransformer(final String path, final JsonValue value) {
+    return new Transformer(
+        e -> e.path.equals(path), e -> Optional.of(new JsonEntry(e.path, value)));
+  }
+
+  /**
+   * Returns a transformer that replaces the value of the existing field designated by the
+   * dot-separated <code>path</code> with <code>value</code>.
    *
    * @param path the dot-separated path.
    * @param value the new value.
    * @return The transformer.
    */
   public static Transformer setTransformer(final String path, final Object value) {
-    return new Transformer(
-        e -> e.path.equals(path), e -> Optional.of(new JsonEntry(e.path, createValue(value))));
+    return setTransformer(path, createValue(value));
   }
 
   public static String string(final JsonStructure json) {
@@ -782,13 +841,15 @@ public class Json {
 
   private static JsonObject transform(
       final JsonObject obj, final String parent, final Transformer transformer) {
-    return obj.keySet()
-        .stream()
+    return concat(parent == null ? of("") : empty(), obj.keySet().stream())
         .reduce(
             createObjectBuilder(),
             (b, k) ->
                 transformer
-                    .run(new JsonEntry(getPath(parent, k), obj.get(k)))
+                    .run(
+                        "".equals(k)
+                            ? new JsonEntry("", obj)
+                            : new JsonEntry(getPath(parent, k), obj.get(k)))
                     .map(
                         entry ->
                             new JsonEntry(
@@ -797,7 +858,11 @@ public class Json {
                                     entry.value,
                                     getPath(parent, getKey(entry.path, k)),
                                     transformer)))
-                    .map(entry -> b.add(getKey(entry.path, k), entry.value))
+                    .map(
+                        entry ->
+                            "".equals(k)
+                                ? copy(entry.value.asJsonObject(), b)
+                                : b.add(getKey(entry.path, k), entry.value))
                     .orElse(b),
             (b1, b2) -> b1)
         .build();
@@ -995,6 +1060,14 @@ public class Json {
     public final Transformer next;
     public final Function<JsonEntry, Optional<JsonEntry>> transform;
 
+    /**
+     * If the transform function returns an empty <code>Optional</code> the entry is removed from
+     * the result.
+     *
+     * @param match the function to test an entry. When <code>true</code> is returned the <code>
+     *     transform</code> function will be executed.
+     * @param transform the transform function.
+     */
     public Transformer(
         final Predicate<JsonEntry> match,
         final Function<JsonEntry, Optional<JsonEntry>> transform) {

@@ -228,7 +228,11 @@ public class Util {
    * @return The segment stream.
    */
   public static Stream<String> getSegments(final String path, final String delimiter) {
-    return Arrays.stream(path.split(delimiter)).filter(seg -> seg.length() > 0);
+    return Arrays.stream(
+            Optional.of(path.split(delimiter))
+                .filter(split -> split.length > 0)
+                .orElse(new String[] {path}))
+        .filter(seg -> seg.length() > 0);
   }
 
   public static String getStackTrace(final Throwable e) {
