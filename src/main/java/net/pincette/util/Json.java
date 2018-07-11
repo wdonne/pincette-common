@@ -643,6 +643,10 @@ public class Json {
     return copy(obj, createObjectBuilder(), key -> !key.startsWith("_")).build();
   }
 
+  public static Transformer removeTransformer(final String path) {
+    return new Transformer(e -> e.path.equals(path), e -> Optional.empty());
+  }
+
   /**
    * Returns a new object in which the value of the existing field designated by the dot-separated
    * <code>path</code> is replaced with <code>value</code>.

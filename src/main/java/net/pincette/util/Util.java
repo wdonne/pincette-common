@@ -195,7 +195,9 @@ public class Util {
                                           Boolean.TRUE.equals(
                                               exp.evaluate(
                                                   identifier ->
-                                                      evaluator.apply((T) map.get(identifier)))))
+                                                      Optional.ofNullable((T) map.get(identifier))
+                                                          .map(evaluator)
+                                                          .orElse(null))))
                                   .findFirst())
                       .orElseGet(HashMap::new);
             })
