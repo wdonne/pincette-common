@@ -5,8 +5,11 @@ import static net.pincette.util.Pair.pair;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -21,6 +24,22 @@ import java.util.stream.StreamSupport;
 public class StreamUtil {
   private StreamUtil() {}
 
+  public static <T> Optional<T> last(final Stream<T> stream) {
+    return Optional.ofNullable(stream.sequential().reduce(null, (result, element) -> element));
+  }
+
+  /**
+   * Produces a sequential integer stream. If <code>from</code> is larger than <code>to</code> then
+   * the stream will count down.
+   *
+   * @param from first value of the range.
+   * @param to last value of the range, which is excluded.
+   * @return the integer stream.
+   */
+  public static Stream<Long> rangeExclusive(final long from, final long to) {
+    return stream(new RangeIterator(from, to, false)).map(Number::longValue);
+  }
+
   /**
    * Produces a sequential integer stream. If <code>from</code> is larger than <code>to</code> then
    * the stream will count down.
@@ -30,7 +49,19 @@ public class StreamUtil {
    * @return the integer stream.
    */
   public static Stream<Integer> rangeExclusive(final int from, final int to) {
-    return stream(new RangeIterator(from, to, false));
+    return stream(new RangeIterator(from, to, false)).map(Number::intValue);
+  }
+
+  /**
+   * Produces a sequential integer stream. If <code>from</code> is larger than <code>to</code> then
+   * the stream will count down.
+   *
+   * @param from first value of the range.
+   * @param to last value of the range, which is included.
+   * @return the integer stream.
+   */
+  public static Stream<Long> rangeInclusive(final long from, final long to) {
+    return stream(new RangeIterator(from, to, true)).map(Number::longValue);
   }
 
   /**
@@ -42,7 +73,7 @@ public class StreamUtil {
    * @return the integer stream.
    */
   public static Stream<Integer> rangeInclusive(final int from, final int to) {
-    return stream(new RangeIterator(from, to, true));
+    return stream(new RangeIterator(from, to, true)).map(Number::intValue);
   }
 
   public static <T> Stream<T> stream(final Iterator<T> iterator) {
@@ -76,7 +107,8 @@ public class StreamUtil {
   }
 
   /**
-   * Iterates sequentially until the predicate returns <code>false</code>.
+   * Iterates sequentially until the predicate returns <code>false</code>. The resulting stream
+   * starts with <code>seed</code>.
    *
    * @param seed the initial value.
    * @param f the function that calculates the next value.
@@ -107,6 +139,52 @@ public class StreamUtil {
             final T result = current;
 
             current = f.apply(current);
+
+            return result;
+          }
+        });
+  }
+
+  /**
+   * Iterates sequentially until the predicate returns <code>false</code>. The resulting stream
+   * starts with the result of <code>seed</code>.
+   *
+   * @param stream the stream from which values are taken to drive the generated stream.
+   * @param seed the function to generate the initial value. If <code>stream</code> is empty this
+   *     function will nit be called.
+   * @param f the function that calculates the next value. If <code>stream</code> is empty this *
+   *     function will nit be called.
+   * @param p the predicate.
+   * @param <T> the value type.
+   * @return The generated stream.
+   */
+  public static <T, U> Stream<T> takeWhile(
+      final Stream<U> stream,
+      final Function<U, T> seed,
+      final BiFunction<T, U, T> f,
+      final Predicate<T> p) {
+    return stream(
+        new Iterator<T>() {
+          private Iterator<U> i = stream.iterator();
+          private T current = i.hasNext() ? seed.apply(i.next()) : null;
+          private boolean ok;
+
+          @Override
+          public boolean hasNext() {
+            ok = current != null && i.hasNext() && p.test(current);
+
+            return ok;
+          }
+
+          @Override
+          public T next() {
+            if (!ok) {
+              throw new NoSuchElementException();
+            }
+
+            final T result = current;
+
+            current = i.hasNext() ? f.apply(current, i.next()) : null;
 
             return result;
           }
@@ -148,25 +226,31 @@ public class StreamUtil {
         });
   }
 
-  private static class RangeIterator implements Iterator<Integer> {
-    private final UnaryOperator<Integer> step;
-    private final Function<Integer, Boolean> test;
-    private int index;
+  private static class RangeIterator implements Iterator<Number> {
+    private final UnaryOperator<Long> step;
+    private final Function<Number, Boolean> test;
+    private long index;
 
-    private RangeIterator(final int from, final int to, final boolean inclusive) {
-      final Function<Integer, Boolean> less = inclusive ? (i -> i + 1 <= to) : (i -> i + 1 < to);
-      final Function<Integer, Boolean> more = inclusive ? (i -> i - 1 >= to) : (i -> i - 1 > to);
+    private RangeIterator(final Number from, final Number to, final boolean inclusive) {
+      final Function<Number, Boolean> less =
+          inclusive
+              ? (i -> i.longValue() + 1 <= to.longValue())
+              : (i -> i.longValue() + 1 < to.longValue());
+      final Function<Number, Boolean> more =
+          inclusive
+              ? (i -> i.longValue() - 1 >= to.longValue())
+              : (i -> i.longValue() - 1 > to.longValue());
 
-      this.test = from < to ? less : more;
-      this.step = from < to ? (i -> i + 1) : (i -> i - 1);
-      this.index = from + (from < to ? -1 : + 1);
+      this.test = from.longValue() < to.longValue() ? less : more;
+      this.step = from.longValue() < to.longValue() ? (i -> i + 1) : (i -> i - 1);
+      this.index = from.longValue() + (from.longValue() < to.longValue() ? -1 : +1);
     }
 
     public boolean hasNext() {
       return test.apply(index);
     }
 
-    public Integer next() {
+    public Long next() {
       if (!hasNext()) {
         throw new NoSuchElementException();
       }

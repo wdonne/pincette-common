@@ -1,0 +1,7 @@
+application/x-javascript=application/javascript
+application/ecmascript=application/javascript
+text/ecmascript=application/javascript
+text/javascript=application/javascript
+application/x-zip=application/zip
+application/x-zip-compressed=application/zip
+text/x-java-source=text/plain

@@ -1,4 +1,4 @@
-package net.pincette.xml.stream;
+package net.pincette.xml;
 
 import static net.pincette.util.Util.tryToGetRethrow;
 import static net.pincette.xml.Util.isNameChar;
@@ -22,7 +22,6 @@ import javax.xml.stream.events.XMLEvent;
  * @author Werner Donn\u00e9
  */
 public class JsonEventReader implements XMLEventReader {
-
   private final Deque<Event> events = new LinkedList<>();
   private final XMLEventFactory factory = XMLEventFactory.newFactory();
   private final Deque<String> keyNames = new LinkedList<>();

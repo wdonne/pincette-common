@@ -60,7 +60,7 @@ import javax.json.JsonValue;
 import javax.json.stream.JsonGenerator;
 import javax.xml.stream.XMLEventWriter;
 import net.pincette.function.SideEffect;
-import net.pincette.xml.stream.JsonEventReader;
+import net.pincette.xml.JsonEventReader;
 
 /**
  * Some JSON-utilities.

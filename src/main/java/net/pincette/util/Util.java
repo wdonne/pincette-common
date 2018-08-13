@@ -25,12 +25,14 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -482,6 +484,106 @@ public class Util {
                         .andThenGet(() -> null)
                     : (flushLines(buffer) + line))
         .filter(Objects::nonNull);
+  }
+
+  /**
+   * Replaces all occurrences of strings delimited by "${" and "}".
+   *
+   * @param s the string that is to transformed.
+   * @param parameters the parameters used for the replacement.
+   * @return The transformed string.
+   */
+  public static String replaceParameters(final String s, final Map<String, String> parameters) {
+    return replaceParameters(s, parameters, new HashSet<>());
+  }
+
+  /**
+   * Replaces all occurrences of strings delimited by "${" and "}". When the name in such a string
+   * is in <code>leave</code> no replacement is done.
+   *
+   * @param s the string that is to transformed.
+   * @param parameters the parameters used for the replacement.
+   * @param leave the names that are excluded from replacement.
+   * @return The transformed string.
+   */
+  public static String replaceParameters(
+      final String s, final Map<String, String> parameters, final Set<String> leave) {
+    return replaceParameters(s, parameters, '{', '}', leave);
+  }
+
+  /**
+   * Replaces all occurrences of strings delimited by $<code>leftBrace</code> and <code>rightBrace
+   * </code>.
+   *
+   * @param s the string that is to transformed.
+   * @param parameters the parameters used for the replacement.
+   * @param leftBrace the left delimiter.
+   * @param rightBrace the right delimiter.
+   * @return The transformed string.
+   */
+  public static String replaceParameters(
+      final String s,
+      final Map<String, String> parameters,
+      final char leftBrace,
+      final char rightBrace) {
+    return replaceParameters(s, parameters, leftBrace, rightBrace, new HashSet<>());
+  }
+
+  /**
+   * Replaces all occurrences of strings delimited by $<code>leftBrace</code> and <code>rightBrace
+   * </code>. When the name in such a string is in <code>leave</code> no replacement is done.
+   *
+   * @param s the string that is to transformed.
+   * @param parameters the parameters used for the replacement.
+   * @param leftBrace the left delimiter.
+   * @param rightBrace the right delimiter.
+   * @param leave the names that are excluded from replacement.
+   * @return The transformed string.
+   */
+  public static String replaceParameters(
+      final String s,
+      final Map<String, String> parameters,
+      final char leftBrace,
+      final char rightBrace,
+      final Set<String> leave) {
+    final String left = new String(new char[] {'$', leftBrace});
+    int position = 0;
+    final StringBuilder result = new StringBuilder(s.length() * 2);
+
+    for (int i = s.indexOf(left); i != -1; i = s.indexOf(left, position)) {
+      final int j = s.indexOf(rightBrace, i + 2);
+
+      if (j == -1) // Syntax error.
+      {
+        return s;
+      }
+
+      final int colon = s.indexOf(":-", i + 2);
+      String defaultValue;
+      String name;
+
+      if (colon != -1 && colon < j) {
+        name = s.substring(i + 2, colon);
+        defaultValue = s.substring(colon + 2, j);
+      } else {
+        name = s.substring(i + 2, j);
+        defaultValue = "";
+      }
+
+      result.append(s.substring(position, i));
+      position = j + 1;
+
+      result.append(
+          leave.contains(name)
+              ? s.substring(i, position)
+              : Optional.ofNullable(parameters.get(name)).orElse(defaultValue));
+    }
+
+    if (position < s.length()) {
+      result.append(s.substring(position));
+    }
+
+    return result.toString();
   }
 
   public static void rethrow(final Throwable e) {

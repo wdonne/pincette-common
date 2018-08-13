@@ -14,7 +14,6 @@ import java.io.IOException;
  * @author Werner Donn\u00e9
  */
 public class DeleteFileInputStream extends FileInputStream {
-
   private final File file;
 
   public DeleteFileInputStream(final File file) throws FileNotFoundException {

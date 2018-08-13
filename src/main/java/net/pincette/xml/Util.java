@@ -1,27 +1,38 @@
 package net.pincette.xml;
 
+import static javax.xml.XMLConstants.FEATURE_SECURE_PROCESSING;
+import static net.pincette.util.MimeType.stripParameters;
 import static net.pincette.util.Pair.pair;
+import static net.pincette.util.StreamUtil.rangeExclusive;
 import static net.pincette.util.StreamUtil.takeWhile;
+import static net.pincette.util.Util.isUri;
+import static net.pincette.util.Util.tryToDoRethrow;
+import static net.pincette.util.Util.tryToGet;
 
-import java.util.Iterator;
+import java.net.URL;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
-import javax.xml.stream.events.Attribute;
-import javax.xml.stream.events.StartElement;
+import javax.xml.transform.TransformerFactory;
 import net.pincette.util.Pair;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.helpers.AttributesImpl;
 
 /** @author Werner Donn\u00e9 */
 public class Util {
-
   private Util() {}
 
+  /**
+   * Returns the stream of ancestors from the parent to the document element.
+   *
+   * @return The stream.
+   */
   public static Stream<Element> ancestors(final Node node) {
     return takeWhile(node.getParentNode(), Node::getParentNode, n -> n instanceof Element)
         .map(n -> (Element) n);
@@ -31,10 +42,15 @@ public class Util {
     return stream(node.getAttributes()).map(n -> (Attr) n);
   }
 
-  public static Stream<Attribute> attributes(final StartElement event) {
-    return net.pincette.util.StreamUtil.stream((Iterator<Attribute>) event.getAttributes());
+  public static Stream<Node> children(final Node node) {
+    return stream(node.getChildNodes());
   }
 
+  /**
+   * Returns the stream of nodes in document order starting from <code>node</code>.
+   *
+   * @return The stream.
+   */
   public static Stream<Node> documentOrder(final Node node) {
     final UnaryOperator<Node> nextSibling =
         n -> n.getNextSibling() != null ? n.getNextSibling() : findNextHigherSibling(n);
@@ -194,7 +210,7 @@ public class Util {
 
   public static boolean isXml(final String mimeType) {
     return Optional.of(mimeType)
-        .map(m -> stripMimeTypeParameters(m).toLowerCase())
+        .map(m -> stripParameters(m).toLowerCase())
         .map(m -> "text/xml".equals(m) || "application/xml".equals(m) || m.endsWith("+xml"))
         .orElse(false);
   }
@@ -215,14 +231,57 @@ public class Util {
     return isXmlText(new String(c));
   }
 
-  public static Stream<Node> stream(final NamedNodeMap map) {
-    return takeWhile(0, i -> i + 1, i -> i < map.getLength()).map(map::item);
+  /**
+   * Returns the stream of next siblings starting right after <code>node</code>.
+   *
+   * @return The stream.
+   */
+  public static Stream<Node> nextSiblings(final Node node) {
+    return takeWhile(node.getNextSibling(), Node::getNextSibling, Objects::nonNull);
   }
 
-  private static String stripMimeTypeParameters(final String mimeType) {
-    return Optional.of(mimeType.indexOf(';'))
-        .filter(index -> index != -1)
-        .map(index -> mimeType.substring(0, index))
-        .orElse(mimeType);
+  /**
+   * Returns the stream of previous siblings starting right before <code>node</code>.
+   *
+   * @return The stream.
+   */
+  public static Stream<Node> previousSiblings(final Node node) {
+    return takeWhile(node.getPreviousSibling(), Node::getPreviousSibling, Objects::nonNull);
+  }
+
+  /** Utility for entity resolvers. */
+  public static String resolveSystemId(final String baseURI, final String systemId) {
+    final Supplier<String> tryBaseURI =
+        () ->
+            baseURI.charAt(baseURI.length() - 1) == '/'
+                ? (baseURI + systemId)
+                : (baseURI.substring(0, baseURI.lastIndexOf('/') + 1) + systemId);
+    final Supplier<String> trySystemId =
+        () -> systemId.charAt(0) == '/' ? systemId : tryBaseURI.get();
+
+    return isUri(baseURI)
+        ? tryToGet(() -> new URL(new URL(baseURI), systemId)).map(URL::toString).orElse(null)
+        : trySystemId.get();
+  }
+
+  /**
+   * Returns a factory with secure processing on.
+   *
+   * @return The factory.
+   */
+  public static TransformerFactory secureTransformerFactory() {
+    final TransformerFactory factory = TransformerFactory.newInstance();
+
+    tryToDoRethrow(() -> factory.setFeature(FEATURE_SECURE_PROCESSING, true));
+
+    return factory;
+  }
+
+  public static Stream<Node> stream(final NamedNodeMap map) {
+    return rangeExclusive(0, map.getLength()).map(map::item);
+  }
+
+  public static Stream<Node> stream(final NodeList list) {
+    return rangeExclusive(0, list.getLength()).map(list::item);
   }
 }
