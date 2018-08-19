@@ -1,5 +1,6 @@
 package net.pincette.xml;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static net.pincette.io.StreamConnector.copy;
 import static net.pincette.util.Util.isUri;
 import static net.pincette.util.Util.tryToGetRethrow;
@@ -144,7 +145,7 @@ public class CatalogResolver implements EntityResolver, XMLResolver {
 
     copy(in, out);
 
-    final char[] c = new String(out.toByteArray(), "ASCII").toCharArray();
+    final char[] c = new String(out.toByteArray(), US_ASCII).toCharArray();
     String from = null;
     int line = 1;
     int position = 0;
@@ -177,7 +178,6 @@ public class CatalogResolver implements EntityResolver, XMLResolver {
             break;
 
           default:
-            throw new IOException("Parse error");
         }
 
         position = i + 1;
