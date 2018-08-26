@@ -312,7 +312,7 @@ public class Json {
     }
 
     if (value instanceof Double || value instanceof Float) {
-      return javax.json.Json.createValue((double) value);
+      return javax.json.Json.createValue(((Number) value).doubleValue());
     }
 
     if (value instanceof Date) {
