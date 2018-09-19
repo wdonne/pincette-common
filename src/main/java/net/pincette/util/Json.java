@@ -68,7 +68,6 @@ import net.pincette.xml.JsonEventReader;
  * @author Werner Donn\u00e9
  */
 public class Json {
-
   public static final Function<JsonObject, ?> EVALUATOR =
       value ->
           value.getValueType() == JsonValue.ValueType.NUMBER
@@ -251,6 +250,10 @@ public class Json {
     }
 
     return (JsonString) value;
+  }
+
+  private static Object convertNumber(final JsonNumber number) {
+    return number.isIntegral() ? (Object) number.longValue() : (Object) number.doubleValue();
   }
 
   public static JsonObjectBuilder copy(final JsonObject obj, final JsonObjectBuilder builder) {
@@ -730,7 +733,7 @@ public class Json {
       case TRUE:
         return true;
       case NUMBER:
-        return asNumber(value).doubleValue();
+        return convertNumber(asNumber(value));
       case OBJECT:
         return toNative(asObject(value));
       case STRING:
@@ -1041,7 +1044,6 @@ public class Json {
   public interface Validator extends Function<ValidationContext, ValidationResult> {} // Validator
 
   public static class JsonEntry {
-
     /** A dot-separated key path. */
     public final String path;
 
@@ -1059,7 +1061,6 @@ public class Json {
   }
 
   public static class Transformer {
-
     public final Predicate<JsonEntry> match;
     public final Transformer next;
     public final Function<JsonEntry, Optional<JsonEntry>> transform;
@@ -1100,7 +1101,6 @@ public class Json {
   }
 
   public static class ValidationContext {
-
     public final String field;
     public final JsonStructure newJson;
     public final JsonStructure oldJson;
@@ -1131,7 +1131,6 @@ public class Json {
   }
 
   public static class ValidationResult {
-
     public final String message;
     public final boolean status;
 
