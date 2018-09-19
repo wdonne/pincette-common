@@ -38,3 +38,5 @@ publishTo := {
   else
     Some("releases"  at nexus + "service/local/staging/deploy/maven2")
 }
+
+credentials += Credentials(Path.userHome / ".sbt" / ".sonatype_credentials")
