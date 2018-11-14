@@ -20,7 +20,6 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,10 +55,11 @@ import net.pincette.io.EscapedUnicodeFilterReader;
  * @author Werner Donn\u00e9
  */
 public class Util {
-
   private static final Pattern EMAIL =
       Pattern.compile(
           "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])");
+  private static final Pattern INSTANT =
+      Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?(Z|\\+00:00)");
 
   private Util() {}
 
@@ -279,7 +279,7 @@ public class Util {
   }
 
   public static boolean isInstant(final String s) {
-    return tryToGetSilent(() -> Instant.parse(s.endsWith("Z") ? s : (s + "Z"))).isPresent();
+    return INSTANT.matcher(!s.endsWith("Z") && !s.endsWith("+00:00") ? (s + "Z") : s).matches();
   }
 
   public static boolean isInteger(final String s) {
@@ -794,7 +794,6 @@ public class Util {
   }
 
   public static class AutoCloseWrapper<T> implements AutoCloseable {
-
     private final ConsumerWithException<T> close;
     private final SupplierWithException<T> resource;
     private T res;
@@ -818,10 +817,9 @@ public class Util {
 
       return res;
     }
-  } // AutoCloseWrapper
+  }
 
   public static class GeneralException extends RuntimeException {
-
     public GeneralException(final String message) {
       super(message);
     }
@@ -829,12 +827,11 @@ public class Util {
     public GeneralException(final Throwable cause) {
       super(cause);
     }
-  } // GeneralException
+  }
 
   public static class PredicateException extends RuntimeException {
-
     private PredicateException(final String message) {
       super(message);
     }
-  } // PredicateException
-} // Util
+  }
+}
