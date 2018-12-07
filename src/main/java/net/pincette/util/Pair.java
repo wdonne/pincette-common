@@ -11,7 +11,6 @@ import java.util.function.Function;
  * @author Werner Donn\u00e9
  */
 public final class Pair<T, U> {
-
   public final T first;
   public final U second;
 

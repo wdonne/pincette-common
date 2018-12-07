@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.function.BiFunction;
 
 public class MapBuilder<K, V> {
-
   private final Map<K, V> map;
 
   /**

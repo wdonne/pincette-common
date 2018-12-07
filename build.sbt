@@ -1,11 +1,11 @@
 name := """pincette-common"""
 organization := "net.pincette"
-version := "1.3.4"
+version := "1.4-SNAPSHOT"
 
 scalaVersion := "2.12.4"
 
 libraryDependencies ++= Seq(
-  "javax.json" % "javax.json-api" % "1.1.2"
+  "javax.json" % "javax.json-api" % "1.1.4"
 )
 
 pomIncludeRepository := { _ => false }

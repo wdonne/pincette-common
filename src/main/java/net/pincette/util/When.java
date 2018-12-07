@@ -13,7 +13,6 @@ import net.pincette.function.RunnableWithException;
  * @author Werner Donn\u00e9
  */
 public class When {
-
   private final boolean condition;
 
   private When(final boolean condition) {

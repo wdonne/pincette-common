@@ -1,5 +1,7 @@
 package net.pincette.util;
 
+import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static java.util.concurrent.ForkJoinPool.commonPool;
 import static net.pincette.util.Pair.pair;
 
 import java.util.Enumeration;
@@ -8,12 +10,15 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executor;
 import java.util.function.BiFunction;
-import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
+import java.util.stream.Stream.Builder;
 import java.util.stream.StreamSupport;
 
 /**
@@ -24,6 +29,13 @@ import java.util.stream.StreamSupport;
 public class StreamUtil {
   private StreamUtil() {}
 
+  /**
+   * Returns the last element of a stream.
+   *
+   * @param stream the given stream.
+   * @param <T> the element type.
+   * @return the last element.
+   */
   public static <T> Optional<T> last(final Stream<T> stream) {
     return Optional.ofNullable(stream.sequential().reduce(null, (result, element) -> element));
   }
@@ -104,6 +116,36 @@ public class StreamUtil {
             return enumeration.nextElement();
           }
         });
+  }
+
+  /**
+   * Runs the <code>suppliers</code> asynchronously and in sequence using the
+   * <code>ForkJoinPool.commonPool()</code>.
+   * @param suppliers the given suppliers.
+   * @param <T> the element type.
+   * @return the stream of generated elements.
+   */
+  public static <T> CompletionStage<Stream<T>> supplyAsyncStream(
+      final Stream<Supplier<T>> suppliers) {
+    return supplyAsyncStream(suppliers, commonPool());
+  }
+
+  /**
+   * Runs the <code>suppliers</code> asynchronously and in sequence.
+   * @param suppliers the given suppliers.
+   * @param executor th executor.
+   * @param <T> the element type.
+   * @return the stream of generated elements.
+   */
+  public static <T> CompletionStage<Stream<T>> supplyAsyncStream(
+      final Stream<Supplier<T>> suppliers, final Executor executor) {
+    return suppliers
+        .sequential()
+        .reduce(
+            supplyAsync(Stream::<T>builder, executor),
+            (stage, s) -> stage.thenApplyAsync(builder -> builder.add(s.get()), executor),
+            (s1, s2) -> s1)
+        .thenApply(Builder::build);
   }
 
   /**

@@ -3,6 +3,7 @@ package net.pincette.io;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import scala.annotation.meta.param;
 
 /**
  * Copies an input stream to an output stream.
@@ -10,10 +11,14 @@ import java.io.OutputStream;
  * @author Werner Donn\u00e9
  */
 public class StreamConnector {
-
   private StreamConnector() {}
 
-  /** Closes the streams after copying. */
+  /**
+   * Closes <code>in</code> and <code>out</code> after copying.
+   * @param in
+   * @param out
+   * @throws IOException
+   */
   public static void copy(final InputStream in, final OutputStream out) throws IOException {
     copy(in, out, true, true);
   }
