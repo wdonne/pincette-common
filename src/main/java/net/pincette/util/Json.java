@@ -1,5 +1,6 @@
 package net.pincette.util;
 
+import static java.lang.String.join;
 import static java.time.Instant.parse;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -16,9 +17,11 @@ import static javax.json.Json.createWriterFactory;
 import static javax.xml.stream.XMLOutputFactory.newInstance;
 import static net.pincette.util.Collections.difference;
 import static net.pincette.util.Pair.pair;
-import static net.pincette.util.StreamUtil.takeWhile;
+import static net.pincette.util.Util.allPaths;
 import static net.pincette.util.Util.autoClose;
 import static net.pincette.util.Util.getLastSegment;
+import static net.pincette.util.Util.getParent;
+import static net.pincette.util.Util.getSegments;
 import static net.pincette.util.Util.pathSearch;
 import static net.pincette.util.Util.tryToDoWith;
 import static net.pincette.util.Util.tryToDoWithRethrow;
@@ -32,7 +35,6 @@ import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -74,6 +76,8 @@ public class Json {
               ? asNumber(value).longValue()
               : toString(value);
   private static final String ERROR = "_error";
+  private static final Set<String> OPS =
+      net.pincette.util.Collections.set("add", "copy", "move", "remove", "replace");
 
   public static JsonObject add(
       final JsonObject obj, final String name, final JsonArrayBuilder value) {
@@ -252,6 +256,54 @@ public class Json {
     return (JsonString) value;
   }
 
+  public static boolean changed(final JsonArray patch, final String jsonPointer) {
+    return changes(patch, jsonPointer).findFirst().isPresent();
+  }
+
+  public static boolean changed(
+      final JsonArray patch,
+      final JsonObject original,
+      final String jsonPointer,
+      final JsonValue from,
+      final JsonValue to) {
+    final JsonObject[] changes = changes(patch, jsonPointer).toArray(JsonObject[]::new);
+
+    return (changes.length == 2
+            && changes[0].getString("op").equals("remove")
+            && changes[1].getString("op").equals("add")
+            && changes[1].getValue("/value").equals(to)
+            && getValue(original, changes[0].getString("path"))
+                .filter(value -> value.equals(from))
+                .isPresent())
+        || (changes.length == 1
+            && changes[0].getString("op").equals("move")
+            && original
+                .getValue(changes[0].getString("from"))
+                .equals(original.getValue(changes[0].getString("path"))));
+  }
+
+  private static Stream<JsonObject> changes(final JsonArray patch, final String jsonPointer) {
+    return patch
+        .stream()
+        .filter(Json::isObject)
+        .map(JsonValue::asJsonObject)
+        .filter(
+            object ->
+                Optional.ofNullable(object.getString("op", null))
+                    .filter(OPS::contains)
+                    .filter(
+                        op ->
+                            !op.equals("move")
+                                || getParent(object.getString("from"), "/")
+                                    .equals(getParent(object.getString("path"), "/")))
+                    .map(
+                        op ->
+                            object
+                                .getString(op.equals("move") ? "from" : "path", "")
+                                .equals(jsonPointer))
+                    .orElse(false));
+  }
+
   private static Object convertNumber(final JsonNumber number) {
     return number.isIntegral() ? (Object) number.longValue() : (Object) number.doubleValue();
   }
@@ -375,10 +427,7 @@ public class Json {
   }
 
   private static Stream<String> getFieldVariants(final String field) {
-    final String[] parts = field.split("\\.");
-
-    return takeWhile(0, i -> i + 1, i -> i < parts.length)
-        .map(i -> Arrays.stream(parts, i, parts.length).collect(joining(".")));
+    return allPaths(field, ".");
   }
 
   public static Optional<Instant> getInstant(final JsonStructure json, final String jsonPointer) {
@@ -719,6 +768,26 @@ public class Json {
   }
 
   /**
+   * Transforms a JSON pointer in the form "/a/b/c" into a dot-separated field in the form "a.b.c".
+   *
+   * @param jsonPointer the given pointer.
+   * @return The dot-separated field.
+   */
+  public static String toDotSeparated(final String jsonPointer) {
+    return getSegments(jsonPointer, "/").collect(joining("."));
+  }
+
+  /**
+   * Transforms a dot-separated field in the form "a.b.c" into a JSON pointer in the form "/a/b/c".
+   *
+   * @param dotSeparatedField the given field.
+   * @return The JSON pointer.
+   */
+  public static String toJsonPointer(final String dotSeparatedField) {
+    return "/" + join("/", dotSeparatedField.split("."));
+  }
+
+  /**
    * Converts <code>value</code> recursively to a Java value.
    *
    * @param value the given value.
@@ -895,6 +964,37 @@ public class Json {
         .orElse(null);
   }
 
+  /**
+   * The method validates <code>value</code>. If there are no errors <code>value</code> is returned
+   * unchanged. Otherwise the fields for which there is an error are replaced with an object
+   * containing the field "value" with the original value, the field "message" with an error message
+   * and the field "_error", which is set to <code>true</code>. All ancestor objects will also have
+   * the field _error set to <code>true</code>.
+   *
+   * @param value the object or array that is to be validated.
+   * @param context the context information which is passed to each validator.
+   * @param validators maps dot-separated fields to validator functions.
+   * @param messages maps dot-separated fields to error messages.
+   * @param mandatory the set of dot-separated fields that are must appear in <code>value</code>.
+   *     When a field has several segments this only says something about the lowest level. For
+   *     example, when the field "a.b" is present that "b" must be present when "a" is, but "a" as
+   *     such doesn't have to be present. If that is also required then the field "a" should also be
+   *     in the set.
+   * @param missingMessage a general error message for missing fields.
+   * @return An annotated copy of <code>value</code> when there is at least one error, just <code>
+   *     value</code> otherwise.
+   */
+  public static JsonStructure validate(
+      final JsonStructure value,
+      final ValidationContext context,
+      final Map<String, Validator> validators,
+      final Map<String, String> messages,
+      final Set<String> mandatory,
+      final String missingMessage) {
+    return (JsonStructure)
+        validate(null, value, context, validators, messages, mandatory, missingMessage).first;
+  }
+
   public static JsonObject validate(
       final JsonObject obj,
       final ValidationContext context,
@@ -914,17 +1014,6 @@ public class Json {
       final Set<String> mandatory,
       final String missingMessage) {
     return validate(null, array, context, validators, messages, mandatory, missingMessage).first;
-  }
-
-  public static JsonStructure validate(
-      final JsonStructure value,
-      final ValidationContext context,
-      final Map<String, Validator> validators,
-      final Map<String, String> messages,
-      final Set<String> mandatory,
-      final String missingMessage) {
-    return (JsonStructure)
-        validate(null, value, context, validators, messages, mandatory, missingMessage).first;
   }
 
   private static Pair<? extends JsonValue, Boolean> validate(

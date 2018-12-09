@@ -1,11 +1,13 @@
 package net.pincette.util;
 
+import static java.lang.String.join;
 import static java.util.logging.Logger.getLogger;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static net.pincette.io.StreamConnector.copy;
 import static net.pincette.util.Pair.pair;
+import static net.pincette.util.StreamUtil.last;
 import static net.pincette.util.StreamUtil.takeWhile;
 
 import java.io.BufferedReader;
@@ -72,12 +74,13 @@ public class Util {
    * @return The stream with the generated paths.
    */
   public static Stream<String> allPaths(final String path, final String delimiter) {
+    final String leading = path.startsWith(delimiter) ? delimiter : "";
     final String[] segments = getSegments(path, delimiter).toArray(String[]::new);
 
     return takeWhile(0, i -> i + 1, i -> i < segments.length)
         .map(
             i ->
-                delimiter
+                leading
                     + Arrays.stream(segments, 0, segments.length - i).collect(joining(delimiter)));
   }
 
@@ -214,9 +217,21 @@ public class Util {
    * @return The optional segment.
    */
   public static Optional<String> getLastSegment(final String path, final String delimiter) {
-    return Optional.of(getSegments(path, delimiter).collect(toList()))
-        .filter(segments -> !segments.isEmpty())
-        .map(segments -> segments.get(segments.size() - 1));
+    return last(getSegments(path, delimiter));
+  }
+
+  /**
+   * Returns the parent path of <code>path</code>.
+   *
+   * @param path the given path.
+   * @param delimiter the regular expression that separates the segments.
+   * @return The parent path.
+   */
+  public static String getParent(final String path, final String delimiter) {
+    final List<String> segments = getSegments(path, delimiter).collect(toList());
+
+    return (path.startsWith(delimiter) ? delimiter : "")
+        + join(delimiter, segments.subList(0, segments.size() - 1));
   }
 
   private static int getPosition(final String expr) {
