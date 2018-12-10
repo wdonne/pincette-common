@@ -257,7 +257,7 @@ public class Json {
   }
 
   public static boolean changed(final JsonArray patch, final String jsonPointer) {
-    return changes(patch, jsonPointer).findFirst().isPresent();
+    return changes(patch, jsonPointer, false).findFirst().isPresent();
   }
 
   public static boolean changed(
@@ -266,7 +266,7 @@ public class Json {
       final String jsonPointer,
       final JsonValue from,
       final JsonValue to) {
-    final JsonObject[] changes = changes(patch, jsonPointer).toArray(JsonObject[]::new);
+    final JsonObject[] changes = changes(patch, jsonPointer, true).toArray(JsonObject[]::new);
 
     return (changes.length == 2
             && changes[0].getString("op").equals("remove")
@@ -282,7 +282,8 @@ public class Json {
                 .equals(original.getValue(changes[0].getString("path"))));
   }
 
-  private static Stream<JsonObject> changes(final JsonArray patch, final String jsonPointer) {
+  private static Stream<JsonObject> changes(
+      final JsonArray patch, final String jsonPointer, final boolean exact) {
     return patch
         .stream()
         .filter(Json::isObject)
@@ -298,10 +299,15 @@ public class Json {
                                     .equals(getParent(object.getString("path"), "/")))
                     .map(
                         op ->
-                            object
-                                .getString(op.equals("move") ? "from" : "path", "")
-                                .equals(jsonPointer))
+                            comparePaths(
+                                object.getString(op.equals("move") ? "from" : "path", ""),
+                                jsonPointer,
+                                exact))
                     .orElse(false));
+  }
+
+  private static boolean comparePaths(final String found, final String given, final boolean exact) {
+    return exact ? found.equals(given) : found.startsWith(given);
   }
 
   private static Object convertNumber(final JsonNumber number) {
