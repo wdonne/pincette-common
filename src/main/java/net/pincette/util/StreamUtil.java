@@ -30,6 +30,37 @@ public class StreamUtil {
   private StreamUtil() {}
 
   /**
+   * Runs the <code>stages</code> in sequence using the <code>ForkJoinPool.commonPool()</code>.
+   *
+   * @param stages the given completion stages.
+   * @param <T> the element type.
+   * @return the stream of generated elements.
+   */
+  public static <T> CompletionStage<Stream<T>> composeAsyncStream(
+      final Stream<CompletionStage<T>> stages) {
+    return composeAsyncStream(stages, commonPool());
+  }
+
+  /**
+   * Runs the <code>stages</code> in sequence.
+   *
+   * @param stages the given completion stages.
+   * @param executor th executor.
+   * @param <T> the element type.
+   * @return the stream of generated elements.
+   */
+  public static <T> CompletionStage<Stream<T>> composeAsyncStream(
+      final Stream<CompletionStage<T>> stages, final Executor executor) {
+    return stages
+        .sequential()
+        .reduce(
+            supplyAsync(Stream::<T>builder, executor),
+            (stage, s) -> stage.thenComposeAsync(builder -> s.thenApply(builder::add), executor),
+            (s1, s2) -> s1)
+        .thenApply(Builder::build);
+  }
+
+  /**
    * Returns the last element of a stream.
    *
    * @param stream the given stream.
@@ -119,8 +150,9 @@ public class StreamUtil {
   }
 
   /**
-   * Runs the <code>suppliers</code> asynchronously and in sequence using the
-   * <code>ForkJoinPool.commonPool()</code>.
+   * Runs the <code>suppliers</code> asynchronously and in sequence using the <code>
+   * ForkJoinPool.commonPool()</code>.
+   *
    * @param suppliers the given suppliers.
    * @param <T> the element type.
    * @return the stream of generated elements.
@@ -132,6 +164,7 @@ public class StreamUtil {
 
   /**
    * Runs the <code>suppliers</code> asynchronously and in sequence.
+   *
    * @param suppliers the given suppliers.
    * @param executor th executor.
    * @param <T> the element type.

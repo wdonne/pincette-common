@@ -20,7 +20,6 @@ import static net.pincette.util.Pair.pair;
 import static net.pincette.util.Util.allPaths;
 import static net.pincette.util.Util.autoClose;
 import static net.pincette.util.Util.getLastSegment;
-import static net.pincette.util.Util.getParent;
 import static net.pincette.util.Util.getSegments;
 import static net.pincette.util.Util.pathSearch;
 import static net.pincette.util.Util.tryToDoWith;
@@ -268,18 +267,19 @@ public class Json {
       final JsonValue to) {
     final JsonObject[] changes = changes(patch, jsonPointer, true).toArray(JsonObject[]::new);
 
-    return (changes.length == 2
-            && changes[0].getString("op").equals("remove")
-            && changes[1].getString("op").equals("add")
-            && changes[1].getValue("/value").equals(to)
-            && getValue(original, changes[0].getString("path"))
-                .filter(value -> value.equals(from))
-                .isPresent())
-        || (changes.length == 1
-            && changes[0].getString("op").equals("move")
-            && original
-                .getValue(changes[0].getString("from"))
-                .equals(original.getValue(changes[0].getString("path"))));
+    return isRemoveThenAdd(changes, original, from, to)
+        || isReplace(changes, original, from, to)
+        || isMove(changes, original, from, to);
+  }
+
+  public static boolean changed(
+      final JsonArray patch,
+      final JsonObject original,
+      final String jsonPointer,
+      final JsonValue to) {
+    final JsonObject[] changes = changes(patch, jsonPointer, true).toArray(JsonObject[]::new);
+
+    return isRemoveThenAdd(changes, to) || isReplace(changes, to) || isMove(changes, original, to);
   }
 
   private static Stream<JsonObject> changes(
@@ -292,17 +292,7 @@ public class Json {
             object ->
                 Optional.ofNullable(object.getString("op", null))
                     .filter(OPS::contains)
-                    .filter(
-                        op ->
-                            !op.equals("move")
-                                || getParent(object.getString("from"), "/")
-                                    .equals(getParent(object.getString("path"), "/")))
-                    .map(
-                        op ->
-                            comparePaths(
-                                object.getString(op.equals("move") ? "from" : "path", ""),
-                                jsonPointer,
-                                exact))
+                    .map(op -> comparePaths(object.getString("path", ""), jsonPointer, exact))
                     .orElse(false));
   }
 
@@ -602,6 +592,24 @@ public class Json {
     return new ValidationResult(isInstant(context.value), null);
   }
 
+  private static boolean isMove(
+      final JsonObject[] changes,
+      final JsonObject original,
+      final JsonValue from,
+      final JsonValue to) {
+    return changes.length == 1
+        && changes[0].getString("op").equals("move")
+        && isValue(changes[0], "path", original, from)
+        && isValue(changes[0], "from", original, to);
+  }
+
+  private static boolean isMove(
+      final JsonObject[] changes, final JsonObject original, final JsonValue to) {
+    return changes.length == 1
+        && changes[0].getString("op").equals("move")
+        && isValue(changes[0], "from", original, to);
+  }
+
   public static boolean isNull(final JsonValue value) {
     return value.getValueType() == JsonValue.ValueType.NULL;
   }
@@ -622,6 +630,42 @@ public class Json {
     return new ValidationResult(isObject(context.value), null);
   }
 
+  private static boolean isRemoveThenAdd(
+      final JsonObject[] changes,
+      final JsonObject original,
+      final JsonValue from,
+      final JsonValue to) {
+    return changes.length == 2
+        && changes[0].getString("op").equals("remove")
+        && changes[1].getString("op").equals("add")
+        && changes[1].getValue("/value").equals(to)
+        && isValue(changes[0], "path", original, from);
+  }
+
+  private static boolean isRemoveThenAdd(final JsonObject[] changes, final JsonValue to) {
+    return changes.length == 2
+        && changes[0].getString("op").equals("remove")
+        && changes[1].getString("op").equals("add")
+        && changes[1].getValue("/value").equals(to);
+  }
+
+  private static boolean isReplace(
+      final JsonObject[] changes,
+      final JsonObject original,
+      final JsonValue from,
+      final JsonValue to) {
+    return changes.length == 1
+        && changes[0].getString("op").equals("replace")
+        && changes[0].getValue("/value").equals(to)
+        && isValue(changes[0], "path", original, from);
+  }
+
+  private static boolean isReplace(final JsonObject[] changes, final JsonValue to) {
+    return changes.length == 1
+        && changes[0].getString("op").equals("replace")
+        && changes[0].getValue("/value").equals(to);
+  }
+
   public static boolean isString(final JsonValue value) {
     return value.getValueType() == JsonValue.ValueType.STRING;
   }
@@ -640,6 +684,14 @@ public class Json {
 
   public static ValidationResult isUri(final ValidationContext context) {
     return new ValidationResult(isUri(context.value), null);
+  }
+
+  private static boolean isValue(
+      final JsonObject change,
+      final String attribute,
+      final JsonObject original,
+      final JsonValue value) {
+    return getValue(original, change.getString(attribute)).filter(v -> v.equals(value)).isPresent();
   }
 
   /**
