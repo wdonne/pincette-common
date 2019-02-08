@@ -128,9 +128,7 @@ public class Json {
 
   public static JsonObjectBuilder add(
       final JsonObjectBuilder builder, final Map<String, ?> fields) {
-    return fields
-        .entrySet()
-        .stream()
+    return fields.entrySet().stream()
         .reduce(builder, (b, e) -> addJsonField(b, e.getKey(), e.getValue()), (b1, b2) -> b1);
   }
 
@@ -152,8 +150,7 @@ public class Json {
    * @return The new object.
    */
   public static JsonObject add(final JsonObject obj, Collection<Pair<String, Object>> values) {
-    return values
-        .stream()
+    return values.stream()
         .reduce(
             copy(obj, createObjectBuilder()),
             (b, p) -> addJsonField(b, p.first, p.second),
@@ -284,8 +281,7 @@ public class Json {
 
   private static Stream<JsonObject> changes(
       final JsonArray patch, final String jsonPointer, final boolean exact) {
-    return patch
-        .stream()
+    return patch.stream()
         .filter(Json::isObject)
         .map(JsonValue::asJsonObject)
         .filter(
@@ -317,8 +313,7 @@ public class Json {
       final JsonObject obj,
       final JsonObjectBuilder builder,
       final BiPredicate<String, JsonObject> retain) {
-    return obj.keySet()
-        .stream()
+    return obj.keySet().stream()
         .filter(key -> retain.test(key, obj))
         .reduce(builder, (b, key) -> b.add(key, obj.get(key)), (b1, b2) -> b1);
   }
@@ -538,8 +533,7 @@ public class Json {
    * @return Whether the array contains errors or not.
    */
   public static boolean hasErrors(final JsonArray array) {
-    return array
-        .stream()
+    return array.stream()
         .anyMatch(value -> value instanceof JsonObject && hasErrors((JsonObject) value));
   }
 
@@ -842,7 +836,7 @@ public class Json {
    * @return The JSON pointer.
    */
   public static String toJsonPointer(final String dotSeparatedField) {
-    return "/" + join("/", dotSeparatedField.split("."));
+    return "/" + join("/", dotSeparatedField.split("\\."));
   }
 
   /**
@@ -887,9 +881,7 @@ public class Json {
    * @return The generated map.
    */
   public static Map<String, Object> toNative(final JsonObject object) {
-    return object
-        .entrySet()
-        .stream()
+    return object.entrySet().stream()
         .collect(toMap(Map.Entry::getKey, e -> toNative(e.getValue())));
   }
 
@@ -951,8 +943,7 @@ public class Json {
 
   private static JsonArray transform(
       final JsonArray array, final String parent, final Transformer transformer) {
-    return array
-        .stream()
+    return array.stream()
         .filter(Objects::nonNull)
         .reduce(
             createArrayBuilder(),
@@ -1112,8 +1103,7 @@ public class Json {
     final JsonObjectBuilder builder = createObjectBuilder();
     final Set<String> found = new HashSet<>();
     boolean errors =
-        obj.keySet()
-            .stream()
+        obj.keySet().stream()
             .map(
                 key -> {
                   final String field = parent != null ? (parent + "." + key) : key;
@@ -1144,8 +1134,7 @@ public class Json {
             .reduce(false, (e1, e2) -> e1 || e2);
 
     errors |=
-        difference(getMandatoryKeys(mandatory, parent), found)
-            .stream()
+        difference(getMandatoryKeys(mandatory, parent), found).stream()
             .map(
                 key -> {
                   builder.add(key, createErrorObject(null, missingMessage));
@@ -1171,8 +1160,7 @@ public class Json {
       final String missingMessage) {
     final JsonArrayBuilder builder = createArrayBuilder();
     final boolean errors =
-        array
-            .stream()
+        array.stream()
             .map(
                 value -> {
                   final Pair<? extends JsonValue, Boolean> entry =
