@@ -859,6 +859,8 @@ public class Json {
         return toNative(asObject(value));
       case STRING:
         return asString(value).getString();
+      case NULL:
+        return null;
       default:
         return value;
     }
