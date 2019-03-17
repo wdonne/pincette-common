@@ -1,6 +1,7 @@
 package net.pincette.util;
 
 import static java.lang.String.join;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.logging.Logger.getLogger;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -148,6 +149,32 @@ public class Util {
   }
 
   /**
+   * Executes <code>runnable</code> infinitely.
+   *
+   * @param runnable a function that may throw an exception, which will be rethrown.
+   */
+  public static void doForever(final RunnableWithException runnable) {
+    doForever(runnable, Util::rethrow);
+  }
+
+  /**
+   * Executes <code>runnable</code> infinitely.
+   *
+   * @param runnable a function that may throw an exception, which will be rethrown.
+   * @param error the function that deals with an exception.
+   */
+  public static void doForever(
+      final RunnableWithException runnable, final Consumer<Exception> error) {
+    tryToDo(
+        () -> {
+          while (true) {
+            runnable.run();
+          }
+        },
+        error);
+  }
+
+  /**
    * Returns <code>true</code> if the given object equals one of the given values.
    *
    * @param o the given object.
@@ -159,7 +186,7 @@ public class Util {
   }
 
   private static String flushLines(final List<String> buffer) {
-    final String result = buffer.stream().collect(joining(""));
+    final String result = join("", buffer);
 
     return SideEffect.<String>run(buffer::clear).andThenGet(() -> result);
   }
@@ -467,7 +494,7 @@ public class Util {
 
   public static Stream<String> readLineConfig(final InputStream in) throws IOException {
     return readLineConfig(
-        new BufferedReader(new EscapedUnicodeFilterReader(new InputStreamReader(in, "UTF-8"))));
+        new BufferedReader(new EscapedUnicodeFilterReader(new InputStreamReader(in, UTF_8))));
   }
 
   public static Stream<String> readLineConfig(final BufferedReader in) {
@@ -585,7 +612,7 @@ public class Util {
         defaultValue = "";
       }
 
-      result.append(s.substring(position, i));
+      result.append(s, position, i);
       position = j + 1;
 
       result.append(

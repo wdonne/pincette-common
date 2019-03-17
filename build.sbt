@@ -1,6 +1,6 @@
 name := """pincette-common"""
 organization := "net.pincette"
-version := "1.5.3"
+version := "1.5.4"
 
 scalaVersion := "2.12.4"
 
