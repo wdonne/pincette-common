@@ -14,6 +14,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import javax.xml.stream.XMLResolver;
 import javax.xml.transform.stream.StreamSource;
@@ -88,11 +89,11 @@ public class CatalogResolver implements EntityResolver, XMLResolver {
   }
 
   private static int category(final int c) {
-    final Supplier<Integer> tryWhite = () -> c == '\t' || c == '\n' || c == '\r' ? WHITE : OTHER;
-    final Supplier<Integer> trySpace = () -> c == ' ' ? SPACE : tryWhite.get();
-    final Supplier<Integer> tryDoubleQuote = () -> c == '\"' ? DOUBLE_QUOTE : trySpace.get();
+    final IntSupplier tryWhite = () -> c == '\t' || c == '\n' || c == '\r' ? WHITE : OTHER;
+    final IntSupplier trySpace = () -> c == ' ' ? SPACE : tryWhite.getAsInt();
+    final IntSupplier tryDoubleQuote = () -> c == '\"' ? DOUBLE_QUOTE : trySpace.getAsInt();
 
-    return c == '\'' ? SINGLE_QUOTE : tryDoubleQuote.get();
+    return c == '\'' ? SINGLE_QUOTE : tryDoubleQuote.getAsInt();
   }
 
   private static void error(final int in, final int line) throws IOException {

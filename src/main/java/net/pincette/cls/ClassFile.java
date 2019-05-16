@@ -16,6 +16,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.ToIntFunction;
 import java.util.stream.Stream;
 import net.pincette.util.Pair;
 
@@ -117,14 +118,14 @@ public class ClassFile {
       final DataInput in, final int index, final short size) {
     final Function<Byte, Stream<Object>> addExtra =
         tag -> isDoubleTag(tag) ? Stream.of(EMPTY) : empty();
-    final Function<Byte, Integer> moveExtra = tag -> isDoubleTag(tag) ? 1 : 0;
+    final ToIntFunction<Byte> moveExtra = tag -> isDoubleTag(tag) ? 1 : 0;
 
     return index < size
         ? tryToGetRethrow(in::readByte)
             .map(
                 tag ->
                     pair(
-                        index + 1 + moveExtra.apply(tag),
+                        index + 1 + moveExtra.applyAsInt(tag),
                         concat(
                             Stream.of(
                                 tryToGetRethrow(() -> readConstantPoolEntry(in, tag)).orElse(null)),

@@ -17,6 +17,7 @@ import static javax.json.Json.createWriterFactory;
 import static javax.xml.stream.XMLOutputFactory.newInstance;
 import static net.pincette.util.Collections.difference;
 import static net.pincette.util.Pair.pair;
+import static net.pincette.util.StreamUtil.last;
 import static net.pincette.util.Util.allPaths;
 import static net.pincette.util.Util.autoClose;
 import static net.pincette.util.Util.getLastSegment;
@@ -74,9 +75,20 @@ public class Json {
           value.getValueType() == JsonValue.ValueType.NUMBER
               ? asNumber(value).longValue()
               : toString(value);
+  private static final String ADD = "add";
+  private static final String COPY = "copy";
   private static final String ERROR = "_error";
+  private static final String FROM = "from";
+  private static final String MOVE = "move";
+  private static final String OP = "op";
+  private static final String PATH = "path";
+  private static final String REMOVE = "remove";
+  private static final String REPLACE = "replace";
   private static final Set<String> OPS =
-      net.pincette.util.Collections.set("add", "copy", "move", "remove", "replace");
+      net.pincette.util.Collections.set(ADD, COPY, MOVE, REMOVE, REPLACE);
+  private static final Set<String> SET_OPS =
+      net.pincette.util.Collections.set(ADD, COPY, MOVE, REPLACE);
+  private static final String VALUE = "/value";
 
   public static JsonObject add(
       final JsonObject obj, final String name, final JsonArrayBuilder value) {
@@ -156,6 +168,11 @@ public class Json {
             (b, p) -> addJsonField(b, p.first, p.second),
             (b1, b2) -> b1)
         .build();
+  }
+
+  public static boolean added(
+      final JsonArray patch, final JsonObject original, final String jsonPointer) {
+    return !getValue(original, jsonPointer).isPresent() && isSet(patch, jsonPointer);
   }
 
   /**
@@ -279,17 +296,23 @@ public class Json {
     return isRemoveThenAdd(changes, to) || isReplace(changes, to) || isMove(changes, original, to);
   }
 
-  private static Stream<JsonObject> changes(
-      final JsonArray patch, final String jsonPointer, final boolean exact) {
+  private static Stream<JsonObject> changes(final JsonArray patch) {
     return patch.stream()
         .filter(Json::isObject)
         .map(JsonValue::asJsonObject)
-        .filter(
-            object ->
-                Optional.ofNullable(object.getString("op", null))
-                    .filter(OPS::contains)
-                    .map(op -> comparePaths(object.getString("path", ""), jsonPointer, exact))
-                    .orElse(false));
+        .filter(json -> json.containsKey(OP));
+  }
+
+  private static Stream<JsonObject> changes(
+      final JsonArray patch, final String jsonPointer, final boolean exact) {
+    return changes(patch, jsonPointer, exact, OPS);
+  }
+
+  private static Stream<JsonObject> changes(
+      final JsonArray patch, final String jsonPointer, final boolean exact, final Set<String> ops) {
+    return changes(patch)
+        .filter(json -> ops.contains(json.getString(OP)))
+        .filter(json -> comparePaths(json.getString(PATH, ""), jsonPointer, exact));
   }
 
   private static boolean comparePaths(final String found, final String given, final boolean exact) {
@@ -494,6 +517,13 @@ public class Json {
     return (parent != null && !"".equals(parent) ? (parent + ".") : "") + key;
   }
 
+  public static Optional<String> getString(final JsonStructure json, final String jsonPointer) {
+    return getValue(json, jsonPointer)
+        .filter(Json::isString)
+        .map(Json::asString)
+        .map(JsonString::getString);
+  }
+
   private static Validator getValidator(
       final Map<String, Validator> validators, final String field) {
     return getFieldVariants(field)
@@ -501,13 +531,6 @@ public class Json {
         .map(validators::get)
         .findFirst()
         .orElse(null);
-  }
-
-  public static Optional<String> getString(final JsonStructure json, final String jsonPointer) {
-    return getValue(json, jsonPointer)
-        .filter(Json::isString)
-        .map(Json::asString)
-        .map(JsonString::getString);
   }
 
   public static Optional<JsonValue> getValue(final JsonStructure json, final String jsonPointer) {
@@ -624,23 +647,32 @@ public class Json {
     return new ValidationResult(isObject(context.value), null);
   }
 
+  private static boolean isRemove(final JsonObject change, final String jsonPointer) {
+    return Optional.of(change.getString(OP))
+        .map(
+            op ->
+                (op.equals(REMOVE) && isSubject(change, PATH, jsonPointer))
+                    || (op.equals(MOVE) && isSubject(change, FROM, jsonPointer)))
+        .orElse(false);
+  }
+
   private static boolean isRemoveThenAdd(
       final JsonObject[] changes,
       final JsonObject original,
       final JsonValue from,
       final JsonValue to) {
     return changes.length == 2
-        && changes[0].getString("op").equals("remove")
-        && changes[1].getString("op").equals("add")
-        && changes[1].getValue("/value").equals(to)
-        && isValue(changes[0], "path", original, from);
+        && changes[0].getString(OP).equals(REMOVE)
+        && changes[1].getString(OP).equals(ADD)
+        && changes[1].getValue(VALUE).equals(to)
+        && isValue(changes[0], PATH, original, from);
   }
 
   private static boolean isRemoveThenAdd(final JsonObject[] changes, final JsonValue to) {
     return changes.length == 2
-        && changes[0].getString("op").equals("remove")
-        && changes[1].getString("op").equals("add")
-        && changes[1].getValue("/value").equals(to);
+        && changes[0].getString(OP).equals(REMOVE)
+        && changes[1].getString(OP).equals(ADD)
+        && changes[1].getValue(VALUE).equals(to);
   }
 
   private static boolean isReplace(
@@ -649,15 +681,25 @@ public class Json {
       final JsonValue from,
       final JsonValue to) {
     return changes.length == 1
-        && changes[0].getString("op").equals("replace")
-        && changes[0].getValue("/value").equals(to)
-        && isValue(changes[0], "path", original, from);
+        && changes[0].getString(OP).equals(REPLACE)
+        && changes[0].getValue(VALUE).equals(to)
+        && isValue(changes[0], PATH, original, from);
   }
 
   private static boolean isReplace(final JsonObject[] changes, final JsonValue to) {
     return changes.length == 1
-        && changes[0].getString("op").equals("replace")
-        && changes[0].getValue("/value").equals(to);
+        && changes[0].getString(OP).equals(REPLACE)
+        && changes[0].getValue(VALUE).equals(to);
+  }
+
+  public static boolean isSet(final JsonArray patch, final String jsonPointer) {
+    return changes(patch, jsonPointer, true, SET_OPS).findFirst().isPresent();
+  }
+
+  private static boolean isSet(final JsonObject change, final String jsonPointer) {
+    return Optional.of(change.getString(OP))
+        .map(op -> SET_OPS.contains(op) && isSubject(change, PATH, jsonPointer))
+        .orElse(false);
   }
 
   public static boolean isString(final JsonValue value) {
@@ -666,6 +708,13 @@ public class Json {
 
   public static ValidationResult isString(final ValidationContext context) {
     return new ValidationResult(isString(context.value), null);
+  }
+
+  private static boolean isSubject(
+      final JsonObject change, final String attribute, final String jsonPointer) {
+    return Optional.ofNullable(change.getString(attribute, ""))
+        .map(value -> value.equals(jsonPointer))
+        .orElse(false);
   }
 
   public static boolean isUri(final JsonValue value) {
@@ -749,6 +798,17 @@ public class Json {
 
   public static Transformer removeTransformer(final String path) {
     return new Transformer(e -> e.path.equals(path), e -> Optional.empty());
+  }
+
+  public static boolean removed(final JsonArray patch, final String jsonPointer) {
+    return last(removedOrSet(patch, jsonPointer))
+        .map(change -> isRemove(change, jsonPointer))
+        .orElse(false);
+  }
+
+  private static Stream<JsonObject> removedOrSet(final JsonArray patch, final String jsonPointer) {
+    return changes(patch)
+        .filter(change -> isRemove(change, jsonPointer) || isSet(change, jsonPointer));
   }
 
   /**

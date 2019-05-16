@@ -5,7 +5,7 @@ import java.io.FilterReader;
 import java.io.IOException;
 import java.io.PushbackReader;
 import java.io.Reader;
-import java.util.function.UnaryOperator;
+import java.util.function.IntUnaryOperator;
 
 /**
  * This reader converts java-style Unicode escape codes to characters. It is a filter in order to
@@ -48,14 +48,14 @@ public class EscapedUnicodeFilterReader extends FilterReader {
   }
 
   private static int category(final int c) {
-    final UnaryOperator<Integer> hexOrOther =
+    final IntUnaryOperator hexOrOther =
         ch ->
             (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F')
                 ? HEX
                 : OTHER;
-    final UnaryOperator<Integer> uOr = ch -> c == 'u' ? U : hexOrOther.apply(ch);
+    final IntUnaryOperator uOr = ch -> c == 'u' ? U : hexOrOther.applyAsInt(ch);
 
-    return c == '\\' ? BACK_SLASH : uOr.apply(c);
+    return c == '\\' ? BACK_SLASH : uOr.applyAsInt(c);
   }
 
   @Override

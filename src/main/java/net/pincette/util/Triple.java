@@ -46,8 +46,7 @@ public final class Triple<T, U, V> {
 
   @SuppressWarnings("unchecked")
   public boolean equals(final Object o) {
-    return o != null
-        && o instanceof Triple
+    return o instanceof Triple
         && getClass().isAssignableFrom(o.getClass())
         && Objects.equals(first, ((Triple<T, U, V>) o).first)
         && Objects.equals(second, ((Triple<T, U, V>) o).second)

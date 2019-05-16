@@ -42,8 +42,7 @@ public final class Pair<T, U> {
 
   @SuppressWarnings("unchecked")
   public boolean equals(final Object o) {
-    return o != null
-        && o instanceof Pair
+    return o instanceof Pair
         && getClass().isAssignableFrom(o.getClass())
         && Objects.equals(first, ((Pair<T, U>) o).first)
         && Objects.equals(second, ((Pair<T, U>) o).second);

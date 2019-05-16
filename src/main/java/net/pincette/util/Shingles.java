@@ -14,6 +14,8 @@ import java.util.stream.Stream;
  * @author Werner Donn\u00e9
  */
 public class Shingles {
+  private Shingles() {}
+
   /**
    * Transform a word in a stream of shingles.
    *

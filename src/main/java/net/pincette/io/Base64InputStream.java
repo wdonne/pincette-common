@@ -61,6 +61,58 @@ public class Base64InputStream extends FilterInputStream {
     }
   }
 
+  private int decodeQuantumPosition(final byte[] b, final int position, final int off) {
+    switch (quantumPosition) {
+      case 0:
+        return decode0(position);
+      case 1:
+        return decode1(b, position, off);
+      case 2:
+        return decode2(b, position, off);
+      case 3:
+        return decode3(b, position, off);
+      default:
+        return position;
+    }
+  }
+
+  private int decode0(final int position) {
+    decodedBuffer[0] = (byte) (values[encodedBuffer[encodedPosition]] << 2);
+
+    return position;
+  }
+
+  private int decode1(final byte[] b, final int position, final int off) {
+    decodedBuffer[0] |= (values[encodedBuffer[encodedPosition]] >> 4) & 0x03;
+    decodedBuffer[1] = (byte) (values[encodedBuffer[encodedPosition]] << 4);
+    b[position + off] = decodedBuffer[0];
+
+    return position + 1;
+  }
+
+  private int decode2(final byte[] b, final int position, final int off) {
+    if (encodedBuffer[encodedPosition] != '=') {
+      decodedBuffer[1] |= (values[encodedBuffer[encodedPosition]] >> 2) & 0x0f;
+      decodedBuffer[2] = (byte) (values[encodedBuffer[encodedPosition]] << 6);
+      b[position + off] = decodedBuffer[1];
+
+      return position + 1;
+    }
+
+    return position;
+  }
+
+  private int decode3(final byte[] b, final int position, final int off) {
+    if (encodedBuffer[encodedPosition] != '=') {
+      decodedBuffer[2] |= values[encodedBuffer[encodedPosition]];
+      b[position + off] = decodedBuffer[2];
+
+      return position + 1;
+    }
+
+    return position;
+  }
+
   private boolean prepareBuffer(final int len) throws IOException {
     if (length == -1) {
       return false;
@@ -96,38 +148,7 @@ public class Base64InputStream extends FilterInputStream {
 
     for (; encodedPosition < length && i < len; ++encodedPosition) {
       if (values[encodedBuffer[encodedPosition]] != -1 || encodedBuffer[encodedPosition] == '=') {
-        switch (quantumPosition) {
-          case 0:
-            decodedBuffer[0] = (byte) (values[encodedBuffer[encodedPosition]] << 2);
-            break;
-
-          case 1:
-            decodedBuffer[0] |= (values[encodedBuffer[encodedPosition]] >> 4) & 0x03;
-            decodedBuffer[1] = (byte) (values[encodedBuffer[encodedPosition]] << 4);
-            b[i++ + off] = decodedBuffer[0];
-            break;
-
-          case 2:
-            if (encodedBuffer[encodedPosition] != '=') {
-              decodedBuffer[1] |= (values[encodedBuffer[encodedPosition]] >> 2) & 0x0f;
-              decodedBuffer[2] = (byte) (values[encodedBuffer[encodedPosition]] << 6);
-              b[i++ + off] = decodedBuffer[1];
-            }
-
-            break;
-
-          case 3:
-            if (encodedBuffer[encodedPosition] != '=') {
-              decodedBuffer[2] |= values[encodedBuffer[encodedPosition]];
-              b[i++ + off] = decodedBuffer[2];
-            }
-
-            break;
-
-          default:
-            break;
-        }
-
+        i = decodeQuantumPosition(b, i, off);
         checkQuantumPosition();
       }
     }

@@ -9,7 +9,14 @@ public class FlushOutputStream extends FilterOutputStream {
     super(out);
   }
 
-  public void write(final byte b) throws IOException {
+  @Override
+  public void write(final byte[] b, final int off, final int len) throws IOException {
+    out.write(b, off, len);
+    out.flush();
+  }
+
+  @Override
+  public void write(final int b) throws IOException {
     out.write(b);
     out.flush();
   }
