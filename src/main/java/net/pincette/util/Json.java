@@ -1,6 +1,7 @@
 package net.pincette.util;
 
 import static java.lang.String.join;
+import static java.time.Instant.ofEpochMilli;
 import static java.time.Instant.parse;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -14,6 +15,8 @@ import static javax.json.Json.createObjectBuilder;
 import static javax.json.Json.createParserFactory;
 import static javax.json.Json.createReader;
 import static javax.json.Json.createWriterFactory;
+import static javax.json.JsonValue.ValueType.FALSE;
+import static javax.json.JsonValue.ValueType.TRUE;
 import static javax.xml.stream.XMLOutputFactory.newInstance;
 import static net.pincette.util.Collections.difference;
 import static net.pincette.util.Pair.pair;
@@ -385,7 +388,7 @@ public class Json {
     }
 
     if (value instanceof Date) {
-      return javax.json.Json.createValue(((Date) value).toInstant().toString());
+      return javax.json.Json.createValue(ofEpochMilli(((Date) value).getTime()).toString());
     }
 
     if (value instanceof Map) {
@@ -438,6 +441,12 @@ public class Json {
    */
   public static Optional<JsonValue> get(final JsonObject obj, final String field) {
     return pathSearch(obj, field.split("\\."));
+  }
+
+  public static Optional<Boolean> getBoolean(final JsonStructure json, final String jsonPointer) {
+    return getValue(json, jsonPointer)
+        .filter(v -> v.getValueType() == TRUE || v.getValueType() == FALSE)
+        .map(v -> v.getValueType() == TRUE);
   }
 
   private static Stream<String> getFieldVariants(final String field) {
@@ -574,8 +583,7 @@ public class Json {
   }
 
   public static boolean isBoolean(final JsonValue value) {
-    return value.getValueType() == JsonValue.ValueType.TRUE
-        || value.getValueType() == JsonValue.ValueType.FALSE;
+    return value.getValueType() == TRUE || value.getValueType() == FALSE;
   }
 
   public static ValidationResult isBoolean(final ValidationContext context) {

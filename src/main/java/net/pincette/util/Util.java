@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static net.pincette.io.StreamConnector.copy;
 import static net.pincette.util.Pair.pair;
+import static net.pincette.util.ScheduledCompletionStage.composeAsyncAfter;
 import static net.pincette.util.StreamUtil.last;
 import static net.pincette.util.StreamUtil.takeWhile;
 
@@ -20,9 +21,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,6 +36,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -502,7 +504,7 @@ public class Util {
   }
 
   public static Stream<String> readLineConfig(final Path path) throws IOException {
-    return readLineConfig(Files.lines(path, Charset.forName("UTF-8")));
+    return readLineConfig(Files.lines(path, UTF_8));
   }
 
   /**
@@ -747,6 +749,28 @@ public class Util {
     } catch (Exception e) {
       return handleException(e, error);
     }
+  }
+
+  public static <T> CompletionStage<T> tryToGetForever(
+      final SupplierWithException<CompletionStage<T>> run, final Duration retryInterval) {
+    return tryToGetForever(run, retryInterval, null);
+  }
+
+  public static <T> CompletionStage<T> tryToGetForever(
+      final SupplierWithException<CompletionStage<T>> run,
+      final Duration retryInterval,
+      final Consumer<Exception> onException) {
+    return tryToGet(
+            run,
+            e ->
+                SideEffect.<CompletionStage<T>>run(
+                        () -> Optional.ofNullable(onException).ifPresent(on -> on.accept(e)))
+                    .andThenGet(
+                        () ->
+                            composeAsyncAfter(
+                                () -> tryToGetForever(run, retryInterval, onException),
+                                retryInterval)))
+        .orElse(null);
   }
 
   public static <T> Optional<T> tryToGetRethrow(final SupplierWithException<T> run) {

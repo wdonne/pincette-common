@@ -36,7 +36,7 @@ public class PBE {
   public static Cipher getCipher(final char[] password, final boolean encrypt) {
     return tryToGetRethrow(
             () -> {
-              final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+              final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
 
               cipher.init(
                   encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE,

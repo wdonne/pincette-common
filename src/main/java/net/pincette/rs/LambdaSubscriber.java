@@ -12,9 +12,10 @@ import org.reactivestreams.Subscription;
  * Provides constructors to which lambdas can be given.
  *
  * @param <T> the parameterized type.
- *
  * @author Werner Donn\u00e9
+ * @deprecated Use pincette-rs.
  */
+@Deprecated
 public class LambdaSubscriber<T> implements Subscriber<T> {
   private final RunnableWithException complete;
   private final ConsumerWithException<Throwable> error;

@@ -3,7 +3,6 @@ package net.pincette.io;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import scala.annotation.meta.param;
 
 /**
  * Copies an input stream to an output stream.
@@ -15,6 +14,7 @@ public class StreamConnector {
 
   /**
    * Closes <code>in</code> and <code>out</code> after copying.
+   *
    * @param in
    * @param out
    * @throws IOException

@@ -11,7 +11,9 @@ import org.reactivestreams.Subscription;
  * @param <T> the type of the incoming values.
  * @param <R> the type of the outgoing values.
  * @author Werner Donn\u00e9
+ * @deprecated Use pincette-rs.
  */
+@Deprecated
 public class Intersperse<T, R> implements Processor<T, R> {
   private final R end;
   private final R separator;
