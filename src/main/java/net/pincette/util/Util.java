@@ -2,6 +2,7 @@ package net.pincette.util;
 
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.logging.Logger.getLogger;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -756,20 +757,43 @@ public class Util {
     return tryToGetForever(run, retryInterval, null);
   }
 
+  /**
+   * When the supplied completion stage completes with <code>null</code> it is also considered to be
+   * a failure and a retry will be performed.
+   *
+   * @param run the supplier of the completion stage.
+   * @param retryInterval the time between retries.
+   * @param onException an optional exception handler.
+   * @param <T> the object type.
+   * @return The completion stage.
+   */
   public static <T> CompletionStage<T> tryToGetForever(
       final SupplierWithException<CompletionStage<T>> run,
       final Duration retryInterval,
       final Consumer<Exception> onException) {
+    final Supplier<CompletionStage<T>> again =
+        () ->
+            composeAsyncAfter(
+                () -> tryToGetForever(run, retryInterval, onException), retryInterval);
+    final Consumer<Exception> ex =
+        e -> Optional.ofNullable(onException).ifPresent(on -> on.accept(e));
+
     return tryToGet(
-            run,
-            e ->
-                SideEffect.<CompletionStage<T>>run(
-                        () -> Optional.ofNullable(onException).ifPresent(on -> on.accept(e)))
-                    .andThenGet(
-                        () ->
-                            composeAsyncAfter(
-                                () -> tryToGetForever(run, retryInterval, onException),
-                                retryInterval)))
+            run, e -> SideEffect.<CompletionStage<T>>run(() -> ex.accept(e)).andThenGet(again))
+        .map(
+            stage ->
+                stage
+                    .exceptionally(
+                        e ->
+                            SideEffect.<T>run(
+                                    () -> {
+                                      if (e instanceof Exception) {
+                                        ex.accept((Exception) e);
+                                      }
+                                    })
+                                .andThenGet(() -> null))
+                    .thenComposeAsync(
+                        value -> value != null ? completedFuture(value) : again.get()))
         .orElse(null);
   }
 

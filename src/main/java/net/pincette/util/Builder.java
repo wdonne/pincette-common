@@ -3,7 +3,10 @@ package net.pincette.util;
 import static net.pincette.util.Util.tryToDoRethrow;
 import static net.pincette.util.Util.tryToGetRethrow;
 
+import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
+import net.pincette.function.BiConsumerWithException;
 import net.pincette.function.ConsumerWithException;
 import net.pincette.function.SupplierWithException;
 
@@ -36,5 +39,10 @@ public class Builder<T> {
 
   public Builder<T> updateIf(final Predicate<T> predicate, final ConsumerWithException<T> set) {
     return predicate.test(object) ? update(set) : this;
+  }
+
+  public <U> Builder<T> updateIf(
+      final Supplier<Optional<U>> value, final BiConsumerWithException<T, U> set) {
+    return value.get().map(v -> update(o -> set.accept(o, v))).orElse(this);
   }
 }
