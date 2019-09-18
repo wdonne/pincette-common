@@ -48,6 +48,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiPredicate;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -188,9 +189,9 @@ public class Json {
    */
   public static JsonObjectBuilder addIf(
       final JsonObjectBuilder builder,
-      final Supplier<Boolean> test,
+      final BooleanSupplier test,
       final UnaryOperator<JsonObjectBuilder> add) {
-    return test.get() ? add.apply(builder) : builder;
+    return test.getAsBoolean() ? add.apply(builder) : builder;
   }
 
   public static JsonObjectBuilder addJsonField(
@@ -506,6 +507,12 @@ public class Json {
 
   public static Optional<JsonObject> getObject(final JsonStructure json, final String jsonPointer) {
     return getValue(json, jsonPointer).filter(Json::isObject).map(JsonValue::asJsonObject);
+  }
+
+  public static Stream<JsonObject> getObjects(final JsonObject json, final String array) {
+    return Optional.ofNullable(json.getJsonArray(array))
+        .map(values -> values.stream().filter(Json::isObject).map(JsonValue::asJsonObject))
+        .orElseGet(Stream::empty);
   }
 
   /**

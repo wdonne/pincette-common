@@ -1,5 +1,6 @@
 package net.pincette.cls;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.empty;
@@ -176,7 +177,7 @@ public class ClassFile {
 
     in.readFully(b);
 
-    return tryToGetRethrow(() -> new String(b, "UTF-8")).orElse(null);
+    return tryToGetRethrow(() -> new String(b, UTF_8)).orElse(null);
   }
 
   public Attribute[] getAttributes() {

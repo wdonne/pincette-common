@@ -303,15 +303,15 @@ public class StreamUtil {
 
   private static class RangeIterator implements Iterator<Number> {
     private final UnaryOperator<Long> step;
-    private final Function<Number, Boolean> test;
+    private final Predicate<Number> test;
     private long index;
 
     private RangeIterator(final Number from, final Number to, final boolean inclusive) {
-      final Function<Number, Boolean> less =
+      final Predicate<Number> less =
           inclusive
               ? (i -> i.longValue() + 1 <= to.longValue())
               : (i -> i.longValue() + 1 < to.longValue());
-      final Function<Number, Boolean> more =
+      final Predicate<Number> more =
           inclusive
               ? (i -> i.longValue() - 1 >= to.longValue())
               : (i -> i.longValue() - 1 > to.longValue());
@@ -322,7 +322,7 @@ public class StreamUtil {
     }
 
     public boolean hasNext() {
-      return test.apply(index);
+      return test.test(index);
     }
 
     public Long next() {

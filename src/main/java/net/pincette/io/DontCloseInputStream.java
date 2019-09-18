@@ -19,4 +19,9 @@ public class DontCloseInputStream extends FilterInputStream {
   public void close() throws IOException {
     // Purpose of class.
   }
+
+  @Override
+  public int read(final byte[] b, final int offset, final int len) throws IOException {
+    return super.read(b, offset, len);
+  }
 }

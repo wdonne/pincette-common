@@ -7,7 +7,7 @@
   <groupId>net.pincette</groupId>
   <artifactId>pincette-common</artifactId>
   <packaging>jar</packaging>
-  <version>1.5.7</version>
+  <version>1.5.8</version>
   <name>pincette-common</name>
   <description>General utilities</description>
   <url>https://github.com/wdonne/pincette-common</url>
@@ -62,7 +62,7 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk15on</artifactId>
-      <version>1.62</version>
+      <version>1.63</version>
     </dependency>
   </dependencies>
 

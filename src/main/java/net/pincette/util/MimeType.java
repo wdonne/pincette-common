@@ -83,9 +83,7 @@ public class MimeType {
    * comparison.
    */
   public static String canonical(final String mimeType) {
-    return getParameters(mimeType)
-        .entrySet()
-        .stream()
+    return getParameters(mimeType).entrySet().stream()
         .map(e -> e.getKey() + "=" + e.getValue())
         .sorted()
         .reduce(
@@ -251,9 +249,7 @@ public class MimeType {
     tryToDoRethrow(
         () -> properties.load(MimeType.class.getResourceAsStream("res/preferred_mime_types.map")));
 
-    return properties
-        .entrySet()
-        .stream()
+    return properties.entrySet().stream()
         .collect(
             toMap(
                 e -> e.getKey().toString().toLowerCase(),
@@ -284,7 +280,7 @@ public class MimeType {
     readLineConfig(in)
         .map(line -> line.split("[ \t]"))
         .filter(tokens -> tokens.length > 1)
-        .peek(tokens -> tokens[0] = tokens[0].toLowerCase())
+        .map(tokens -> new String[] {tokens[0].toLowerCase(), tokens[1]})
         .forEach(
             tokens -> {
               mapExtensionsToType(extensions, tokens);
@@ -294,9 +290,7 @@ public class MimeType {
 
   public static String setParameter(final String mimeType, final String name, final String value) {
     return stripParameters(mimeType)
-        + put(getParameters(mimeType), name.toLowerCase(), value)
-            .entrySet()
-            .stream()
+        + put(getParameters(mimeType), name.toLowerCase(), value).entrySet().stream()
             .map(e -> ";" + e.getKey() + "=\"" + e.getValue() + "\"")
             .collect(joining());
   }
