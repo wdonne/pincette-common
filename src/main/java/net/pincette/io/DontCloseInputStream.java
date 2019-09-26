@@ -9,6 +9,7 @@ import java.io.InputStream;
  *
  * @author Werner Donn\u00e9
  */
+@SuppressWarnings("squid:S4929") // Why?
 public class DontCloseInputStream extends FilterInputStream {
 
   public DontCloseInputStream(final InputStream in) {
@@ -18,10 +19,5 @@ public class DontCloseInputStream extends FilterInputStream {
   @Override
   public void close() throws IOException {
     // Purpose of class.
-  }
-
-  @Override
-  public int read(final byte[] b, final int offset, final int len) throws IOException {
-    return super.read(b, offset, len);
   }
 }

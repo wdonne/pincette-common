@@ -505,14 +505,19 @@ public class Json {
         .map(JsonNumber::doubleValue);
   }
 
+  public static Stream<Double> getNumbers(final JsonObject json, final String array) {
+    return getValues(json, array)
+        .filter(Json::isNumber)
+        .map(Json::asNumber)
+        .map(JsonNumber::doubleValue);
+  }
+
   public static Optional<JsonObject> getObject(final JsonStructure json, final String jsonPointer) {
     return getValue(json, jsonPointer).filter(Json::isObject).map(JsonValue::asJsonObject);
   }
 
   public static Stream<JsonObject> getObjects(final JsonObject json, final String array) {
-    return Optional.ofNullable(json.getJsonArray(array))
-        .map(values -> values.stream().filter(Json::isObject).map(JsonValue::asJsonObject))
-        .orElseGet(Stream::empty);
+    return getValues(json, array).filter(Json::isObject).map(JsonValue::asJsonObject);
   }
 
   /**
@@ -540,6 +545,13 @@ public class Json {
         .map(JsonString::getString);
   }
 
+  public static Stream<String> getStrings(final JsonObject json, final String array) {
+    return getValues(json, array)
+        .filter(Json::isString)
+        .map(Json::asString)
+        .map(JsonString::getString);
+  }
+
   private static Validator getValidator(
       final Map<String, Validator> validators, final String field) {
     return getFieldVariants(field)
@@ -551,6 +563,12 @@ public class Json {
 
   public static Optional<JsonValue> getValue(final JsonStructure json, final String jsonPointer) {
     return tryToGetSilent(() -> json.getValue(jsonPointer));
+  }
+
+  public static Stream<JsonValue> getValues(final JsonObject json, final String array) {
+    return Optional.ofNullable(json.getJsonArray(array))
+        .map(JsonArray::stream)
+        .orElseGet(Stream::empty);
   }
 
   /**

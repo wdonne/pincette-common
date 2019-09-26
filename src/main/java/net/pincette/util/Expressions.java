@@ -23,7 +23,6 @@ import net.pincette.function.SideEffect;
  * @author Werner Donn\u00e9
  */
 public class Expressions {
-
   private static final Pattern TOKENS =
       Pattern.compile(
           "(\\()|(\\))|(\\!)|([a-zA-Z][a-zA-Z0-9_]*)|(=)|(\\!=)|(<)|(>)|(<=)|"
@@ -212,12 +211,10 @@ public class Expressions {
   }
 
   public interface Expr {
-
     Object evaluate(Function<String, Object> evaluator);
   }
 
   private static class Identifier implements Expr {
-
     private final String name;
 
     private Identifier(final String name) {
@@ -230,7 +227,6 @@ public class Expressions {
   }
 
   private static class MatchedToken {
-
     private final int end;
     private final int token;
     private final int start;
@@ -243,7 +239,6 @@ public class Expressions {
   }
 
   private static class Not implements Expr {
-
     private final Expr operand;
 
     private Not(final Expr operand) {
@@ -258,7 +253,6 @@ public class Expressions {
   }
 
   private static class NumberExpr implements Expr {
-
     private final Double value;
 
     private NumberExpr(final Double value) {
@@ -271,7 +265,6 @@ public class Expressions {
   }
 
   private static class Operator implements Expr {
-
     private final Expr operand1;
     private final Expr operand2;
     private final int op;
@@ -351,7 +344,6 @@ public class Expressions {
   }
 
   private static class StringExpr implements Expr {
-
     private final String value;
 
     private StringExpr(final String value) {
@@ -364,7 +356,6 @@ public class Expressions {
   }
 
   private static class Tokens {
-
     private final List<Value> toks;
     private int position;
 
@@ -382,7 +373,6 @@ public class Expressions {
   }
 
   private static class Value {
-
     private final int token;
     private final Object val;
 
