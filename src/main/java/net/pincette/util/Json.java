@@ -1088,7 +1088,7 @@ public class Json {
         .build();
   }
 
-  public static InputStream transformToXML(final JsonObject json) {
+  public static InputStream transformToXML(final JsonStructure json) {
     return Optional.of(new ByteArrayOutputStream())
         .map(
             out ->
@@ -1101,7 +1101,11 @@ public class Json {
                                 writer ->
                                     writer.add(
                                         new JsonEventReader(
-                                            createParserFactory(null).createParser(json)))))
+                                            json instanceof JsonObject
+                                                ? createParserFactory(null)
+                                                    .createParser((JsonObject) json)
+                                                : createParserFactory(null)
+                                                    .createParser((JsonArray) json)))))
                     .andThenGet(() -> out))
         .map(ByteArrayOutputStream::toByteArray)
         .map(ByteArrayInputStream::new)

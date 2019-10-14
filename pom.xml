@@ -7,7 +7,7 @@
   <groupId>net.pincette</groupId>
   <artifactId>pincette-common</artifactId>
   <packaging>jar</packaging>
-  <version>1.6</version>
+  <version>1.6.2</version>
   <name>pincette-common</name>
   <description>General utilities</description>
   <url>https://github.com/wdonne/pincette-common</url>
