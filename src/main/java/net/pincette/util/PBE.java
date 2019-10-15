@@ -1,5 +1,7 @@
 package net.pincette.util;
 
+import static javax.crypto.Cipher.DECRYPT_MODE;
+import static javax.crypto.Cipher.ENCRYPT_MODE;
 import static net.pincette.util.Util.tryToGetRethrow;
 
 import java.io.InputStream;
@@ -8,7 +10,6 @@ import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -18,6 +19,17 @@ import javax.crypto.spec.SecretKeySpec;
  * @author Werner Donn\u00e9
  */
 public class PBE {
+  private static final byte[] SALT =
+      new byte[] {
+        (byte) 0x34,
+        (byte) 0xfe,
+        (byte) 0x9a,
+        (byte) 0x01,
+        (byte) 0x33,
+        (byte) 0x12,
+        (byte) 0x98,
+        (byte) 0x55
+      };
 
   private PBE() {}
 
@@ -36,36 +48,15 @@ public class PBE {
   public static Cipher getCipher(final char[] password, final boolean encrypt) {
     return tryToGetRethrow(
             () -> {
-              final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
+              final Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
 
               cipher.init(
-                  encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE,
+                  encrypt ? ENCRYPT_MODE : DECRYPT_MODE,
                   new SecretKeySpec(
                       SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1")
-                          .generateSecret(
-                              new PBEKeySpec(
-                                  password,
-                                  new byte[] {
-                                    (byte) 0x34,
-                                    (byte) 0xfe,
-                                    (byte) 0x9a,
-                                    (byte) 0x01,
-                                    (byte) 0x33,
-                                    (byte) 0x12,
-                                    (byte) 0x98,
-                                    (byte) 0x55
-                                  },
-                                  100,
-                                  128))
+                          .generateSecret(new PBEKeySpec(password, SALT, 100, 128))
                           .getEncoded(),
-                      "AES"),
-                  new IvParameterSpec(
-                      new byte[] {
-                        (byte) 0x68, (byte) 0xa0, (byte) 0x41, (byte) 0x6b,
-                        (byte) 0xfe, (byte) 0xdf, (byte) 0xce, (byte) 0x88,
-                        (byte) 0x22, (byte) 0x1f, (byte) 0x77, (byte) 0x83,
-                        (byte) 0xca, (byte) 0x01, (byte) 0x0f, (byte) 0x4c
-                      }));
+                      "AES"));
 
               return cipher;
             })
