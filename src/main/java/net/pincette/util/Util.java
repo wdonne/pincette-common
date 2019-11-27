@@ -402,7 +402,12 @@ public class Util {
     // To use as empty runnable.
   }
 
-  /** Does nothing. */
+  /**
+   * Does nothing.
+   *
+   * @param arg the ignored argument.
+   * @param <T> the type of the ignored argument.
+   */
   public static <T> void nop(final T arg) {
     // To use as empty consumer.
   }

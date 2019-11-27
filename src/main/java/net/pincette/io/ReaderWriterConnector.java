@@ -15,9 +15,10 @@ public class ReaderWriterConnector {
 
   /**
    * Closes <code>in</code> and <code>out</code> after copying.
-   * @param in
-   * @param out
-   * @throws IOException
+   *
+   * @param in the consumed reader.
+   * @param out the writer to which the data is written.
+   * @throws IOException when something goes wrong.
    */
   public static void copy(final Reader in, final Writer out) throws IOException {
     copy(in, out, true, true);

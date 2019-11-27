@@ -15,9 +15,9 @@ public class StreamConnector {
   /**
    * Closes <code>in</code> and <code>out</code> after copying.
    *
-   * @param in
-   * @param out
-   * @throws IOException
+   * @param in the consumed input stream.
+   * @param out the stream the data is written to.
+   * @throws IOException when something goes wrong.
    */
   public static void copy(final InputStream in, final OutputStream out) throws IOException {
     copy(in, out, true, true);

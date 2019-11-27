@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.TransformerFactory;
 import net.pincette.util.Pair;
 import org.w3c.dom.Attr;
@@ -31,6 +32,7 @@ public class Util {
   /**
    * Returns the stream of ancestors from the parent to the document element.
    *
+   * @param node the given node.
    * @return The stream.
    */
   public static Stream<Element> ancestors(final Node node) {
@@ -49,6 +51,7 @@ public class Util {
   /**
    * Returns the stream of nodes in document order starting from <code>node</code>.
    *
+   * @param node the given node.
    * @return The stream.
    */
   public static Stream<Node> documentOrder(final Node node) {
@@ -234,6 +237,7 @@ public class Util {
   /**
    * Returns the stream of next siblings starting right after <code>node</code>.
    *
+   * @param node the given node.
    * @return The stream.
    */
   public static Stream<Node> nextSiblings(final Node node) {
@@ -243,13 +247,20 @@ public class Util {
   /**
    * Returns the stream of previous siblings starting right before <code>node</code>.
    *
+   * @param node the given node.
    * @return The stream.
    */
   public static Stream<Node> previousSiblings(final Node node) {
     return takeWhile(node.getPreviousSibling(), Node::getPreviousSibling, Objects::nonNull);
   }
 
-  /** Utility for entity resolvers. */
+  /**
+   * Utility for entity resolvers.
+   *
+   * @param baseURI the given base URI against which the resolution is done.
+   * @param systemId the given system identifier, which is resolved if it is relative.
+   * @return The resolved system identifier.
+   */
   public static String resolveSystemId(final String baseURI, final String systemId) {
     final Supplier<String> tryBaseURI =
         () ->
@@ -262,6 +273,19 @@ public class Util {
     return isUri(baseURI)
         ? tryToGet(() -> new URL(new URL(baseURI), systemId)).map(URL::toString).orElse(null)
         : trySystemId.get();
+  }
+
+  /**
+   * Returns a factory with secure processing on.
+   *
+   * @return The factory.
+   */
+  public static DocumentBuilderFactory secureDocumentBuilderFactory() {
+    final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+    tryToDoRethrow(() -> factory.setFeature(FEATURE_SECURE_PROCESSING, true));
+
+    return factory;
   }
 
   /**

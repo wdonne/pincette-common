@@ -131,12 +131,20 @@ public class CatalogResolver implements EntityResolver, XMLResolver {
     return "Line" + line + ": ";
   }
 
-  /** Returns a map from the public identifiers to the resolved URLs. */
+  /**
+   * Returns a map from the public identifiers to the resolved URLs.
+   *
+   * @return The public identifier map.
+   */
   public Map<String, String> getPublicIdentifierMappings() {
     return publicIdentifiers;
   }
 
-  /** Returns a map from the public identifiers to the resolved URLs. */
+  /**
+   * Returns a map from the public identifiers to the resolved URLs.
+   *
+   * @return The system identifier map.
+   */
   public Map<String, String> getSystemIdentifierMappings() {
     return systemIdentifiers;
   }

@@ -55,9 +55,7 @@ public class NamespacePrefixMap implements NamespaceContext {
   }
 
   public Map<String, String> getCurrentPrefixMap() {
-    return prefixMap
-        .entrySet()
-        .stream()
+    return prefixMap.entrySet().stream()
         .collect(
             toMap(
                 Map.Entry::getKey,
@@ -67,6 +65,9 @@ public class NamespacePrefixMap implements NamespaceContext {
   /**
    * Returns the most recent namespace prefix which is associated with <code>uri</code> or <code>
    * null</code> if there isn't any.
+   *
+   * @param uri the given URI.
+   * @return The prefix.
    */
   public String getNamespacePrefix(final String uri) {
     if (uri == null || "".equals(uri)) {

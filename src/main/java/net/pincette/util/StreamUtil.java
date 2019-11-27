@@ -231,6 +231,7 @@ public class StreamUtil {
    *     function will nit be called.
    * @param p the predicate.
    * @param <T> the value type.
+   * @param <U> the value type of the driving stream.
    * @return The generated stream.
    */
   public static <T, U> Stream<T> takeWhile(
@@ -246,7 +247,7 @@ public class StreamUtil {
 
           @Override
           public boolean hasNext() {
-            ok = current != null && i.hasNext() && p.test(current);
+            ok = current != null && p.test(current);
 
             return ok;
           }

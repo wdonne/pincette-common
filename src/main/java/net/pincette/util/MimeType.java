@@ -81,6 +81,9 @@ public class MimeType {
   /**
    * Returns the MIME type in lower case and the parameters in alphabetical order, which facilitates
    * comparison.
+   *
+   * @param mimeType the original MIME type.
+   * @return The transformed MIME type.
    */
   public static String canonical(final String mimeType) {
     return getParameters(mimeType).entrySet().stream()
@@ -96,6 +99,9 @@ public class MimeType {
   /**
    * Tries to detect the MIME type through magic numbers. If the type is not detected
    * application/octet-stream is returned.
+   *
+   * @param b the given byte stream.
+   * @return The detected MIME type.
    */
   public static String detectType(final byte[] b) {
     final Supplier<String> pngOr =
@@ -120,12 +126,22 @@ public class MimeType {
         : jpegOr.get();
   }
 
-  /** The default is application/octet-stream. */
+  /**
+   * The default is application/octet-stream.
+   *
+   * @param extension the given extension.
+   * @return The mapped MIME type.
+   */
   public static String getContentTypeFromExtension(final String extension) {
     return Optional.ofNullable(extensions.get(extension)).orElse(OCTET_STREAM);
   }
 
-  /** The default is application/octet-stream. */
+  /**
+   * Return the MIME type for a name. The default is application/octet-stream.
+   *
+   * @param name the given name, e.g. a filename, URI, etc.
+   * @return The mapped MIME type.
+   */
   public static String getContentTypeFromName(final String name) {
     return Optional.of(name.lastIndexOf('.'))
         .filter(index -> index != -1)
@@ -147,7 +163,12 @@ public class MimeType {
     return knownMimeTypes;
   }
 
-  /** Returns the media type in lower case. */
+  /**
+   * Returns the media type part in lower case.
+   *
+   * @param mimeType teh given MIME type.
+   * @return The media type.
+   */
   public static String getMediaType(final String mimeType) {
     return Optional.of(mimeType.indexOf('/'))
         .filter(index -> index != -1)
@@ -165,7 +186,12 @@ public class MimeType {
         .map(tokens -> tokens[0]);
   }
 
-  /** The parameter names in lower case are the keys. The values are copied literally. */
+  /**
+   * The parameter names in lower case are the keys. The values are copied literally.
+   *
+   * @param mimeType the given MIME type.
+   * @return The MIME type parameters.
+   */
   public static Map<String, String> getParameters(final String mimeType) {
     return stream(mimeType.split(";"))
         .map(String::trim)
@@ -183,6 +209,9 @@ public class MimeType {
   /**
    * Sometimes more than one MIME type is used for the same thing. This method returns the preferred
    * MIME type in lower case.
+   *
+   * @param mimeType the given MIME type.
+   * @return The preferred substitute.
    */
   public static String getPreferred(final String mimeType) {
     if (preferredMimeTypes == null) {
@@ -193,7 +222,12 @@ public class MimeType {
         .orElseGet(mimeType::toLowerCase);
   }
 
-  /** Returns the subtype in lower case or * if there is no subtype. */
+  /**
+   * Returns the subtype in lower case or * if there is no subtype.
+   *
+   * @param mimeType the given MIME type.
+   * @return The substype.
+   */
   public static String getSubtype(final String mimeType) {
     return Optional.of(mimeType.indexOf('/'))
         .filter(index -> index != -1)
@@ -295,7 +329,12 @@ public class MimeType {
             .collect(joining());
   }
 
-  /** Returns the MIME type without its parameters if it has any. */
+  /**
+   * Returns the MIME type without its parameters if it has any.
+   *
+   * @param mimeType the given MIME type.
+   * @return The MIME type without parameters.
+   */
   public static String stripParameters(final String mimeType) {
     return Optional.of(mimeType.indexOf(';'))
         .filter(index -> index != -1)
