@@ -316,7 +316,7 @@ public class Util {
   }
 
   public static boolean isEmail(String s) {
-    return EMAIL.matcher(s).matches();
+    return EMAIL.matcher(s.toLowerCase()).matches();
   }
 
   public static boolean isFloat(final String s) {
