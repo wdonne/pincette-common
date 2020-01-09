@@ -17,7 +17,9 @@ import javax.crypto.spec.SecretKeySpec;
  * The class contains password-based encryption functions.
  *
  * @author Werner Donn\u00e9
+ * @deprecated Not secure.
  */
+@Deprecated
 public class PBE {
   private static final byte[] SALT =
       new byte[] {

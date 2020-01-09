@@ -72,7 +72,9 @@ import net.pincette.xml.JsonEventReader;
  * Some JSON-utilities.
  *
  * @author Werner Donn\u00e9
+ * @deprecated These function were moved to the package pincette-json.
  */
+@Deprecated
 public class Json {
   public static final Function<JsonObject, ?> EVALUATOR =
       value ->
