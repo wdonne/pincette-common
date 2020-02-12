@@ -1,5 +1,6 @@
 package net.pincette.util;
 
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.ForkJoinPool.commonPool;
 import static net.pincette.util.Pair.pair;
@@ -117,6 +118,43 @@ public class StreamUtil {
    */
   public static Stream<Integer> rangeInclusive(final int from, final int to) {
     return stream(new RangeIterator(from, to, true)).map(Number::intValue);
+  }
+
+  /**
+   * Reduces the operator stream to a value where the seeded value falls through until a predicate
+   * is met or the end is reached.
+   *
+   * @param seed the seed value.
+   * @param operators the stream of operators.
+   * @param until the predicate, which stops the evaluation.
+   * @param <T> the value type.
+   * @return The reduced value.
+   * @since 1.6.7
+   */
+  public static <T> T reduceUntil(
+      final T seed, final Stream<UnaryOperator<T>> operators, final Predicate<T> until) {
+    return operators.reduce(seed, (v, o) -> until.test(v) ? v : o.apply(v), (v1, v2) -> v1);
+  }
+
+  /**
+   * Reduces the operator stream to a completion stage chain where the seeded value falls through
+   * until a predicate is met or the end is reached.
+   *
+   * @param seed the function that provides the seed value.
+   * @param operators the stream of operators.
+   * @param until the predicate, which stops the evaluation.
+   * @param <T> the value type.
+   * @return The reduced value.
+   * @since 1.6.7
+   */
+  public static <T> CompletionStage<T> reduceUntilAsync(
+      final Supplier<CompletionStage<T>> seed,
+      final Stream<Function<T, CompletionStage<T>>> operators,
+      final Predicate<T> until) {
+    return operators.reduce(
+        seed.get(),
+        (s, o) -> s.thenComposeAsync(v -> until.test(v) ? completedFuture(v) : o.apply(v)),
+        (s1, s2) -> s1);
   }
 
   public static <T> Stream<T> stream(final Iterator<T> iterator) {
