@@ -1,5 +1,6 @@
 package net.pincette.util;
 
+import static java.lang.Integer.max;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.ForkJoinPool.commonPool;
@@ -81,7 +82,21 @@ public class StreamUtil {
    * @return the integer stream.
    */
   public static Stream<Long> rangeExclusive(final long from, final long to) {
-    return stream(new RangeIterator(from, to, false)).map(Number::longValue);
+    return rangeExclusive(from, to, 1);
+  }
+
+  /**
+   * Produces a sequential integer stream. If <code>from</code> is larger than <code>to</code> then
+   * the stream will count down.
+   *
+   * @param from first value of the range.
+   * @param to last value of the range, which is excluded.
+   * @param step the positive distance for the iteration.
+   * @return the integer stream.
+   * @since 1.6.8
+   */
+  public static Stream<Long> rangeExclusive(final long from, final long to, final int step) {
+    return stream(new RangeIterator(from, to, step, false)).map(Number::longValue);
   }
 
   /**
@@ -93,7 +108,21 @@ public class StreamUtil {
    * @return the integer stream.
    */
   public static Stream<Integer> rangeExclusive(final int from, final int to) {
-    return stream(new RangeIterator(from, to, false)).map(Number::intValue);
+    return rangeExclusive(from, to, 1);
+  }
+
+  /**
+   * Produces a sequential integer stream. If <code>from</code> is larger than <code>to</code> then
+   * the stream will count down.
+   *
+   * @param from first value of the range.
+   * @param to last value of the range, which is excluded.
+   * @param step the positive distance for the iteration.
+   * @return the integer stream.
+   * @since 1.6.8
+   */
+  public static Stream<Integer> rangeExclusive(final int from, final int to, final int step) {
+    return stream(new RangeIterator(from, to, step, false)).map(Number::intValue);
   }
 
   /**
@@ -105,7 +134,21 @@ public class StreamUtil {
    * @return the integer stream.
    */
   public static Stream<Long> rangeInclusive(final long from, final long to) {
-    return stream(new RangeIterator(from, to, true)).map(Number::longValue);
+    return rangeInclusive(from, to, 1);
+  }
+
+  /**
+   * Produces a sequential integer stream. If <code>from</code> is larger than <code>to</code> then
+   * the stream will count down.
+   *
+   * @param from first value of the range.
+   * @param to last value of the range, which is included.
+   * @param step the positive distance for the iteration.
+   * @return the integer stream.
+   * @since 1.6.8
+   */
+  public static Stream<Long> rangeInclusive(final long from, final long to, final int step) {
+    return stream(new RangeIterator(from, to, step, true)).map(Number::longValue);
   }
 
   /**
@@ -117,7 +160,21 @@ public class StreamUtil {
    * @return the integer stream.
    */
   public static Stream<Integer> rangeInclusive(final int from, final int to) {
-    return stream(new RangeIterator(from, to, true)).map(Number::intValue);
+    return rangeInclusive(from, to, 1);
+  }
+
+  /**
+   * Produces a sequential integer stream. If <code>from</code> is larger than <code>to</code> then
+   * the stream will count down.
+   *
+   * @param from first value of the range.
+   * @param to last value of the range, which is included.
+   * @param step the positive distance for the iteration.
+   * @return the integer stream.
+   * @since 1.6.8
+   */
+  public static Stream<Integer> rangeInclusive(final int from, final int to, final int step) {
+    return stream(new RangeIterator(from, to, step, true)).map(Number::intValue);
   }
 
   /**
@@ -341,23 +398,25 @@ public class StreamUtil {
   }
 
   private static class RangeIterator implements Iterator<Number> {
-    private final UnaryOperator<Long> step;
+    private final UnaryOperator<Long> doStep;
     private final Predicate<Number> test;
     private long index;
 
-    private RangeIterator(final Number from, final Number to, final boolean inclusive) {
+    private RangeIterator(
+        final Number from, final Number to, final int step, final boolean inclusive) {
+      final int realStep = max(1, step);
       final Predicate<Number> less =
           inclusive
-              ? (i -> i.longValue() + 1 <= to.longValue())
-              : (i -> i.longValue() + 1 < to.longValue());
+              ? (i -> i.longValue() + realStep <= to.longValue())
+              : (i -> i.longValue() + realStep < to.longValue());
       final Predicate<Number> more =
           inclusive
-              ? (i -> i.longValue() - 1 >= to.longValue())
-              : (i -> i.longValue() - 1 > to.longValue());
+              ? (i -> i.longValue() - realStep >= to.longValue())
+              : (i -> i.longValue() - realStep > to.longValue());
 
       this.test = from.longValue() < to.longValue() ? less : more;
-      this.step = from.longValue() < to.longValue() ? (i -> i + 1) : (i -> i - 1);
-      this.index = from.longValue() + (from.longValue() < to.longValue() ? -1 : +1);
+      this.doStep = from.longValue() < to.longValue() ? (i -> i + realStep) : (i -> i - realStep);
+      this.index = from.longValue() + (from.longValue() < to.longValue() ? -realStep : realStep);
     }
 
     public boolean hasNext() {
@@ -369,7 +428,7 @@ public class StreamUtil {
         throw new NoSuchElementException();
       }
 
-      index = step.apply(index);
+      index = doStep.apply(index);
 
       return index;
     }

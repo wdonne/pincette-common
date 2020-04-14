@@ -48,6 +48,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import net.pincette.function.BiFunctionWithException;
 import net.pincette.function.ConsumerWithException;
 import net.pincette.function.FunctionWithException;
 import net.pincette.function.RunnableWithException;
@@ -68,6 +69,27 @@ public class Util {
       Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?(Z|\\+00:00)");
 
   private Util() {}
+
+  /**
+   * This returns a function that accumulates the results. Each call will receive the result of the
+   * previous call.
+   *
+   * @param fn the original function.
+   * @param initialValue the accumulated value for the first call.
+   * @param <T> the value type.
+   * @param <R> the result type.
+   * @return The generated function.
+   * @since 1.6.8
+   */
+  public static <T, R> Function<T, R> accumulate(
+      final BiFunctionWithException<R, T, R> fn, final R initialValue) {
+    final Object[] state = new Object[] {initialValue};
+
+    return v ->
+        SideEffect.<R>run(
+                () -> state[0] = tryToGetRethrow(() -> fn.apply((R) state[0], v)).orElse(null))
+            .andThenGet(() -> (R) state[0]);
+  }
 
   /**
    * Produces a stream with all paths from <code>path</code> up to the root path, which is just the

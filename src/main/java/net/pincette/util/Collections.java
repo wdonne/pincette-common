@@ -27,7 +27,6 @@ import java.util.stream.Stream;
  * @author Werner Donn\u00e9
  */
 public class Collections {
-
   private Collections() {}
 
   /**
