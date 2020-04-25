@@ -1,11 +1,13 @@
 package net.pincette.util;
 
+import static java.lang.Integer.min;
+import static java.util.Collections.nCopies;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static net.pincette.util.Pair.pair;
 import static net.pincette.util.StreamUtil.stream;
-import static net.pincette.util.StreamUtil.takeWhile;
 import static net.pincette.util.Util.countingIterator;
 
 import java.util.Arrays;
@@ -16,10 +18,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
+import net.pincette.function.SideEffect;
 
 /**
  * Collection utilities.
@@ -28,6 +32,31 @@ import java.util.stream.Stream;
  */
 public class Collections {
   private Collections() {}
+
+  /**
+   * Concatenates <code>collections</code> into one list containing the elements of the collections.
+   *
+   * @param collections the given collections.
+   * @param <T> the element type.
+   * @return The new list.
+   * @since 1.7
+   */
+  @SafeVarargs
+  public static <T> List<T> concat(final Collection<T>... collections) {
+    return concat(Arrays.stream(collections));
+  }
+
+  /**
+   * Concatenates <code>collections</code> into one list containing the elements of the collections.
+   *
+   * @param collections the given collections.
+   * @param <T> the element type.
+   * @return The new list.
+   * @since 1.7
+   */
+  public static <T> List<T> concat(final Stream<Collection<T>> collections) {
+    return collections.flatMap(Collection::stream).collect(toList());
+  }
 
   /**
    * Returns a new set with the elements of <code>c1</code> but without those that also occur in
@@ -56,7 +85,7 @@ public class Collections {
    * @return The optional value.
    */
   public static <K, V> Optional<V> get(final Map<K, V> map, final K key) {
-    return Optional.ofNullable(map.get(key));
+    return ofNullable(map.get(key));
   }
 
   /**
@@ -80,16 +109,23 @@ public class Collections {
    */
   @SafeVarargs
   public static <T> Set<T> intersection(final Collection<T>... collections) {
-    if (collections.length == 0) {
-      return new HashSet<>();
-    }
+    return intersection(Arrays.stream(collections));
+  }
 
-    final Set<T> result = new HashSet<>(collections[0]);
-
-    takeWhile(1, i -> i + 1, i -> i < collections.length)
-        .forEach(i -> result.retainAll(collections[i]));
-
-    return result;
+  /**
+   * Returns a new set containing all elements that are common in the given collections.
+   *
+   * @param collections the given collections.
+   * @param <T> the element type.
+   * @return The intersection.
+   * @since 1.7
+   */
+  public static <T> Set<T> intersection(final Stream<Collection<T>> collections) {
+    return collections
+        .map(HashSet::new)
+        .reduce((s1, s2) -> SideEffect.<HashSet<T>>run(() -> s1.retainAll(s2)).andThenGet(() -> s1))
+        .map(s -> (Set<T>) s)
+        .orElseGet(java.util.Collections::emptySet);
   }
 
   /**
@@ -115,7 +151,21 @@ public class Collections {
    */
   @SafeVarargs
   public static <K, V> Map<K, V> map(final Pair<K, V>... pairs) {
-    return Arrays.stream(pairs).collect(toMap(pair -> pair.first, pair -> pair.second));
+    return map(Arrays.stream(pairs));
+  }
+
+  /**
+   * Creates a map with the given element pairs, where each first element is a key and each second
+   * element a value.
+   *
+   * @param pairs the given pairs.
+   * @param <K> the key type.
+   * @param <V> the value type.
+   * @return The new map.
+   * @since 1.7
+   */
+  public static <K, V> Map<K, V> map(final Stream<Pair<K, V>> pairs) {
+    return pairs.collect(toMap(pair -> pair.first, pair -> pair.second));
   }
 
   /**
@@ -129,11 +179,21 @@ public class Collections {
    */
   @SafeVarargs
   public static <K, V> Map<K, V> merge(final Map<K, V>... maps) {
-    final Map<K, V> result = new HashMap<>();
+    return merge(Arrays.stream(maps));
+  }
 
-    Arrays.stream(maps).forEach(result::putAll);
-
-    return result;
+  /**
+   * Returns a new map with all the mappings of the given maps combined. When there is more than one
+   * mapping for a key only the last one will be retained.
+   *
+   * @param maps the given maps.
+   * @param <K> the key type.
+   * @param <V> the value type.
+   * @return The new map.
+   * @since 1.7
+   */
+  public static <K, V> Map<K, V> merge(final Stream<Map<K, V>> maps) {
+    return maps.flatMap(m -> m.entrySet().stream()).collect(toMap(Entry::getKey, Entry::getValue));
   }
 
   /**
@@ -194,7 +254,7 @@ public class Collections {
    * @return The iterator.
    */
   public static <T> Iterator<T> reverse(final List<T> list) {
-    return list.isEmpty() ? list.iterator() : new ReverseIterator(list);
+    return list.isEmpty() ? list.iterator() : new ReverseIterator<>(list);
   }
 
   /**
@@ -210,6 +270,76 @@ public class Collections {
   }
 
   /**
+   * Removes the first <code>positions</code> elements from the list and adds the last element
+   * <code>positions</code> times at the end of the list.
+   *
+   * @param list the given list.
+   * @param positions the number of positions over which to shift. If it is larger than the list
+   *     size it will be reduced to the list size.
+   * @param <T> the element type.
+   * @return The new list.
+   * @since 1.7
+   */
+  public static <T> List<T> shiftDown(final List<T> list, final int positions) {
+    return !list.isEmpty() ? shiftDown(list, positions, list.get(list.size() - 1)) : list;
+  }
+
+  /**
+   * Removes the first <code>positions</code> elements from the list and adds <code>newElement
+   * </code> <code>positions</code> times at the end of the list.
+   *
+   * @param list the given list.
+   * @param positions the number of positions over which to shift. If it is larger than the list
+   *     size it will be reduced to the list size.
+   * @param newElement the element that is shifted in.
+   * @param <T> the element type.
+   * @return The new list.
+   * @since 1.7
+   */
+  public static <T> List<T> shiftDown(final List<T> list, final int positions, final T newElement) {
+    final int pos = min(positions, list.size());
+
+    return !list.isEmpty()
+        ? concat(list.subList(pos, list.size()), nCopies(pos, newElement))
+        : list;
+  }
+
+  /**
+   * Removes the first <code>positions</code> elements from the list and adds the first element
+   * <code>positions</code> times at the end of the list.
+   *
+   * @param list the given list.
+   * @param positions the number of positions over which to shift. If it is larger than the list
+   *     size it will be reduced to the list size.
+   * @param <T> the element type.
+   * @return The new list.
+   * @since 1.7
+   */
+  public static <T> List<T> shiftUp(final List<T> list, final int positions) {
+    return !list.isEmpty() ? shiftUp(list, positions, list.get(0)) : list;
+  }
+
+  /**
+   * Removes the first <code>positions</code> elements from the list and adds <code>newElement
+   * </code> <code>positions</code> times at the end of the list.
+   *
+   * @param list the given list.
+   * @param positions the number of positions over which to shift. If it is larger than the list
+   *     size it will be reduced to the list size.
+   * @param newElement the element that is shifted in.
+   * @param <T> the element type.
+   * @return The new list.
+   * @since 1.7
+   */
+  public static <T> List<T> shiftUp(final List<T> list, final int positions, final T newElement) {
+    final int pos = min(positions, list.size());
+
+    return !list.isEmpty()
+        ? concat(nCopies(pos, newElement), list.subList(0, list.size() - pos))
+        : list;
+  }
+
+  /**
    * Returns a new set containing all of the elements from the given collections.
    *
    * @param collections the given collections.
@@ -218,15 +348,22 @@ public class Collections {
    */
   @SafeVarargs
   public static <T> Set<T> union(final Collection<T>... collections) {
-    final Set<T> result = new HashSet<>();
+    return union(Arrays.stream(collections));
+  }
 
-    Arrays.stream(collections).forEach(result::addAll);
-
-    return result;
+  /**
+   * Returns a new set containing all of the elements from the given collections.
+   *
+   * @param collections the given collections.
+   * @param <T> the element type.
+   * @return The new set.
+   * @since 1.7
+   */
+  public static <T> Set<T> union(final Stream<Collection<T>> collections) {
+    return collections.flatMap(Collection::stream).collect(toSet());
   }
 
   private static class ReverseIterator<T> implements Iterator<T> {
-
     private final ListIterator<T> iterator;
 
     private ReverseIterator(final List<T> list) {

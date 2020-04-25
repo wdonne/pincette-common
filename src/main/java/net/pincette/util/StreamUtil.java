@@ -1,17 +1,25 @@
 package net.pincette.util;
 
 import static java.lang.Integer.max;
+import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
+import static java.util.Spliterator.IMMUTABLE;
+import static java.util.Spliterator.NONNULL;
+import static java.util.Spliterator.ORDERED;
+import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.ForkJoinPool.commonPool;
+import static java.util.stream.Collectors.toList;
+import static net.pincette.util.Collections.shiftDown;
 import static net.pincette.util.Pair.pair;
 
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
 import java.util.function.BiFunction;
@@ -70,7 +78,7 @@ public class StreamUtil {
    * @return the last element.
    */
   public static <T> Optional<T> last(final Stream<T> stream) {
-    return Optional.ofNullable(stream.sequential().reduce(null, (result, element) -> element));
+    return ofNullable(stream.sequential().reduce(null, (result, element) -> element));
   }
 
   /**
@@ -214,11 +222,54 @@ public class StreamUtil {
         (s1, s2) -> s1);
   }
 
+  /**
+   * Returns a stream of sliding windows over <code>stream</code>. Only windows of exactly <code>
+   * windowSize</code> are returned.
+   *
+   * @param stream the given stream.
+   * @param windowSize the size of the returned windows.
+   * @param <T> the element type.
+   * @return The new stream.
+   * @since 1.7
+   */
+  public static <T> Stream<List<T>> slide(final Stream<T> stream, final int windowSize) {
+    return stream(
+        new Iterator<List<T>>() {
+          final Iterator<T> iterator = stream.iterator();
+          List<T> window;
+
+          private List<T> initialWindow() {
+            return rangeExclusive(0, windowSize)
+                .map(i -> iterator.hasNext() ? iterator.next() : null)
+                .filter(Objects::nonNull)
+                .collect(toList());
+          }
+
+          @Override
+          public boolean hasNext() {
+            window = window == null ? initialWindow() : newWindow();
+
+            return window.size() == windowSize;
+          }
+
+          private List<T> newWindow() {
+            return iterator.hasNext() ? shiftDown(window, 1, iterator.next()) : emptyList();
+          }
+
+          @Override
+          public List<T> next() {
+            if (window == null || window.size() < windowSize) {
+              throw new NoSuchElementException();
+            }
+
+            return window;
+          }
+        });
+  }
+
   public static <T> Stream<T> stream(final Iterator<T> iterator) {
     return StreamSupport.stream(
-        Spliterators.spliteratorUnknownSize(
-            iterator, Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE),
-        false);
+        spliteratorUnknownSize(iterator, ORDERED | NONNULL | IMMUTABLE), false);
   }
 
   public static <T> Stream<T> stream(final Enumeration<T> enumeration) {
