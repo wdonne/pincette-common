@@ -193,7 +193,8 @@ public class Collections {
    * @since 1.7
    */
   public static <K, V> Map<K, V> merge(final Stream<Map<K, V>> maps) {
-    return maps.flatMap(m -> m.entrySet().stream()).collect(toMap(Entry::getKey, Entry::getValue));
+    return maps.flatMap(m -> m.entrySet().stream())
+        .collect(toMap(Entry::getKey, Entry::getValue, (v1, v2) -> v2));
   }
 
   /**
