@@ -283,7 +283,7 @@ public class Util {
     final List<String> segments = getSegments(path, delimiter).collect(toList());
 
     return (path.startsWith(delimiter) ? delimiter : "")
-        + join(delimiter, segments.subList(0, segments.size() - 1));
+        + (!segments.isEmpty() ? join(delimiter, segments.subList(0, segments.size() - 1)) : "");
   }
 
   private static int getPosition(final String expr) {
