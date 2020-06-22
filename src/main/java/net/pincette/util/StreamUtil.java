@@ -71,6 +71,22 @@ public class StreamUtil {
   }
 
   /**
+   * Create an iterable of a stream using its iterator.
+   *
+   * @param stream the given stream.
+   * @param <T> the value type.
+   * @return The generated iterable.
+   * @since 1.7.3
+   */
+  public static <T> Iterable<T> iterable(final Stream<T> stream) {
+    return new Iterable<T>() {
+      public Iterator<T> iterator() {
+        return stream.iterator();
+      }
+    };
+  }
+
+  /**
    * Returns the last element of a stream.
    *
    * @param stream the given stream.
