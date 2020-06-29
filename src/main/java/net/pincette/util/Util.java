@@ -4,6 +4,7 @@ import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.logging.Logger.getLogger;
+import static java.util.regex.Pattern.quote;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -65,6 +66,7 @@ public class Util {
   private static final Pattern EMAIL =
       Pattern.compile(
           "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])");
+  private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
   private static final Pattern INSTANT =
       Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?(Z|\\+00:00)");
 
@@ -101,7 +103,7 @@ public class Util {
    */
   public static Stream<String> allPaths(final String path, final String delimiter) {
     final String leading = path.startsWith(delimiter) ? delimiter : "";
-    final String[] segments = getSegments(path, delimiter).toArray(String[]::new);
+    final String[] segments = getSegments(path, quote(delimiter)).toArray(String[]::new);
 
     return takeWhile(0, i -> i + 1, i -> i < segments.length)
         .map(
@@ -680,6 +682,19 @@ public class Util {
    */
   public static <T, R> Function<FunctionWithException<T, R>, R> to(final T value) {
     return fn -> tryToGetRethrow(() -> fn.apply(value)).orElse(null);
+  }
+
+  public static char[] toHex(final byte[] bytes) {
+    final char[] result = new char[bytes.length * 2];
+
+    for (int i = 0; i < bytes.length; ++i) {
+      final int v = bytes[i] & 0xFF;
+
+      result[i * 2] = HEX_ARRAY[v >>> 4];
+      result[i * 2 + 1] = HEX_ARRAY[v & 0x0F];
+    }
+
+    return result;
   }
 
   public static boolean tryToDo(final RunnableWithException run) {
