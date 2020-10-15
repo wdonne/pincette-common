@@ -280,6 +280,7 @@ public class Util {
    *
    * @return The factory.
    */
+  @SuppressWarnings("java:S2755") // The feature is set.
   public static DocumentBuilderFactory secureDocumentBuilderFactory() {
     final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
@@ -293,6 +294,7 @@ public class Util {
    *
    * @return The factory.
    */
+  @SuppressWarnings("java:S2755") // The feature is set.
   public static TransformerFactory secureTransformerFactory() {
     final TransformerFactory factory = TransformerFactory.newInstance();
 

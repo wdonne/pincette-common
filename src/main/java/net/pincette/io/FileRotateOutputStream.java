@@ -2,6 +2,7 @@ package net.pincette.io;
 
 import static java.nio.file.Files.delete;
 import static net.pincette.io.StreamConnector.copy;
+import static net.pincette.util.Util.tryToDoWithRethrow;
 import static net.pincette.util.Util.tryToGetRethrow;
 
 import java.io.File;
@@ -65,9 +66,10 @@ public class FileRotateOutputStream extends OutputStream {
       }
     }
 
-    copy(
-        new FileInputStream(file),
-        new GZIPOutputStream(new FileOutputStream(file.getAbsolutePath() + ".1.gz")));
+    tryToDoWithRethrow(
+        () -> new FileInputStream(file),
+        in ->
+            copy(in, new GZIPOutputStream(new FileOutputStream(file.getAbsolutePath() + ".1.gz"))));
 
     delete(file.toPath());
 

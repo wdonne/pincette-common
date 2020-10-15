@@ -1,6 +1,6 @@
 package net.pincette.xml;
 
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toMap;
 import static javax.xml.XMLConstants.XMLNS_ATTRIBUTE;
 import static javax.xml.XMLConstants.XMLNS_ATTRIBUTE_NS_URI;
@@ -102,20 +102,24 @@ public class NamespacePrefixMap implements NamespaceContext {
     return getNamespacePrefix(namespaceURI);
   }
 
-  public Iterator getPrefixes(final String namespaceURI) {
+  public Iterator<String> getPrefixes(final String namespaceURI) {
     if (namespaceURI == null || "".equals(namespaceURI)) {
       throw new IllegalArgumentException();
     }
 
-    final Supplier<Collection> mapOr =
+    final Supplier<Collection<String>> mapOr =
         () ->
             namespaceMap.get(namespaceURI) != null
                 ? namespaceMap.get(namespaceURI)
                 : new ArrayList<>();
-    final Supplier<Collection> attrNsOr =
-        () -> XMLNS_ATTRIBUTE_NS_URI.equals(namespaceURI) ? asList(XMLNS_ATTRIBUTE) : mapOr.get();
+    final Supplier<Collection<String>> attrNsOr =
+        () ->
+            XMLNS_ATTRIBUTE_NS_URI.equals(namespaceURI)
+                ? singletonList(XMLNS_ATTRIBUTE)
+                : mapOr.get();
 
-    return (XML_NS_URI.equals(namespaceURI) ? asList(XML_NS_PREFIX) : attrNsOr.get()).iterator();
+    return (XML_NS_URI.equals(namespaceURI) ? singletonList(XML_NS_PREFIX) : attrNsOr.get())
+        .iterator();
   }
 
   public void startPrefixMapping(final String prefix, final String uri) {
