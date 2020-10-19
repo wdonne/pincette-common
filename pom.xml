@@ -7,7 +7,7 @@
   <groupId>net.pincette</groupId>
   <artifactId>pincette-common</artifactId>
   <packaging>jar</packaging>
-  <version>1.7.5</version>
+  <version>1.7.6</version>
   <name>pincette-common</name>
   <description>General utilities</description>
   <url>https://github.com/wdonne/pincette-common</url>
@@ -93,7 +93,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.1.1</version>
+        <version>3.2.0</version>
         <configuration>
           <additionalJOptions>
             <additionalJOption>-J-Dhttp.agent=maven-javadoc-plugin-${project.name}

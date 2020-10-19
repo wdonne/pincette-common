@@ -1,6 +1,7 @@
 package net.pincette.util;
 
 import static java.lang.Integer.max;
+import static java.lang.Long.MAX_VALUE;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 import static java.util.Spliterator.IMMUTABLE;
@@ -423,6 +424,30 @@ public class StreamUtil {
             return result;
           }
         });
+  }
+
+  /**
+   * Computes a header value with the first value in the stream and generates a stream where the
+   * header value is paired with the remainder of the original values.
+   *
+   * @param stream the given stream of values.
+   * @param header the function that calculates the header value.
+   * @param <H> the header type.
+   * @param <V> the value type.
+   * @return The stream of header value pairs.
+   * @since 1.7.6
+   */
+  public static <H, V> Stream<Pair<H, V>> withHeader(
+      final Stream<V> stream, final Function<V, H> header) {
+    final State<H> state = new State<>();
+
+    return zip(stream, rangeExclusive(0L, MAX_VALUE))
+        .map(
+            pair ->
+                pair(
+                    pair.second == 0 ? state.set(header.apply(pair.first)) : state.get(),
+                    pair.first))
+        .skip(1);
   }
 
   /**
