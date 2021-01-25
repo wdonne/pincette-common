@@ -35,19 +35,18 @@ import net.pincette.function.SideEffect;
  * @author Werner Donn\u00e9
  */
 public class IsolatingClassLoader extends ClassLoader {
-
-  private static Map<ClassLoader, Map<String, byte[]>> classesPerParent = new HashMap<>();
-  private static String[] defaultPrefixes = {
+  private static final Map<ClassLoader, Map<String, byte[]>> classesPerParent = new HashMap<>();
+  private static final String[] defaultPrefixes = {
     "int", "char", "void", "long", "short", "double", "byte", "float", "boolean", "java.", "javax."
   };
-  private static String[] excludePrefixes = {"javax.xml.stream.", "javax.xml.namespace."};
+  private static final String[] excludePrefixes = {"javax.xml.stream.", "javax.xml.namespace."};
 
-  private File[] classPath;
-  private Map<String, Class> loadedClasses = new HashMap<>();
-  private ClassLoader parent;
-  private Set<String> parentClasses = new HashSet<>();
-  private String[] prefixesForParent;
-  private String[] prefixesNotForParent;
+  private final File[] classPath;
+  private final Map<String, Class<?>> loadedClasses = new HashMap<>();
+  private final ClassLoader parent;
+  private final Set<String> parentClasses = new HashSet<>();
+  private final String[] prefixesForParent;
+  private final String[] prefixesNotForParent;
 
   public IsolatingClassLoader() {
     this(new String[0], null);
@@ -161,7 +160,7 @@ public class IsolatingClassLoader extends ClassLoader {
     Optional.of(name.lastIndexOf('.'))
         .filter(index -> index != -1)
         .map(index -> name.substring(0, index))
-        .filter(n -> getPackage(n) == null)
+        .filter(n -> getDefinedPackage(n) == null)
         .ifPresent(n -> definePackage(name, null, null, null, null, null, null, null));
   }
 
@@ -268,8 +267,9 @@ public class IsolatingClassLoader extends ClassLoader {
   }
 
   @Override
-  public Class loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
-    final Class c = findClass(name);
+  public Class<?> loadClass(final String name, final boolean resolve)
+      throws ClassNotFoundException {
+    final Class<?> c = findClass(name);
 
     if (resolve) {
       resolveClass(c);
@@ -278,7 +278,7 @@ public class IsolatingClassLoader extends ClassLoader {
     return c;
   }
 
-  private Class loadClassAsResource(final String className) {
+  private Class<?> loadClassAsResource(final String className) {
     definePackageWithName(className);
 
     return Optional.of(loadFromResource(className))

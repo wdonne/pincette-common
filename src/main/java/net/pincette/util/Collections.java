@@ -124,7 +124,7 @@ public class Collections {
     return collections
         .map(HashSet::new)
         .reduce((s1, s2) -> SideEffect.<HashSet<T>>run(() -> s1.retainAll(s2)).andThenGet(() -> s1))
-        .map(s -> (Set<T>) s)
+        .map(Set.class::cast)
         .orElseGet(java.util.Collections::emptySet);
   }
 

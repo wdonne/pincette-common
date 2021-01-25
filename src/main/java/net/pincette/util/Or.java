@@ -12,7 +12,6 @@ import java.util.function.Supplier;
  * @author Werner Donn\u00e9
  */
 public class Or<T> {
-
   private final T result;
 
   private Or(final Supplier<T> supplier) {

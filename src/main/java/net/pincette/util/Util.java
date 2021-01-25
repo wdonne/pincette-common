@@ -66,11 +66,10 @@ import net.pincette.io.EscapedUnicodeFilterReader;
  */
 public class Util {
   private static final Pattern EMAIL =
-      compile(
-          "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])");
+      compile("[\\w.%+\\-]+@[a-zA-Z\\d\\-]+(\\.[a-zA-Z\\d\\-]+)*\\.[a-zA-Z]{2,}");
   private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
   private static final Pattern INSTANT =
-      compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?(Z|\\+00:00)");
+      compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|\\+00:00)");
 
   private Util() {}
 
@@ -211,7 +210,7 @@ public class Util {
    * @return The comparison result.
    */
   public static boolean equalsOneOf(final Object o, final Object... values) {
-    return Arrays.stream(values).anyMatch(v -> v.equals(o));
+    return Arrays.asList(values).contains(o);
   }
 
   private static String flushLines(final List<String> buffer) {
@@ -342,7 +341,7 @@ public class Util {
   }
 
   public static boolean isEmail(String s) {
-    return EMAIL.matcher(s.toLowerCase()).matches();
+    return EMAIL.matcher(s).matches();
   }
 
   public static boolean isFloat(final String s) {

@@ -25,7 +25,7 @@ import net.pincette.function.SideEffect;
 public class Expressions {
   private static final Pattern TOKENS =
       Pattern.compile(
-          "(\\()|(\\))|(\\!)|([a-zA-Z][a-zA-Z0-9_]*)|(=)|(\\!=)|(<)|(>)|(<=)|"
+          "(\\()|(\\))|(!)|([a-zA-Z][\\w]*)|(=)|(\\!=)|(<)|(>)|(<=)|"
               + "(>=)|(\\+)|(-)|(\\*)|(/)|(&&)|(\\|\\|)|(-?\\d+\\.?\\d*)|('[^']*')|"
               + "(\"[^\"]*\")|(\\s+)");
 

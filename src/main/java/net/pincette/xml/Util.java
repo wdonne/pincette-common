@@ -37,11 +37,11 @@ public class Util {
    */
   public static Stream<Element> ancestors(final Node node) {
     return takeWhile(node.getParentNode(), Node::getParentNode, n -> n instanceof Element)
-        .map(n -> (Element) n);
+        .map(Element.class::cast);
   }
 
   public static Stream<Attr> attributes(final Node node) {
-    return stream(node.getAttributes()).map(n -> (Attr) n);
+    return stream(node.getAttributes()).map(Attr.class::cast);
   }
 
   public static Stream<Node> children(final Node node) {
