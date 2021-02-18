@@ -11,7 +11,6 @@ import java.util.function.Supplier;
  */
 @FunctionalInterface
 public interface SideEffect<T> extends Runnable {
-
   /**
    * Runs <code>runnable</code> and then returns a <code>SideEffect</code> on which the <code>
    * andThenGet</code> method can be called.

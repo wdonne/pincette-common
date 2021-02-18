@@ -7,7 +7,6 @@ package net.pincette.function;
  */
 @FunctionalInterface
 public interface ConsumerWithException<T> {
-
   @SuppressWarnings("squid:S00112")
   void accept(T t) throws Exception;
 

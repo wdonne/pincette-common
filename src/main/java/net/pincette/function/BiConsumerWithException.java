@@ -7,7 +7,6 @@ package net.pincette.function;
  */
 @FunctionalInterface
 public interface BiConsumerWithException<T, U> {
-
   @SuppressWarnings("squid:S00112")
   void accept(T t, U u) throws Exception;
 

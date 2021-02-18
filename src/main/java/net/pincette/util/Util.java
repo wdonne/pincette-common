@@ -19,6 +19,7 @@ import static net.pincette.util.StreamUtil.takeWhile;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -665,6 +666,16 @@ public class Util {
                 ? s.substring(matcher.start(), matcher.end())
                 : ofNullable(parameters.get(matcher.group(1)))
                     .orElseGet(() -> tryDefault.apply(matcher)));
+  }
+
+  public static Optional<File> resolveFile(final File baseDirectory, final String path) {
+    final File file = new File(path);
+
+    return !file.isAbsolute()
+        ? tryToGetRethrow(baseDirectory::getCanonicalFile)
+            .map(b -> new File(b, path))
+            .flatMap(f -> tryToGetRethrow(f::getCanonicalFile))
+        : Optional.of(file);
   }
 
   public static void rethrow(final Throwable e) {

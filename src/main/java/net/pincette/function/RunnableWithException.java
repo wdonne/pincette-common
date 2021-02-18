@@ -7,7 +7,6 @@ package net.pincette.function;
  */
 @FunctionalInterface
 public interface RunnableWithException {
-
   @SuppressWarnings("squid:S00112")
   void run() throws Exception;
 }

@@ -7,7 +7,6 @@ package net.pincette.function;
  */
 @FunctionalInterface
 public interface FunctionWithException<T, R> {
-
   public static <T> FunctionWithException<T, T> identity() {
     return a -> a;
   }

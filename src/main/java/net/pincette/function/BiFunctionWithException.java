@@ -7,7 +7,6 @@ package net.pincette.function;
  */
 @FunctionalInterface
 public interface BiFunctionWithException<T, U, R> {
-
   @SuppressWarnings("squid:S00112")
   public R apply(T t, U u) throws Exception;
 
