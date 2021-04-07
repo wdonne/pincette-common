@@ -1,8 +1,10 @@
 package net.pincette.util;
 
 import static java.lang.Integer.min;
+import static java.util.Arrays.copyOf;
 import static java.util.Collections.nCopies;
 import static java.util.Optional.ofNullable;
+import static java.util.regex.Pattern.quote;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
@@ -73,6 +75,56 @@ public class Collections {
     result.removeAll(c2);
 
     return result;
+  }
+
+  /**
+   * Returns a map where all keys that are paths with segments separated by <code>delimiter</code>
+   * are replaced with the first segment as the key and an expanded submap with the remainder of the
+   * segments as the value.
+   *
+   * @param map the given map.
+   * @param delimiter the delimiter for the keys in the given map.
+   * @return The new expanded map.
+   * @since 1.8
+   */
+  public static Map<String, Object> expand(final Map<String, ?> map, final String delimiter) {
+    final Map<String, Object> result = new HashMap<>();
+
+    map.forEach(
+        (k, v) -> {
+          final String[] segments = k.split(quote(delimiter));
+
+          Arrays.stream(copyOf(segments, segments.length - 1))
+              .reduce(
+                  result,
+                  (m, segment) ->
+                      (Map<String, Object>) m.computeIfAbsent(segment, s -> new HashMap<>()),
+                  (m1, m2) -> m1)
+              .put(segments[segments.length - 1], v);
+        });
+
+    return result;
+  }
+
+  /**
+   * Returns a map where the keys are paths created by the keys of the maps and the submaps,
+   * separated by <code>delimiter</code>. The keys of all the submaps must be strings too. The
+   * result is a map without submaps.
+   *
+   * @param map the given map.
+   * @param delimiter the delimiter for the keys in the new map.
+   * @return The new flattened map.
+   * @since 1.8
+   */
+  public static Map<String, Object> flatten(final Map<String, ?> map, final String delimiter) {
+    return map.entrySet().stream()
+        .flatMap(
+            e ->
+                e.getValue() instanceof Map
+                    ? flatten((Map<String, ?>) e.getValue(), delimiter).entrySet().stream()
+                        .map(sub -> pair(e.getKey() + delimiter + sub.getKey(), sub.getValue()))
+                    : Stream.of(pair(e.getKey(), e.getValue())))
+        .collect(toMap(p -> p.first, p -> p.second));
   }
 
   /**
@@ -306,8 +358,8 @@ public class Collections {
   }
 
   /**
-   * Removes the first <code>positions</code> elements from the list and adds the first element
-   * <code>positions</code> times at the end of the list.
+   * Removes the last <code>positions</code> elements from the list and adds the first element
+   * <code>positions</code> times at the start of the list.
    *
    * @param list the given list.
    * @param positions the number of positions over which to shift. If it is larger than the list
@@ -321,8 +373,8 @@ public class Collections {
   }
 
   /**
-   * Removes the first <code>positions</code> elements from the list and adds <code>newElement
-   * </code> <code>positions</code> times at the end of the list.
+   * Removes the last <code>positions</code> elements from the list and adds <code>newElement
+   * </code> <code>positions</code> times at the start of the list.
    *
    * @param list the given list.
    * @param positions the number of positions over which to shift. If it is larger than the list

@@ -3,6 +3,7 @@ package net.pincette.util;
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Optional.ofNullable;
+import static java.util.UUID.fromString;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.logging.Logger.getLogger;
 import static java.util.regex.Pattern.compile;
@@ -10,7 +11,6 @@ import static java.util.regex.Pattern.quote;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static net.pincette.io.StreamConnector.copy;
 import static net.pincette.util.Pair.pair;
 import static net.pincette.util.ScheduledCompletionStage.composeAsyncAfter;
 import static net.pincette.util.StreamUtil.last;
@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
@@ -59,6 +60,7 @@ import net.pincette.function.RunnableWithException;
 import net.pincette.function.SideEffect;
 import net.pincette.function.SupplierWithException;
 import net.pincette.io.EscapedUnicodeFilterReader;
+import net.pincette.io.StreamConnector;
 
 /**
  * General purpose utility functions.
@@ -136,9 +138,27 @@ public class Util {
   public static byte[] compress(final byte[] b) {
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-    tryToDoRethrow(() -> copy(new ByteArrayInputStream(b), new GZIPOutputStream(out)));
+    tryToDoRethrow(
+        () -> StreamConnector.copy(new ByteArrayInputStream(b), new GZIPOutputStream(out)));
 
     return out.toByteArray();
+  }
+
+  /**
+   * Returs a copy of <code>properties</code>.
+   *
+   * @param properties the given properties.
+   * @return The copy of the properties object.
+   * @since 1.8
+   */
+  public static Properties copy(final Properties properties) {
+    final Properties result = new Properties();
+
+    properties
+        .stringPropertyNames()
+        .forEach(key -> result.setProperty(key, properties.getProperty(key)));
+
+    return result;
   }
 
   /**
@@ -172,7 +192,8 @@ public class Util {
   public static byte[] decompress(final byte[] b) {
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-    tryToDoRethrow(() -> copy(new GZIPInputStream(new ByteArrayInputStream(b)), out));
+    tryToDoRethrow(
+        () -> StreamConnector.copy(new GZIPInputStream(new ByteArrayInputStream(b)), out));
 
     return out.toByteArray();
   }
@@ -359,6 +380,10 @@ public class Util {
 
   public static boolean isLong(final String s) {
     return tryToGetSilent(() -> Long.parseLong(s)).isPresent();
+  }
+
+  public static boolean isUUID(final String s) {
+    return tryToGetSilent(() -> fromString(s)).isPresent();
   }
 
   public static boolean isUri(final String s) {
@@ -680,6 +705,23 @@ public class Util {
 
   public static void rethrow(final Throwable e) {
     throw new GeneralException(e);
+  }
+
+  /**
+   * Returns a new properties object with the new value.
+   *
+   * @param properties the given properties.
+   * @param key the key.
+   * @param value the value.
+   * @return The new properties object.
+   * @since 1.8
+   */
+  public static Properties set(final Properties properties, final String key, final String value) {
+    final Properties copy = copy(properties);
+
+    copy.setProperty(key, value);
+
+    return copy;
   }
 
   private static String stripCondition(final String field) {
