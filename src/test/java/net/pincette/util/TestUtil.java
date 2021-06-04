@@ -1,5 +1,6 @@
 package net.pincette.util;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -7,6 +8,17 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class TestUtil {
+  @Test
+  @DisplayName("canonicalPath")
+  void canonicalPath() {
+    assertEquals("/a/b/c", Util.canonicalPath("/a/b/c", "/"));
+    assertEquals("/a/c", Util.canonicalPath("/a/b/../c", "/"));
+    assertEquals("/c", Util.canonicalPath("/a/b/../../c", "/"));
+    assertEquals("/", Util.canonicalPath("/a/b/../../", "/"));
+    assertEquals("/", Util.canonicalPath("/a/b/../..", "/"));
+    assertEquals("/c", Util.canonicalPath("/a/../b/../c", "/"));
+  }
+
   @Test
   @DisplayName("isEmail")
   void isEmail() {

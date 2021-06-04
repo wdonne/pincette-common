@@ -1,17 +1,18 @@
 package net.pincette.util;
 
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 /**
  * This lets you chain a number of predicates with suppliers. The value of the first supplier with a
  * matching predicate is the result returned by the <code>get</code> method. It can be used like
  * this:
  *
- * <p>{@code Cases.withValue(v).or(v -> test1).or(v -> test2).get();}
+ * <p>{@code Cases.<T, U>withValue(v).or(v -> test1, v -> v1).or(v -> test2, v -> v2).get();}
  *
  * @author Werner Donn\u00e9
+ * @since 1.8
  */
 public class Cases<T, U> {
   private final U result;
@@ -30,11 +31,11 @@ public class Cases<T, U> {
     return Optional.ofNullable(result);
   }
 
-  private Cases<T, U> next(final Predicate<T> predicate, final Supplier<U> supplier) {
-    return new Cases<>(value, predicate.test(value) ? supplier.get() : null);
+  private Cases<T, U> next(final Predicate<T> predicate, final Function<T, U> fn) {
+    return new Cases<>(value, predicate.test(value) ? fn.apply(value) : null);
   }
 
-  public Cases<T, U> or(final Predicate<T> predicate, final Supplier<U> supplier) {
-    return result != null ? this : next(predicate, supplier);
+  public Cases<T, U> or(final Predicate<T> predicate, final Function<T, U> fn) {
+    return result != null ? this : next(predicate, fn);
   }
 }

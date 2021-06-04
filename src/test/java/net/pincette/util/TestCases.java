@@ -10,8 +10,8 @@ class TestCases {
   @Test
   @DisplayName("Cases")
   void test() {
-    assertEquals(0, withValue(0).or(v -> true, () -> 0).or(v -> false, () -> 1).get().orElse(-1));
-    assertEquals(1, withValue(0).or(v -> false, () -> 0).or(v -> true, () -> 1).get().orElse(-1));
-    assertEquals(-1, withValue(0).or(v -> false, () -> 0).or(v -> false, () -> 1).get().orElse(-1));
+    assertEquals(0, withValue(0).or(v -> true, v -> 0).or(v -> false, v -> 1).get().orElse(-1));
+    assertEquals(1, withValue(0).or(v -> false, v -> 0).or(v -> true, v -> 1).get().orElse(-1));
+    assertEquals(-1, withValue(0).or(v -> false, v -> 0).or(v -> false, v -> 1).get().orElse(-1));
   }
 }

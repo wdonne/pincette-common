@@ -24,6 +24,8 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import net.pincette.function.SideEffect;
 
@@ -34,6 +36,52 @@ import net.pincette.function.SideEffect;
  */
 public class Collections {
   private Collections() {}
+
+  /**
+   * Works like <code>Map.computeIfAbsent</code>, but avoids a concurrent access exception when the
+   * given function also modifies the map.
+   *
+   * @param map the given map.
+   * @param key the key to look up.
+   * @param fn the function that generates a new value if it doesn't exist for the given key.
+   * @param <K> the key type.
+   * @param <V> the value type.
+   * @return The existing or generated value.
+   * @since 1.8.1
+   */
+  public static <K, V> V computeIfAbsent(
+      final Map<K, V> map, final K key, final Function<? super K, ? extends V> fn) {
+    return ofNullable(map.get(key))
+        .orElseGet(
+            () ->
+                Optional.of(fn.apply(key))
+                    .map(v -> SideEffect.<V>run(() -> map.put(key, v)).andThenGet(() -> v))
+                    .orElse(null));
+  }
+
+  /**
+   * Works like <code>Map.computeIfPresent</code>, but avoids a concurrent access exception when the
+   * given function also modifies the map.
+   *
+   * @param map the given map.
+   * @param key the key to look up.
+   * @param fn the function that generates a new value if one already exists for the given key.
+   * @param <K> the key type.
+   * @param <V> the value type.
+   * @return The new value or <code>null</code>.
+   * @since 1.8.1
+   */
+  public static <K, V> V computeIfPresent(
+      final Map<K, V> map, final K key, final BiFunction<? super K, ? super V, ? extends V> fn) {
+    return ofNullable(map.get(key))
+        .map(
+            v ->
+                ofNullable(fn.apply(key, v))
+                    .map(val -> SideEffect.<V>run(() -> map.put(key, v)).andThenGet(() -> val))
+                    .orElseGet(
+                        () -> SideEffect.<V>run(() -> map.remove(key)).andThenGet(() -> null)))
+        .orElse(null);
+  }
 
   /**
    * Concatenates <code>collections</code> into one list containing the elements of the collections.

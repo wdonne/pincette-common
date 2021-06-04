@@ -1,6 +1,8 @@
 package net.pincette.util;
 
 import static java.util.stream.Collectors.toList;
+import static net.pincette.util.Collections.computeIfAbsent;
+import static net.pincette.util.Collections.computeIfPresent;
 import static net.pincette.util.Collections.concat;
 import static net.pincette.util.Collections.difference;
 import static net.pincette.util.Collections.expand;
@@ -20,11 +22,37 @@ import static net.pincette.util.Collections.union;
 import static net.pincette.util.Pair.pair;
 import static net.pincette.util.StreamUtil.stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class TestCollections {
+  @Test
+  @DisplayName("computeIfAbsent")
+  void testComputeIfAbsent() {
+    final Map<String, Integer> map = map(pair("0", 0));
+
+    assertEquals(0, computeIfAbsent(new HashMap<>(map), "0", k -> 0));
+    assertEquals(1, computeIfAbsent(new HashMap<>(map), "1", k -> 1));
+  }
+
+  @Test
+  @DisplayName("computeIfPresent")
+  void testComputeIfPresent() {
+    final Map<String, Integer> map = map(pair("0", 0));
+
+    assertEquals(1, computeIfPresent(new HashMap<>(map), "0", (k, v) -> v + 1));
+    assertNull(computeIfPresent(new HashMap<>(map), "1", (k, v) -> 2));
+
+    final HashMap<String, Integer> copy = new HashMap<>(map);
+
+    assertNull(computeIfPresent(copy, "0", (k, v) -> null));
+    assertNull(copy.get("0"));
+  }
+
   @Test
   @DisplayName("concat")
   void testConcat() {

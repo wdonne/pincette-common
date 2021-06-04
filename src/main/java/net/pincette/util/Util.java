@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -127,6 +128,34 @@ public class Util {
   public static <T> AutoCloseWrapper<T> autoClose(
       final SupplierWithException<T> resource, final ConsumerWithException<T> close) {
     return new AutoCloseWrapper<>(resource, close);
+  }
+
+  /**
+   * Converts a path with "." and ".." segments into a resolved canonical path.
+   *
+   * @param path the original path.
+   * @param delimiter the path delimiter.
+   * @return The canonical path.
+   * @since 1.8.1
+   */
+  public static String canonicalPath(final String path, final String delimiter) {
+    return delimiter
+        + String.join(
+            delimiter,
+            getSegments(path, delimiter)
+                .filter(s -> s.length() > 0 && !s.equals("."))
+                .reduce(
+                    new LinkedList<>(),
+                    (l, s) -> {
+                      if (s.equals("..")) {
+                        l.removeLast();
+                      } else {
+                        l.add(s);
+                      }
+
+                      return l;
+                    },
+                    (l1, l2) -> l1));
   }
 
   /**
