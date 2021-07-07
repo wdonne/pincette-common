@@ -36,7 +36,7 @@ public class Util {
    * @return The stream.
    */
   public static Stream<Element> ancestors(final Node node) {
-    return takeWhile(node.getParentNode(), Node::getParentNode, n -> n instanceof Element)
+    return takeWhile(node.getParentNode(), Node::getParentNode, Element.class::isInstance)
         .map(Element.class::cast);
   }
 

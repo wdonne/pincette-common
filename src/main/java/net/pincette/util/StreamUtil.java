@@ -15,6 +15,7 @@ import static java.util.stream.Collectors.toList;
 import static net.pincette.util.Collections.shiftDown;
 import static net.pincette.util.Pair.pair;
 
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
@@ -45,7 +46,7 @@ public class StreamUtil {
    *
    * @param stages the given completion stages.
    * @param <T> the element type.
-   * @return the stream of generated elements.
+   * @return The stream of generated elements.
    */
   public static <T> CompletionStage<Stream<T>> composeAsyncStream(
       final Stream<CompletionStage<T>> stages) {
@@ -56,9 +57,9 @@ public class StreamUtil {
    * Runs the <code>stages</code> in sequence.
    *
    * @param stages the given completion stages.
-   * @param executor th executor.
+   * @param executor the executor.
    * @param <T> the element type.
-   * @return the stream of generated elements.
+   * @return The stream of generated elements.
    */
   public static <T> CompletionStage<Stream<T>> composeAsyncStream(
       final Stream<CompletionStage<T>> stages, final Executor executor) {
@@ -69,6 +70,54 @@ public class StreamUtil {
             (stage, s) -> stage.thenComposeAsync(builder -> s.thenApply(builder::add), executor),
             (s1, s2) -> s1)
         .thenApply(Builder::build);
+  }
+
+  /**
+   * Runs the supplied <code>stages</code> in sequence using the <code>ForkJoinPool.commonPool()
+   * </code>.
+   *
+   * @param stages the given completion stages.
+   * @param <T> the element type.
+   * @return The stream of generated elements.
+   * @since 1.9
+   */
+  public static <T> CompletionStage<Stream<T>> composeAsyncSuppliers(
+      final Stream<Supplier<CompletionStage<T>>> stages) {
+    return composeAsyncSuppliers(stages, commonPool());
+  }
+
+  /**
+   * Runs the supplied <code>stages</code> in sequence.
+   *
+   * @param stages the given completion stages.
+   * @param executor the executor.
+   * @param <T> the element type.
+   * @return The stream of generated elements.
+   * @since 1.9
+   */
+  public static <T> CompletionStage<Stream<T>> composeAsyncSuppliers(
+      final Stream<Supplier<CompletionStage<T>>> stages, final Executor executor) {
+    return stages
+        .sequential()
+        .reduce(
+            supplyAsync(Stream::<T>builder, executor),
+            (stage, s) ->
+                stage.thenComposeAsync(builder -> s.get().thenApply(builder::add), executor),
+            (s1, s2) -> s1)
+        .thenApply(Builder::build);
+  }
+
+  /**
+   * Concatenates all given streams into one.
+   *
+   * @param streams the given streams.
+   * @param <T> the element type.
+   * @return The concatenated stream.
+   * @since 1.8.2
+   */
+  @SafeVarargs
+  public static <T> Stream<T> concat(final Stream<? extends T>... streams) {
+    return Arrays.stream(streams).reduce(Stream.empty(), Stream::concat, (r1, r2) -> r1);
   }
 
   /**

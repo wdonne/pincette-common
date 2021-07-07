@@ -7,7 +7,7 @@
   <groupId>net.pincette</groupId>
   <artifactId>pincette-common</artifactId>
   <packaging>jar</packaging>
-  <version>1.8.1</version>
+  <version>1.9</version>
   <name>pincette-common</name>
   <description>General utilities</description>
   <url>https://github.com/wdonne/pincette-common</url>
@@ -60,7 +60,7 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>5.7.1</version>
+      <version>5.7.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -159,7 +159,7 @@
       <plugin>
         <groupId>pl.project13.maven</groupId>
         <artifactId>git-commit-id-plugin</artifactId>
-        <version>4.0.3</version>
+        <version>4.0.5</version>
         <executions>
           <execution>
             <id>get-the-git-infos</id>
@@ -179,6 +179,17 @@
           </includeOnlyProperties>
           <commitIdGenerationMode>full</commitIdGenerationMode>
         </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.22.2</version>
+        <configuration>
+          <forkCount>0</forkCount>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>2.22.2</version>
       </plugin>
     </plugins>
   </build>

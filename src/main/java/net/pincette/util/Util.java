@@ -2,6 +2,7 @@ package net.pincette.util;
 
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.fill;
 import static java.util.Optional.ofNullable;
 import static java.util.UUID.fromString;
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -614,6 +615,14 @@ public class Util {
                         .andThenGet(() -> null)
                     : (flushLines(buffer) + line))
         .filter(Objects::nonNull);
+  }
+
+  public static char[] repeat(final char c, final int count) {
+    final char[] result = new char[count];
+
+    fill(result, c);
+
+    return result;
   }
 
   /**
