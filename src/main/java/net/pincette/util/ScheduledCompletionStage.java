@@ -43,6 +43,21 @@ public class ScheduledCompletionStage {
     return future.thenComposeAsync(r -> supplier.get());
   }
 
+  public static CompletionStage<Void> runAsyncAfter(final Runnable runnable, final Duration delay) {
+    return runAsyncAfter(runnable, delay, commonPool());
+  }
+
+  public static CompletionStage<Void> runAsyncAfter(
+      final Runnable runnable, final Duration delay, final Executor executor) {
+    return supplyAsyncAfter(
+        () -> {
+          runnable.run();
+          return null;
+        },
+        delay,
+        executor);
+  }
+
   public static <T> CompletionStage<T> supplyAsyncAfter(
       final Supplier<T> supplier, final Duration delay) {
     return supplyAsyncAfter(supplier, delay, commonPool());
