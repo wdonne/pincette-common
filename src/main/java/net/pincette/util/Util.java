@@ -451,6 +451,17 @@ public class Util {
     };
   }
 
+  /**
+   * Throws an unchecked exception if <code>o</code> is false.
+   *
+   * @param o the object to test and return.
+   */
+  public static void must(final boolean o) {
+    if (!o) {
+      throw new PredicateException("Unmet predicate");
+    }
+  }
+
   public static <T> T must(final T o, final Predicate<T> predicate) {
     return must(o, predicate, null);
   }

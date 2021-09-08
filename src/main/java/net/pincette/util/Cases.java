@@ -5,7 +5,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- * This lets you chain a number of predicates with suppliers. The value of the first supplier with a
+ * This lets you chain a number of predicates with functions. The value of the first function with a
  * matching predicate is the result returned by the <code>get</code> method. It can be used like
  * this:
  *

@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,6 +30,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.Stream.Builder;
 import java.util.stream.StreamSupport;
@@ -285,6 +287,19 @@ public class StreamUtil {
   }
 
   /**
+   * Create a stream of <code>count</code> times <code>value</code>.
+   *
+   * @param value the value that will be repeated.
+   * @param count the number of times the value will be repeated.
+   * @param <T> the value type.
+   * @return The stream of repetitions.
+   * @see 1.9.2
+   */
+  public static <T> Stream<T> repeat(final T value, final int count) {
+    return rangeExclusive(0, count).map(i -> value);
+  }
+
+  /**
    * Returns a stream of sliding windows over <code>stream</code>. Only windows of exactly <code>
    * windowSize</code> are returned.
    *
@@ -473,6 +488,19 @@ public class StreamUtil {
             return result;
           }
         });
+  }
+
+  /**
+   * Creates a map from a stream of value pairs.
+   *
+   * @param stream the given stream.
+   * @param <K> the key type.
+   * @param <V> the value type.
+   * @return The generated map.
+   * @since 1.9.2
+   */
+  public static <K, V> Map<K, V> toMap(final Stream<Pair<K, V>> stream) {
+    return stream.collect(Collectors.toMap(pair -> pair.first, pair -> pair.second));
   }
 
   /**
