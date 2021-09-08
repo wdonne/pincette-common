@@ -455,6 +455,7 @@ public class Util {
    * Throws an unchecked exception if <code>o</code> is false.
    *
    * @param o the object to test and return.
+   * @since 1.9.2
    */
   public static void must(final boolean o) {
     if (!o) {

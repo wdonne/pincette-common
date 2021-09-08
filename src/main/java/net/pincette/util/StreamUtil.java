@@ -293,7 +293,7 @@ public class StreamUtil {
    * @param count the number of times the value will be repeated.
    * @param <T> the value type.
    * @return The stream of repetitions.
-   * @see 1.9.2
+   * @since 1.9.2
    */
   public static <T> Stream<T> repeat(final T value, final int count) {
     return rangeExclusive(0, count).map(i -> value);
