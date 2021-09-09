@@ -3,6 +3,7 @@ package net.pincette.util;
 import static java.util.Arrays.stream;
 import static java.util.logging.Logger.getLogger;
 import static net.pincette.io.StreamConnector.copy;
+import static net.pincette.util.Collections.computeIfAbsent;
 import static net.pincette.util.Pair.pair;
 import static net.pincette.util.Util.tryToDoRethrow;
 import static net.pincette.util.Util.tryToGetRethrow;
@@ -93,7 +94,7 @@ public class IsolatingClassLoader extends ClassLoader {
       final ClassLoader parent,
       final File[] classPath) {
     super(null);
-    this.parent = parent != null ? parent : ClassLoader.getSystemClassLoader();
+    this.parent = parent != null ? parent : getSystemClassLoader();
     this.prefixesForParent = new String[defaultPrefixes.length + prefixesForParent.length];
     this.prefixesNotForParent = new String[excludePrefixes.length + prefixesNotForParent.length];
     this.classPath = classPath;
@@ -127,9 +128,7 @@ public class IsolatingClassLoader extends ClassLoader {
                     .flatMap(
                         e ->
                             tryToGetRethrow(
-                                () ->
-                                    new URL(
-                                        "jar:" + classPathEntry.toURI().toString() + "!/" + name)))
+                                () -> new URL("jar:" + classPathEntry.toURI() + "!/" + name)))
                     .orElse(null))
         .orElse(null);
   }
@@ -175,13 +174,15 @@ public class IsolatingClassLoader extends ClassLoader {
   }
 
   @Override
-  protected Class findClass(final String className) throws ClassNotFoundException {
+  protected Class<?> findClass(final String className) throws ClassNotFoundException {
     try {
       return !isNotForParent(className)
-          ? SideEffect.<Class>run(() -> trace(className + ": parent classloader"))
+          ? SideEffect.<Class<?>>run(() -> trace(className + ": parent classloader"))
               .andThenGet(() -> tryToGetRethrow(() -> parent.loadClass(className)).orElse(null))
-          : loadedClasses.computeIfAbsent(
-              className, name -> tryToGetRethrow(() -> loadClassAsResource(name)).orElse(null));
+          : computeIfAbsent(
+              loadedClasses,
+              className,
+              name -> tryToGetRethrow(() -> loadClassAsResource(name)).orElse(null));
     } catch (Exception e) {
       throw e.getCause() instanceof ClassNotFoundException
           ? (ClassNotFoundException) e.getCause()
@@ -201,10 +202,7 @@ public class IsolatingClassLoader extends ClassLoader {
     return stream(classPath)
         .map(cp -> resourceUrl(name, cp))
         .filter(Objects::nonNull)
-        .map(
-            url ->
-                SideEffect.<URL>run(() -> trace(name + ": " + url.toString()))
-                    .andThenGet(() -> url))
+        .map(url -> SideEffect.<URL>run(() -> trace(name + ": " + url)).andThenGet(() -> url))
         .findFirst()
         .orElse(
             SideEffect.<URL>run(() -> trace(name + ": parent as resource"))
