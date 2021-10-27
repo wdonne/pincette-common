@@ -91,12 +91,9 @@ public class Util {
    */
   public static <T, R> Function<T, R> accumulate(
       final BiFunctionWithException<R, T, R> fn, final R initialValue) {
-    final Object[] state = new Object[] {initialValue};
+    final State<R> state = new State<>(initialValue);
 
-    return v ->
-        SideEffect.<R>run(
-                () -> state[0] = tryToGetRethrow(() -> fn.apply((R) state[0], v)).orElse(null))
-            .andThenGet(() -> (R) state[0]);
+    return v -> state.set(tryToGetRethrow(() -> fn.apply(state.get(), v)).orElse(null));
   }
 
   /**
@@ -583,7 +580,7 @@ public class Util {
                 pair -> pair.map(evaluateIfLastOr))
             .filter(
                 pair ->
-                    !pair.isPresent() || pair.map(p -> p.second == Integer.MAX_VALUE).orElse(false))
+                    pair.isEmpty() || pair.map(p -> p.second == Integer.MAX_VALUE).orElse(false))
             .map(pair -> pair.map(p -> (T) p.first))
             .findFirst()
             .orElse(Optional.empty());
@@ -1051,9 +1048,9 @@ public class Util {
       }
     }
 
-    private T get() throws Exception {
+    private T get() {
       if (res == null) {
-        res = resource.get();
+        res = tryToGetRethrow(resource::get).orElse(null);
       }
 
       return res;
