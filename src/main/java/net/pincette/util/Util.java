@@ -1,5 +1,6 @@
 package net.pincette.util;
 
+import static java.lang.Boolean.FALSE;
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.fill;
@@ -75,6 +76,7 @@ public class Util {
   private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
   private static final Pattern INSTANT =
       compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|\\+00:00)");
+  private static final Object VOID = new Object();
 
   private Util() {}
 
@@ -247,6 +249,27 @@ public class Util {
           while (true) {
             runnable.run();
           }
+        },
+        error);
+  }
+
+  public static void doUntil(final SupplierWithException<Boolean> supplier) {
+    doUntil(supplier, Util::rethrow);
+  }
+
+  /**
+   * Executes <code>supplier</code> until it returns <code>true</code>.
+   *
+   * @param supplier a function that may throw an exception, which will be rethrown.
+   * @param error the function that deals with an exception.
+   * @since 2.0.1
+   */
+  public static void doUntil(
+      final SupplierWithException<Boolean> supplier, final Consumer<Exception> error) {
+    tryToDo(
+        () -> {
+          while (FALSE.equals(supplier.get()))
+            ;
         },
         error);
   }
@@ -820,6 +843,54 @@ public class Util {
     }
   }
 
+  public static CompletionStage<Void> tryToDoForever(
+      final RunnableWithException run, final Duration retryInterval) {
+    return tryToDoForever(run, retryInterval, null);
+  }
+
+  /**
+   * Repeats the given function until it no longer throws an exception.
+   *
+   * @param run the given function.
+   * @param retryInterval the time between retries.
+   * @param onException an optional exception handler.
+   * @return The completion stage that completes when the given function succeeds.
+   * @since 2.0.1
+   */
+  public static CompletionStage<Void> tryToDoForever(
+      final RunnableWithException run,
+      final Duration retryInterval,
+      final Consumer<Exception> onException) {
+    return tryToGetForever(
+            () ->
+                SideEffect.<CompletionStage<Object>>run(() -> tryToDoRethrow(run))
+                    .andThenGet(() -> completedFuture(VOID)),
+            retryInterval,
+            onException)
+        .thenApply(r -> null);
+  }
+
+  public static CompletionStage<Void> tryToDoForever(
+      final SupplierWithException<CompletionStage<Void>> run, final Duration retryInterval) {
+    return tryToDoForever(run, retryInterval, null);
+  }
+
+  /**
+   * Repeats the given function until it no longer throws an exception.
+   *
+   * @param run the given function.
+   * @param retryInterval the time between retries.
+   * @param onException an optional exception handler.
+   * @return The completion stage that completes when the given function succeeds.
+   * @since 2.0.1
+   */
+  public static CompletionStage<Void> tryToDoForever(
+      final SupplierWithException<CompletionStage<Void>> run,
+      final Duration retryInterval,
+      final Consumer<Exception> onException) {
+    return tryToGetForever(run, retryInterval, onException);
+  }
+
   public static void tryToDoRethrow(final RunnableWithException run) {
     tryToDo(run, Util::rethrow);
   }
@@ -942,7 +1013,7 @@ public class Util {
                                 .andThenGet(() -> null))
                     .thenComposeAsync(
                         value -> value != null ? completedFuture(value) : again.get()))
-        .orElse(null);
+        .orElseGet(() -> completedFuture(null));
   }
 
   public static <T> Optional<T> tryToGetRethrow(final SupplierWithException<T> run) {
