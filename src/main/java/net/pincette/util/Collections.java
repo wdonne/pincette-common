@@ -10,10 +10,12 @@ import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static net.pincette.util.Pair.pair;
 import static net.pincette.util.StreamUtil.stream;
+import static net.pincette.util.StreamUtil.takeWhile;
 import static net.pincette.util.Util.countingIterator;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -22,6 +24,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -106,6 +109,36 @@ public class Collections {
    */
   public static <T> List<T> concat(final Stream<Collection<T>> collections) {
     return collections.flatMap(Collection::stream).collect(toList());
+  }
+
+  private static <T> Stream<T> consumeDeque(final Deque<T> deque, final Function<Deque<T>, T> fn) {
+    return takeWhile(fn.apply(deque), v -> fn.apply(deque), Objects::nonNull);
+  }
+
+  /**
+   * Returns a stream that consumes all the elements starting from the head of the queue. The
+   * returned elements are removed.
+   *
+   * @param deque the given queue.
+   * @param <T> the value type.
+   * @return The value stream.
+   * @since 2.0.2
+   */
+  public static <T> Stream<T> consumeHead(final Deque<T> deque) {
+    return consumeDeque(deque, Deque::pollFirst);
+  }
+
+  /**
+   * Returns a stream that consumes all the elements starting from the head of the queue. The
+   * returned elements are removed.
+   *
+   * @param deque the given queue.
+   * @param <T> the value type.
+   * @return The value stream.
+   * @since 2.0.2
+   */
+  public static <T> Stream<T> consumeTail(final Deque<T> deque) {
+    return consumeDeque(deque, Deque::pollLast);
   }
 
   /**

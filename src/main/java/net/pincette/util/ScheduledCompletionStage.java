@@ -18,7 +18,7 @@ import java.util.function.Supplier;
  * @author Werner Donn\u00e9
  */
 public class ScheduledCompletionStage {
-  private static final Timer TIMER = new Timer("ScheduledCompletionStage");
+  private static final Timer TIMER = new Timer("ScheduledCompletionStage", true);
 
   private ScheduledCompletionStage() {}
 

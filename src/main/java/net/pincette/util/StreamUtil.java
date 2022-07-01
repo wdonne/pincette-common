@@ -12,6 +12,7 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.ForkJoinPool.commonPool;
 import static java.util.stream.Collectors.toList;
+import static net.pincette.util.Collections.map;
 import static net.pincette.util.Collections.shiftDown;
 import static net.pincette.util.Pair.pair;
 
@@ -30,7 +31,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.Stream.Builder;
 import java.util.stream.StreamSupport;
@@ -42,6 +42,13 @@ import java.util.stream.StreamSupport;
  */
 public class StreamUtil {
   private StreamUtil() {}
+
+  private static <T> List<T> chunk(final Iterator<T> iterator, final int size) {
+    return rangeExclusive(0, size)
+        .map(i -> iterator.hasNext() ? iterator.next() : null)
+        .filter(Objects::nonNull)
+        .collect(toList());
+  }
 
   /**
    * Runs the <code>stages</code> in sequence using the <code>ForkJoinPool.commonPool()</code>.
@@ -123,6 +130,37 @@ public class StreamUtil {
   }
 
   /**
+   * Generates a stream of elements until the <code>generator</code> returns an empty value.
+   *
+   * @param generator the given generator.
+   * @return The stream.
+   * @param <T> the value type.
+   * @since 2.0.2
+   */
+  public static <T> Stream<T> generate(final Supplier<Optional<T>> generator) {
+    return stream(
+        new Iterator<T>() {
+          T value;
+
+          @Override
+          public boolean hasNext() {
+            value = generator.get().orElse(null);
+
+            return value != null;
+          }
+
+          @Override
+          public T next() {
+            if (value == null) {
+              throw new NoSuchElementException();
+            }
+
+            return value;
+          }
+        });
+  }
+
+  /**
    * Create an iterable of a stream using its iterator.
    *
    * @param stream the given stream.
@@ -143,6 +181,30 @@ public class StreamUtil {
    */
   public static <T> Optional<T> last(final Stream<T> stream) {
     return ofNullable(stream.sequential().reduce(null, (result, element) -> element));
+  }
+
+  public static <T> Stream<List<T>> per(final Stream<T> stream, final int n) {
+    return stream(
+        new Iterator<>() {
+          final Iterator<T> iterator = stream.iterator();
+          List<T> chunk;
+
+          @Override
+          public boolean hasNext() {
+            chunk = chunk(iterator, n);
+
+            return !chunk.isEmpty();
+          }
+
+          @Override
+          public List<T> next() {
+            if (chunk == null || chunk.isEmpty()) {
+              throw new NoSuchElementException();
+            }
+
+            return chunk;
+          }
+        });
   }
 
   /**
@@ -311,20 +373,13 @@ public class StreamUtil {
    */
   public static <T> Stream<List<T>> slide(final Stream<T> stream, final int windowSize) {
     return stream(
-        new Iterator<List<T>>() {
+        new Iterator<>() {
           final Iterator<T> iterator = stream.iterator();
           List<T> window;
 
-          private List<T> initialWindow() {
-            return rangeExclusive(0, windowSize)
-                .map(i -> iterator.hasNext() ? iterator.next() : null)
-                .filter(Objects::nonNull)
-                .collect(toList());
-          }
-
           @Override
           public boolean hasNext() {
-            window = window == null ? initialWindow() : newWindow();
+            window = window == null ? chunk(iterator, windowSize) : newWindow();
 
             return window.size() == windowSize;
           }
@@ -498,9 +553,11 @@ public class StreamUtil {
    * @param <V> the value type.
    * @return The generated map.
    * @since 1.9.2
+   * @deprecated 2.0.2
    */
+  @Deprecated(since = "2.0.2")
   public static <K, V> Map<K, V> toMap(final Stream<Pair<K, V>> stream) {
-    return stream.collect(Collectors.toMap(pair -> pair.first, pair -> pair.second));
+    return map(stream);
   }
 
   /**

@@ -1,6 +1,8 @@
 package net.pincette.util;
 
 import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
+import static java.lang.Math.max;
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.fill;
@@ -45,6 +47,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -156,6 +159,11 @@ public class Util {
                       return l;
                     },
                     (l1, l2) -> l1));
+  }
+
+  public static <T, R, V> Function<T, R> compose(
+      final Function<T, V> fn1, final Function<V, R> fn2) {
+    return fn1.andThen(fn2);
   }
 
   /**
@@ -523,6 +531,10 @@ public class Util {
    */
   public static <T> void nop(final T arg) {
     // To use as empty consumer.
+  }
+
+  public static String padWith(final String s, final char c, final int size) {
+    return new StringBuilder(s).insert(0, repeat(c, max(0, size - s.length()))).toString();
   }
 
   public static <T> Optional<T> pathSearch(final Map<String, ? extends T> map, final String path) {
@@ -1102,6 +1114,25 @@ public class Util {
     return tryToGetWith(resource, fn, e -> null);
   }
 
+  public static <T> CompletionStage<T> waitFor(
+      final Supplier<CompletionStage<Optional<T>>> condition, final Duration interval) {
+    return condition
+        .get()
+        .thenComposeAsync(
+            result ->
+                result
+                    .map(CompletableFuture::completedFuture)
+                    .orElseGet(
+                        () ->
+                            composeAsyncAfter(() -> waitFor(condition, interval), interval)
+                                .toCompletableFuture()));
+  }
+
+  public static Supplier<CompletionStage<Optional<Boolean>>> waitForCondition(
+      final Supplier<CompletionStage<Boolean>> condition) {
+    return () -> condition.get().thenApply(result -> ofNullable(TRUE.equals(result) ? TRUE : null));
+  }
+
   public static class AutoCloseWrapper<T> implements AutoCloseable {
     private final ConsumerWithException<T> close;
     private final SupplierWithException<T> resource;
@@ -1121,7 +1152,7 @@ public class Util {
 
     private T get() {
       if (res == null) {
-        res = tryToGetRethrow(resource::get).orElse(null);
+        res = tryToGetRethrow(resource).orElse(null);
       }
 
       return res;

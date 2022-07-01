@@ -1,6 +1,8 @@
 package net.pincette.util;
 
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import net.pincette.function.SideEffect;
 
@@ -8,7 +10,7 @@ import net.pincette.function.SideEffect;
  * This lets you chain a number of predicates with consumers. It falls through the <code>or</code>
  * calls until a predicate returns <code>true</code>.
  *
- * <p>{@code D.<T>withValue(v).or(v -> test1, v -> {}).or(v -> test2, v -> {});}
+ * <p>{@code Do.<T>withValue(v).or(v -> test1, v -> {}).or(v -> test2, v -> {});}
  *
  * @author Werner Donn\u00e9
  * @since 1.9.2
@@ -32,7 +34,17 @@ public class Do<T> {
         : new Do<>(value, false);
   }
 
+  private <U> Do<T> next(final Function<T, Optional<U>> get, final Consumer<U> fn) {
+    return get.apply(value)
+        .map(v -> SideEffect.<Do<T>>run(() -> fn.accept(v)).andThenGet(() -> new Do<>(value, true)))
+        .orElseGet(() -> new Do<>(value, false));
+  }
+
   public Do<T> or(final Predicate<T> predicate, final Consumer<T> fn) {
     return done ? this : next(predicate, fn);
+  }
+
+  public <U> Do<T> orGet(final Function<T, Optional<U>> get, final Consumer<U> fn) {
+    return done ? this : next(get, fn);
   }
 }

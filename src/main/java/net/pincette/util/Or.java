@@ -1,7 +1,10 @@
 package net.pincette.util;
 
+import static java.util.Optional.ofNullable;
+
 import java.util.Optional;
 import java.util.function.Supplier;
+import net.pincette.function.OptionalSupplier;
 
 /**
  * This lets you chain a number of lambda expressions. The execution stops at the first expression
@@ -12,9 +15,13 @@ import java.util.function.Supplier;
  * @author Werner Donn\u00e9
  */
 public class Or<T> {
-  private final T result;
+  private final Optional<T> result;
 
   private Or(final Supplier<T> supplier) {
+    this.result = ofNullable(supplier.get());
+  }
+
+  private Or(final OptionalSupplier<T> supplier) {
     this.result = supplier.get();
   }
 
@@ -22,11 +29,19 @@ public class Or<T> {
     return new Or<>(supplier);
   }
 
+  public static <T> Or<T> tryWith(final OptionalSupplier<T> supplier) {
+    return new Or<>(supplier);
+  }
+
   public Optional<T> get() {
-    return Optional.ofNullable(result);
+    return result;
   }
 
   public Or<T> or(final Supplier<T> supplier) {
-    return result != null ? this : new Or<>(supplier);
+    return result.isPresent() ? this : new Or<>(supplier);
+  }
+
+  public Or<T> or(final OptionalSupplier<T> supplier) {
+    return result.isPresent() ? this : new Or<>(supplier);
   }
 }

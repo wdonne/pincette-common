@@ -19,7 +19,7 @@ public class Base64OutputStream extends FilterOutputStream {
   };
 
   private final byte[] buffer = new byte[3]; // One encoding quantum.
-  private boolean closeUnderlying;
+  private final boolean closeUnderlying;
   private int lineSize = 0;
   private boolean oneLine;
   private int position = 0;
@@ -99,7 +99,8 @@ public class Base64OutputStream extends FilterOutputStream {
       i += checkLine(b, i);
     }
 
-    for (int j = 0; j < buffer.length; buffer[j++] = 0) ;
+    for (int j = 0; j < buffer.length; buffer[j++] = 0)
+      ;
     position = 0;
 
     return i - off;

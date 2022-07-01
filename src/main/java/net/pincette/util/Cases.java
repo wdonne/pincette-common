@@ -35,7 +35,18 @@ public class Cases<T, U> {
     return new Cases<>(value, predicate.test(value) ? fn.apply(value) : null);
   }
 
+  private <V> Cases<T, U> next(final Function<T, Optional<V>> get, final Function<V, U> fn) {
+    return get.apply(value)
+        .map(fn)
+        .map(v -> new Cases<>(value, v))
+        .orElseGet(() -> new Cases<>(value, null));
+  }
+
   public Cases<T, U> or(final Predicate<T> predicate, final Function<T, U> fn) {
     return result != null ? this : next(predicate, fn);
+  }
+
+  public <V> Cases<T, U> orGet(final Function<T, Optional<V>> get, final Function<V, U> fn) {
+    return result != null ? this : next(get, fn);
   }
 }
