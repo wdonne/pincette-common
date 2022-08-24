@@ -51,11 +51,14 @@ public class StreamUtil {
   }
 
   /**
-   * Runs the <code>stages</code> in sequence using the <code>ForkJoinPool.commonPool()</code>.
+   * Runs the <code>stages</code> in sequence using the <code>ForkJoinPool.commonPool()</code>. The
+   * resulting element sequence is in the same sequence. Note that side effects in the stages are
+   * not guaranteed to happen in the same sequence.
    *
    * @param stages the given completion stages.
    * @param <T> the element type.
    * @return The stream of generated elements.
+   * @see #supplyAsyncStream(Stream)
    */
   public static <T> CompletionStage<Stream<T>> composeAsyncStream(
       final Stream<CompletionStage<T>> stages) {
@@ -63,12 +66,15 @@ public class StreamUtil {
   }
 
   /**
-   * Runs the <code>stages</code> in sequence.
+   * Runs the <code>stages</code> in sequence. The resulting element sequence is in the same
+   * sequence. Note that side effects in the stages are not guaranteed to happen in the same
+   * sequence.
    *
    * @param stages the given completion stages.
    * @param executor the executor.
    * @param <T> the element type.
    * @return The stream of generated elements.
+   * @see #composeAsyncStream(Stream, Executor)
    */
   public static <T> CompletionStage<Stream<T>> composeAsyncStream(
       final Stream<CompletionStage<T>> stages, final Executor executor) {
@@ -429,7 +435,7 @@ public class StreamUtil {
 
   /**
    * Runs the <code>suppliers</code> asynchronously and in sequence using the <code>
-   * ForkJoinPool.commonPool()</code>.
+   * ForkJoinPool.commonPool()</code>. The resulting element stream will be in the same sequence.
    *
    * @param suppliers the given suppliers.
    * @param <T> the element type.
@@ -441,7 +447,8 @@ public class StreamUtil {
   }
 
   /**
-   * Runs the <code>suppliers</code> asynchronously and in sequence.
+   * Runs the <code>suppliers</code> asynchronously and in sequence. The resulting element stream
+   * will be in the same sequence.
    *
    * @param suppliers the given suppliers.
    * @param executor th executor.
