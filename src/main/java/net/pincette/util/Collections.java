@@ -1,10 +1,8 @@
 package net.pincette.util;
 
 import static java.lang.Integer.min;
-import static java.util.Arrays.copyOf;
 import static java.util.Collections.nCopies;
 import static java.util.Optional.ofNullable;
-import static java.util.regex.Pattern.quote;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
@@ -12,6 +10,7 @@ import static net.pincette.util.Pair.pair;
 import static net.pincette.util.StreamUtil.stream;
 import static net.pincette.util.StreamUtil.takeWhile;
 import static net.pincette.util.Util.countingIterator;
+import static net.pincette.util.Util.segments;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,6 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import net.pincette.function.SideEffect;
 
@@ -159,6 +159,20 @@ public class Collections {
   }
 
   /**
+   * Returns a map where all keys that are paths with segments separated by the literal string
+   * <code>delimiter</code> are replaced with the first segment as the key and an expanded submap
+   * with the remainder of the segments as the value.
+   *
+   * @param map the given map.
+   * @param delimiter the literal string that separates the keys in the given map.
+   * @return The new expanded map.
+   * @since 1.8
+   */
+  public static Map<String, Object> expand(final Map<String, ?> map, final String delimiter) {
+    return expand(map, s -> segments(s, delimiter), CharSequence::toString);
+  }
+
+  /**
    * Returns a map where all keys that are paths with segments separated by <code>delimiter</code>
    * are replaced with the first segment as the key and an expanded submap with the remainder of the
    * segments as the value.
@@ -166,22 +180,35 @@ public class Collections {
    * @param map the given map.
    * @param delimiter the delimiter for the keys in the given map.
    * @return The new expanded map.
-   * @since 1.8
+   * @since 2.0.4
    */
-  public static Map<String, Object> expand(final Map<String, ?> map, final String delimiter) {
-    final Map<String, Object> result = new HashMap<>();
+  public static Map<CharSequence, Object> expand(
+      final Map<String, ?> map, final Pattern delimiter) {
+    return expand(map, s -> segments(s, delimiter), k -> k);
+  }
+
+  public static <T> Map<T, Object> expand(
+      final Map<String, ?> map, final Pattern delimiter, final Function<CharSequence, T> key) {
+    return expand(map, s -> segments(s, delimiter), key);
+  }
+
+  private static <T> Map<T, Object> expand(
+      final Map<String, ?> map,
+      final Function<String, Stream<CharSequence>> segments,
+      final Function<CharSequence, T> key) {
+    final Map<T, Object> result = new HashMap<>();
 
     map.forEach(
         (k, v) -> {
-          final String[] segments = k.split(quote(delimiter));
+          final List<CharSequence> segs = segments.apply(k).collect(toList());
 
-          Arrays.stream(copyOf(segments, segments.length - 1))
+          segs.subList(0, segs.size() - 1).stream()
               .reduce(
                   result,
                   (m, segment) ->
-                      (Map<String, Object>) m.computeIfAbsent(segment, s -> new HashMap<>()),
+                      (Map<T, Object>) m.computeIfAbsent(key.apply(segment), s -> new HashMap<>()),
                   (m1, m2) -> m1)
-              .put(segments[segments.length - 1], v);
+              .put(key.apply(segs.get(segs.size() - 1)), v);
         });
 
     return result;
@@ -257,7 +284,7 @@ public class Collections {
     return collections
         .map(HashSet::new)
         .reduce((s1, s2) -> SideEffect.<HashSet<T>>run(() -> s1.retainAll(s2)).andThenGet(() -> s1))
-        .map(Set.class::cast)
+        .map(s -> (Set<T>) s)
         .orElseGet(java.util.Collections::emptySet);
   }
 
@@ -270,7 +297,7 @@ public class Collections {
    */
   @SafeVarargs
   public static <T> List<T> list(final T... elements) {
-    return Arrays.stream(elements).collect(toList());
+    return List.of(elements);
   }
 
   /**

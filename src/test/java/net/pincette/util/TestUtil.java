@@ -1,5 +1,9 @@
 package net.pincette.util;
 
+import static java.util.regex.Pattern.compile;
+import static java.util.stream.Collectors.toList;
+import static net.pincette.util.Collections.list;
+import static net.pincette.util.ShadowString.shadow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -42,5 +46,35 @@ class TestUtil {
     assertTrue(Util.isInstant("2021-01-24T12:11:42+00:00"));
     assertFalse(Util.isInstant("2021-01-24T12:11"));
     assertFalse(Util.isInstant("2021-01-24"));
+  }
+
+  @Test
+  @DisplayName("segments1")
+  void segments1() {
+    assertEquals(
+        list(shadow("a"), shadow("b"), shadow("c")), Util.segments("a#b#c", "#").collect(toList()));
+    assertEquals(list(shadow("a"), shadow("b")), Util.segments("a#b#", "#").collect(toList()));
+    assertEquals(list(shadow("a")), Util.segments("a", "#").collect(toList()));
+    assertEquals(list(shadow(""), shadow("a")), Util.segments("#a", "#").collect(toList()));
+    assertEquals(list(shadow("")), Util.segments("", "#").collect(toList()));
+    assertEquals(list(shadow("")), Util.segments("#", "#").collect(toList()));
+  }
+
+  @Test
+  @DisplayName("segments2")
+  void segments2() {
+    assertEquals(
+        list(shadow("a"), shadow("b"), shadow("c")),
+        Util.segments("a#b#c", compile("#")).collect(toList()));
+    assertEquals(
+        list(shadow("a"), shadow("b"), shadow("c")),
+        Util.segments("a# b # c", compile(" *# *")).collect(toList()));
+    assertEquals(
+        list(shadow("a"), shadow("b")), Util.segments("a#b#", compile("#")).collect(toList()));
+    assertEquals(list(shadow("a")), Util.segments("a", compile("#")).collect(toList()));
+    assertEquals(
+        list(shadow(""), shadow("a")), Util.segments("#a", compile("#")).collect(toList()));
+    assertEquals(list(shadow("")), Util.segments("", compile("#")).collect(toList()));
+    assertEquals(list(shadow("")), Util.segments("#", compile("#")).collect(toList()));
   }
 }

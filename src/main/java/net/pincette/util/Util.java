@@ -2,22 +2,27 @@ package net.pincette.util;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
+import static java.lang.Long.MAX_VALUE;
 import static java.lang.Math.max;
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.time.Duration.ofMillis;
+import static java.time.Instant.now;
 import static java.util.Arrays.fill;
+import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static java.util.UUID.fromString;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.logging.Logger.getLogger;
 import static java.util.regex.Pattern.compile;
-import static java.util.regex.Pattern.quote;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static net.pincette.util.Pair.pair;
 import static net.pincette.util.ScheduledCompletionStage.composeAsyncAfter;
+import static net.pincette.util.ShadowString.shadow;
 import static net.pincette.util.StreamUtil.last;
+import static net.pincette.util.StreamUtil.stream;
 import static net.pincette.util.StreamUtil.takeWhile;
 
 import java.io.BufferedReader;
@@ -33,6 +38,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,8 +53,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -106,12 +112,12 @@ public class Util {
    * <code>delimiter</code>. A trailing <code>delimiter</code> will be discarded.
    *
    * @param path the path that will be decomposed.
-   * @param delimiter the delimiter that separates the path segments.
+   * @param delimiter the literal string that separates the path segments.
    * @return The stream with the generated paths.
    */
   public static Stream<String> allPaths(final String path, final String delimiter) {
     final String leading = path.startsWith(delimiter) ? delimiter : "";
-    final String[] segments = getSegments(path, quote(delimiter)).toArray(String[]::new);
+    final CharSequence[] segments = segments(path, delimiter).toArray(CharSequence[]::new);
 
     return takeWhile(0, i -> i + 1, i -> i < segments.length)
         .map(
@@ -790,6 +796,116 @@ public class Util {
   }
 
   /**
+   * Iterates over the segments in <code>s</code> that are separated by the regular expression
+   * <code>delimiter</code>. The segment strings may be empty.
+   *
+   * @param s the given string.
+   * @param delimiter the regular expression that separates the segments.
+   * @return The segment iterator.
+   * @since 2.0.4
+   */
+  public static Iterator<CharSequence> segmentIterator(final String s, final Pattern delimiter) {
+    final Matcher matcher = delimiter.matcher(shadow(s));
+
+    return new Iterator<>() {
+      int lastEnd = -1;
+      CharSequence segment;
+
+      @Override
+      public boolean hasNext() {
+        if (matcher.find()) {
+          segment = shadow(s, lastEnd == -1 ? 0 : lastEnd, matcher.start());
+          lastEnd = matcher.end();
+        } else if (lastEnd < s.length()) {
+          segment = lastEnd == -1 ? s : shadow(s, lastEnd, s.length());
+          lastEnd = s.length();
+        } else {
+          segment = null;
+        }
+
+        return segment != null;
+      }
+
+      @Override
+      public CharSequence next() {
+        if (segment == null) {
+          throw new NoSuchElementException();
+        }
+
+        return segment;
+      }
+    };
+  }
+
+  /**
+   * Iterates over the segments in <code>s</code> that are separated by the literal string <code>
+   * delimiter</code>. The segment strings may be empty.
+   *
+   * @param s the given string.
+   * @param delimiter the literal string that separates the segments.
+   * @return The segment iterator.
+   * @since 2.0.4
+   */
+  public static Iterator<CharSequence> segmentIterator(final String s, final String delimiter) {
+    return new Iterator<>() {
+      int lastEnd = -1;
+      CharSequence segment;
+
+      @Override
+      public boolean hasNext() {
+        final int index = s.indexOf(delimiter, lastEnd == -1 ? 0 : lastEnd);
+
+        if (index != -1) {
+          segment = shadow(s, lastEnd == -1 ? 0 : lastEnd, index);
+          lastEnd = index + delimiter.length();
+        } else if (lastEnd < s.length()) {
+          segment = lastEnd == -1 ? s : shadow(s, lastEnd, s.length());
+          lastEnd = s.length();
+        } else {
+          segment = null;
+        }
+
+        return segment != null;
+      }
+
+      @Override
+      public CharSequence next() {
+        if (segment == null) {
+          throw new NoSuchElementException();
+        }
+
+        return segment;
+      }
+    };
+  }
+
+  /**
+   * Returns a stream of the segments in <code>s</code> that are separated by the literal string
+   * <code>delimiter</code>. The segment strings may be empty.
+   *
+   * @param s the given string.
+   * @param delimiter the literal string that separates the segments.
+   * @return The segment stream.
+   * @since 2.0.4
+   */
+  public static Stream<CharSequence> segments(final String s, final String delimiter) {
+    return stream(segmentIterator(s, delimiter));
+  }
+
+  /**
+   * Returns a stream of the segments in <code>s</code> that are separated by the regular expression
+   * <code>delimiter</code>. The segment strings may be empty.
+   *
+   * @param s the given string.
+   * @param delimiter the regular expression that separates the segments.
+   * @return The segment stream.
+   * @since 2.0.4
+   */
+  public static Stream<CharSequence> segments(final String s, final Pattern delimiter) {
+    return stream(segmentIterator(s, delimiter));
+  }
+
+  /**
    * Returns a new properties object with the new value.
    *
    * @param properties the given properties.
@@ -1116,16 +1232,49 @@ public class Util {
 
   public static <T> CompletionStage<T> waitFor(
       final Supplier<CompletionStage<Optional<T>>> condition, final Duration interval) {
+    return waitFor(condition, () -> true, interval, ofMillis(MAX_VALUE))
+        .thenApply(result -> result.orElse(null));
+  }
+
+  public static <T> CompletionStage<Optional<T>> waitFor(
+      final Supplier<CompletionStage<Optional<T>>> condition,
+      final BooleanSupplier progress,
+      final Duration interval,
+      final Duration progressTimeout) {
+    return waitFor(condition, progress, interval, progressTimeout, new State<>(now()));
+  }
+
+  private static <T> CompletionStage<Optional<T>> waitFor(
+      final Supplier<CompletionStage<Optional<T>>> condition,
+      final BooleanSupplier progress,
+      final Duration interval,
+      final Duration progressTimeout,
+      final State<Instant> lastProgress) {
     return condition
         .get()
         .thenComposeAsync(
             result ->
                 result
-                    .map(CompletableFuture::completedFuture)
+                    .map(r -> completedFuture(Optional.of(r)))
                     .orElseGet(
-                        () ->
-                            composeAsyncAfter(() -> waitFor(condition, interval), interval)
-                                .toCompletableFuture()));
+                        () -> {
+                          if (progress.getAsBoolean()) {
+                            lastProgress.set(now());
+                          }
+
+                          return lastProgress.get().plus(progressTimeout).isBefore(now())
+                              ? completedFuture(empty())
+                              : composeAsyncAfter(
+                                      () ->
+                                          waitFor(
+                                              condition,
+                                              progress,
+                                              interval,
+                                              progressTimeout,
+                                              lastProgress),
+                                      interval)
+                                  .toCompletableFuture();
+                        }));
   }
 
   public static Supplier<CompletionStage<Optional<Boolean>>> waitForCondition(
