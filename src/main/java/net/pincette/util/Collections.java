@@ -330,7 +330,7 @@ public class Collections {
 
   /**
    * Returns a new map with all the mappings of the given maps combined. When there is more than one
-   * mapping for a key only the last one will be retained.
+   * mapping for a key only the last one will be retained. The merge is recursive.
    *
    * @param maps the given maps.
    * @param <K> the key type.
@@ -344,7 +344,7 @@ public class Collections {
 
   /**
    * Returns a new map with all the mappings of the given maps combined. When there is more than one
-   * mapping for a key only the last one will be retained.
+   * mapping for a key only the last one will be retained. The merge is recursive.
    *
    * @param maps the given maps.
    * @param <K> the key type.
@@ -354,7 +354,14 @@ public class Collections {
    */
   public static <K, V> Map<K, V> merge(final Stream<Map<K, V>> maps) {
     return maps.flatMap(m -> m.entrySet().stream())
-        .collect(toMap(Entry::getKey, Entry::getValue, (v1, v2) -> v2));
+        .collect(
+            toMap(
+                Entry::getKey,
+                Entry::getValue,
+                (v1, v2) ->
+                    v1 instanceof Map && v2 instanceof Map
+                        ? (V) merge(Stream.of((Map) v1, (Map) v2))
+                        : v2));
   }
 
   /**

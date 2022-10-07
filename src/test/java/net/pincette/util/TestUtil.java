@@ -24,6 +24,19 @@ class TestUtil {
   }
 
   @Test
+  @DisplayName("getParent")
+  void getParent() {
+    assertEquals("/a/b", Util.getParent("/a/b/c", "/"));
+    assertEquals("/a/b", Util.getParent("/a/b/c/", "/"));
+    assertEquals("/", Util.getParent("/a", "/"));
+    assertEquals("/", Util.getParent("/a/", "/"));
+    assertEquals("/", Util.getParent("/", "/"));
+    assertEquals("", Util.getParent("", "/"));
+    assertEquals("a/b", Util.getParent("a/b/c", "/"));
+    assertEquals("", Util.getParent("a", "/"));
+  }
+
+  @Test
   @DisplayName("isEmail")
   void isEmail() {
     assertTrue(Util.isEmail("a@re.be"));

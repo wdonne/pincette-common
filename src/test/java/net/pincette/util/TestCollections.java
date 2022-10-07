@@ -98,8 +98,26 @@ class TestCollections {
   @DisplayName("merge")
   void testMerge() {
     assertEquals(
-        map(pair("a", 0), pair("b", 1), pair("c", 2)),
-        merge(map(pair("a", 0), pair("b", 0)), map(pair("b", 1), pair("c", 2))));
+        map(
+            pair("a", 0),
+            pair("b", 1),
+            pair("c", 2),
+            pair("d", map(pair("e", map(pair("f", 1))))),
+            pair("e", map(pair("f", 0))),
+            pair("f", 0)),
+        merge(
+            map(
+                pair("a", 0),
+                pair("b", 0),
+                pair("d", map(pair("e", map(pair("f", 0))))),
+                pair("e", 0),
+                pair("f", map(pair("g", 0)))),
+            map(
+                pair("b", 1),
+                pair("c", 2),
+                pair("d", map(pair("e", map(pair("f", 1))))),
+                pair("e", map(pair("f", 0))),
+                pair("f", 0))));
   }
 
   @Test
