@@ -814,8 +814,12 @@ public class Util {
         : Optional.of(file);
   }
 
-  public static void rethrow(final Throwable e) {
-    throw new GeneralException(e);
+  public static void rethrow(final Throwable t) {
+    if (t instanceof RuntimeException) {
+      throw (RuntimeException) t;
+    } else {
+      throw new GeneralException(t);
+    }
   }
 
   /**
