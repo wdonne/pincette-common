@@ -1,13 +1,18 @@
 package net.pincette.util;
 
+import static java.time.Duration.ofSeconds;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static net.pincette.util.Collections.list;
 import static net.pincette.util.ShadowString.shadow;
+import static net.pincette.util.Util.tryToGetForever;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import net.pincette.util.Util.GeneralException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -89,5 +94,48 @@ class TestUtil {
         list(shadow(""), shadow("a")), Util.segments("#a", compile("#")).collect(toList()));
     assertEquals(list(shadow("")), Util.segments("", compile("#")).collect(toList()));
     assertEquals(list(shadow("")), Util.segments("#", compile("#")).collect(toList()));
+  }
+
+  @Test
+  @DisplayName("tryToGetForever1")
+  void tryToGetForever1() {
+    final State<Integer> called = new State<>(0);
+
+    assertEquals(
+        0,
+        tryToGetForever(
+                () -> {
+                  if (called.set(called.get() + 1) < 3) {
+                    throw new GeneralException("test");
+                  }
+
+                  return completedFuture(0);
+                },
+                ofSeconds(1))
+            .toCompletableFuture()
+            .join());
+  }
+
+  @Test
+  @DisplayName("tryToGetForever2")
+  void tryToGetForever2() {
+    final State<Integer> called = new State<>(0);
+
+    assertEquals(
+        0,
+        tryToGetForever(
+                () ->
+                    supplyAsync(() -> 0)
+                        .thenApply(
+                            v -> {
+                              if (called.set(called.get() + 1) < 3) {
+                                throw new GeneralException("test");
+                              }
+
+                              return v;
+                            }),
+                ofSeconds(1))
+            .toCompletableFuture()
+            .join());
   }
 }

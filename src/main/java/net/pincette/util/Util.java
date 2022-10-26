@@ -19,6 +19,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 import static net.pincette.util.Pair.pair;
 import static net.pincette.util.ScheduledCompletionStage.composeAsyncAfter;
+import static net.pincette.util.ScheduledCompletionStage.runAsyncAfter;
 import static net.pincette.util.ShadowString.shadow;
 import static net.pincette.util.StreamUtil.stream;
 import static net.pincette.util.StreamUtil.takeWhile;
@@ -51,6 +52,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -1204,29 +1206,40 @@ public class Util {
       final SupplierWithException<CompletionStage<T>> run,
       final Duration retryInterval,
       final Consumer<Exception> onException) {
-    final Supplier<CompletionStage<T>> again =
-        () ->
-            composeAsyncAfter(
-                () -> tryToGetForever(run, retryInterval, onException), retryInterval);
-    final Consumer<Exception> ex = e -> ofNullable(onException).ifPresent(on -> on.accept(e));
+    final CompletableFuture<T> future = new CompletableFuture<>();
 
-    return tryToGet(
-            run, e -> SideEffect.<CompletionStage<T>>run(() -> ex.accept(e)).andThenGet(again))
-        .map(
-            stage ->
-                stage
-                    .exceptionally(
-                        e ->
-                            SideEffect.<T>run(
-                                    () -> {
-                                      if (e instanceof Exception) {
-                                        ex.accept((Exception) e);
-                                      }
-                                    })
-                                .andThenGet(() -> null))
-                    .thenComposeAsync(
-                        value -> value != null ? completedFuture(value) : again.get()))
-        .orElseGet(() -> completedFuture(null));
+    tryToGetForever(
+        future, run, retryInterval, e -> ofNullable(onException).ifPresent(on -> on.accept(e)));
+
+    return future;
+  }
+
+  private static <T> void tryToGetForever(
+      final CompletableFuture<T> future,
+      final SupplierWithException<CompletionStage<T>> run,
+      final Duration retryInterval,
+      final Consumer<Exception> onException) {
+    final Consumer<Throwable> again =
+        e -> {
+          if (e instanceof Exception) {
+            onException.accept((Exception) e);
+          }
+
+          runAsyncAfter(
+              () -> tryToGetForever(future, run, retryInterval, onException), retryInterval);
+        };
+
+    tryToDo(
+        () ->
+            run.get()
+                .thenAccept(future::complete)
+                .exceptionally(
+                    e -> {
+                      again.accept(e);
+
+                      return null;
+                    }),
+        again::accept);
   }
 
   public static <T> Optional<T> tryToGetRethrow(final SupplierWithException<T> run) {
