@@ -38,4 +38,12 @@ class TestStreamUtil {
     assertEquals(list(), StreamUtil.slide(list(0).stream(), 2).collect(toList()));
     assertEquals(list(list(0, 1)), StreamUtil.slide(list(0, 1).stream(), 2).collect(toList()));
   }
+
+  @Test
+  @DisplayName("tail")
+  void tail() {
+    assertEquals(list(1, 2), StreamUtil.tail(list(0, 1, 2).stream()).collect(toList()));
+    assertEquals(list(), StreamUtil.tail(list(0).stream()).collect(toList()));
+    assertEquals(list(), StreamUtil.tail(list().stream()).collect(toList()));
+  }
 }

@@ -17,6 +17,7 @@ import static java.util.logging.Logger.getLogger;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Stream.concat;
 import static net.pincette.util.Pair.pair;
 import static net.pincette.util.ScheduledCompletionStage.composeAsyncAfter;
 import static net.pincette.util.ScheduledCompletionStage.runAsyncAfter;
@@ -109,7 +110,8 @@ public class Util {
 
   /**
    * Produces a stream with all paths from <code>path</code> up to the root path, which is just the
-   * <code>delimiter</code>. A trailing <code>delimiter</code> will be discarded.
+   * <code>delimiter</code> in case the given path starts with the delimiter. A trailing <code>
+   * delimiter</code> will be discarded.
    *
    * @param path the path that will be decomposed.
    * @param delimiter the literal string that separates the path segments.
@@ -117,13 +119,16 @@ public class Util {
    */
   public static Stream<String> allPaths(final String path, final String delimiter) {
     final String leading = path.startsWith(delimiter) ? delimiter : "";
-    final CharSequence[] segments = segments(path, delimiter).toArray(CharSequence[]::new);
+    final CharSequence[] segments = getSegments(path, delimiter).toArray(CharSequence[]::new);
 
-    return takeWhile(0, i -> i + 1, i -> i < segments.length)
-        .map(
-            i ->
-                leading
-                    + Arrays.stream(segments, 0, segments.length - i).collect(joining(delimiter)));
+    return concat(
+        takeWhile(0, i -> i + 1, i -> i < segments.length)
+            .map(
+                i ->
+                    leading
+                        + Arrays.stream(segments, 0, segments.length - i)
+                            .collect(joining(delimiter))),
+        !leading.equals("") ? Stream.of(delimiter) : Stream.empty());
   }
 
   /**

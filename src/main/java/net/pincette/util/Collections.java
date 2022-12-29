@@ -289,7 +289,7 @@ public class Collections {
   }
 
   /**
-   * Creates a list with the given elements.
+   * Creates an immutable list with the given elements.
    *
    * @param elements the given elements.
    * @param <T> the element type.

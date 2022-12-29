@@ -139,8 +139,8 @@ public class StreamUtil {
    * Generates a stream of elements until the <code>generator</code> returns an empty value.
    *
    * @param generator the given generator.
-   * @return The stream.
-   * @param <T> the value type.
+   * @return The generated stream.
+   * @param <T> the element type.
    * @since 2.0.2
    */
   public static <T> Stream<T> generate(final Supplier<Optional<T>> generator) {
@@ -170,7 +170,7 @@ public class StreamUtil {
    * Create an iterable of a stream using its iterator.
    *
    * @param stream the given stream.
-   * @param <T> the value type.
+   * @param <T> the element type.
    * @return The generated iterable.
    * @since 1.7.3
    */
@@ -183,7 +183,7 @@ public class StreamUtil {
    *
    * @param stream the given stream.
    * @param <T> the element type.
-   * @return the last element.
+   * @return The last element.
    */
   public static <T> Optional<T> last(final Stream<T> stream) {
     return ofNullable(stream.sequential().reduce(null, (result, element) -> element));
@@ -219,7 +219,7 @@ public class StreamUtil {
    *
    * @param from first value of the range.
    * @param to last value of the range, which is excluded.
-   * @return the integer stream.
+   * @return The integer stream.
    */
   public static Stream<Long> rangeExclusive(final long from, final long to) {
     return rangeExclusive(from, to, 1);
@@ -232,7 +232,7 @@ public class StreamUtil {
    * @param from first value of the range.
    * @param to last value of the range, which is excluded.
    * @param step the positive distance for the iteration.
-   * @return the integer stream.
+   * @return The integer stream.
    * @since 1.6.8
    */
   public static Stream<Long> rangeExclusive(final long from, final long to, final int step) {
@@ -245,7 +245,7 @@ public class StreamUtil {
    *
    * @param from first value of the range.
    * @param to last value of the range, which is excluded.
-   * @return the integer stream.
+   * @return The integer stream.
    */
   public static Stream<Integer> rangeExclusive(final int from, final int to) {
     return rangeExclusive(from, to, 1);
@@ -258,7 +258,7 @@ public class StreamUtil {
    * @param from first value of the range.
    * @param to last value of the range, which is excluded.
    * @param step the positive distance for the iteration.
-   * @return the integer stream.
+   * @return The integer stream.
    * @since 1.6.8
    */
   public static Stream<Integer> rangeExclusive(final int from, final int to, final int step) {
@@ -271,7 +271,7 @@ public class StreamUtil {
    *
    * @param from first value of the range.
    * @param to last value of the range, which is included.
-   * @return the integer stream.
+   * @return The integer stream.
    */
   public static Stream<Long> rangeInclusive(final long from, final long to) {
     return rangeInclusive(from, to, 1);
@@ -284,7 +284,7 @@ public class StreamUtil {
    * @param from first value of the range.
    * @param to last value of the range, which is included.
    * @param step the positive distance for the iteration.
-   * @return the integer stream.
+   * @return The integer stream.
    * @since 1.6.8
    */
   public static Stream<Long> rangeInclusive(final long from, final long to, final int step) {
@@ -297,7 +297,7 @@ public class StreamUtil {
    *
    * @param from first value of the range.
    * @param to last value of the range, which is included.
-   * @return the integer stream.
+   * @return The integer stream.
    */
   public static Stream<Integer> rangeInclusive(final int from, final int to) {
     return rangeInclusive(from, to, 1);
@@ -310,7 +310,7 @@ public class StreamUtil {
    * @param from first value of the range.
    * @param to last value of the range, which is included.
    * @param step the positive distance for the iteration.
-   * @return the integer stream.
+   * @return The integer stream.
    * @since 1.6.8
    */
   public static Stream<Integer> rangeInclusive(final int from, final int to, final int step) {
@@ -324,7 +324,7 @@ public class StreamUtil {
    * @param seed the seed value.
    * @param operators the stream of operators.
    * @param until the predicate, which stops the evaluation.
-   * @param <T> the value type.
+   * @param <T> the element type.
    * @return The reduced value.
    * @since 1.6.7
    */
@@ -340,7 +340,7 @@ public class StreamUtil {
    * @param seed the function that provides the seed value.
    * @param operators the stream of operators.
    * @param until the predicate, which stops the evaluation.
-   * @param <T> the value type.
+   * @param <T> the element type.
    * @return The reduced value.
    * @since 1.6.7
    */
@@ -359,7 +359,7 @@ public class StreamUtil {
    *
    * @param value the value that will be repeated.
    * @param count the number of times the value will be repeated.
-   * @param <T> the value type.
+   * @param <T> the element type.
    * @return The stream of repetitions.
    * @since 1.9.2
    */
@@ -439,7 +439,7 @@ public class StreamUtil {
    *
    * @param suppliers the given suppliers.
    * @param <T> the element type.
-   * @return the stream of generated elements.
+   * @return The stream of generated elements.
    */
   public static <T> CompletionStage<Stream<T>> supplyAsyncStream(
       final Stream<Supplier<T>> suppliers) {
@@ -451,9 +451,9 @@ public class StreamUtil {
    * will be in the same sequence.
    *
    * @param suppliers the given suppliers.
-   * @param executor th executor.
+   * @param executor the executor.
    * @param <T> the element type.
-   * @return the stream of generated elements.
+   * @return The stream of generated elements.
    */
   public static <T> CompletionStage<Stream<T>> supplyAsyncStream(
       final Stream<Supplier<T>> suppliers, final Executor executor) {
@@ -467,13 +467,27 @@ public class StreamUtil {
   }
 
   /**
+   * Returns <code>stream</code> without the first element.
+   *
+   * @param stream the given stream.
+   * @param <T> the element type.
+   * @return The resulting stream.
+   * @since 2.2
+   */
+  public static <T> Stream<T> tail(final Stream<T> stream) {
+    return zip(stream, rangeExclusive(0, MAX_VALUE))
+        .filter(pair -> pair.second > 0)
+        .map(pair -> pair.first);
+  }
+
+  /**
    * Iterates sequentially until the predicate returns <code>false</code>. The resulting stream
    * starts with <code>seed</code>.
    *
    * @param seed the initial value.
    * @param f the function that calculates the next value.
    * @param p the predicate.
-   * @param <T> the value type.
+   * @param <T> the element type.
    * @return The generated stream.
    */
   public static <T> Stream<T> takeWhile(
@@ -515,8 +529,8 @@ public class StreamUtil {
    * @param f the function that calculates the next value. If <code>stream</code> is empty this *
    *     function will nit be called.
    * @param p the predicate.
-   * @param <T> the value type.
-   * @param <U> the value type of the driving stream.
+   * @param <T> the element type.
+   * @param <U> the element type of the driving stream.
    * @return The generated stream.
    */
   public static <T, U> Stream<T> takeWhile(
@@ -557,7 +571,7 @@ public class StreamUtil {
    *
    * @param stream the given stream.
    * @param <K> the key type.
-   * @param <V> the value type.
+   * @param <V> the element type.
    * @return The generated map.
    * @since 1.9.2
    * @deprecated 2.0.2
@@ -574,7 +588,7 @@ public class StreamUtil {
    * @param stream the given stream of values.
    * @param header the function that calculates the header value.
    * @param <H> the header type.
-   * @param <V> the value type.
+   * @param <V> the element type.
    * @return The stream of header value pairs.
    * @since 1.7.6
    */

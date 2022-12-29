@@ -1,10 +1,10 @@
 package net.pincette.util;
 
 import static java.time.Duration.ofSeconds;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
-import static java.util.concurrent.CompletableFuture.completedFuture;
 import static net.pincette.util.Collections.list;
 import static net.pincette.util.ShadowString.shadow;
 import static net.pincette.util.Util.tryToGetForever;
@@ -12,11 +12,30 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import net.pincette.util.Util.GeneralException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class TestUtil {
+  private static void allPaths(
+      final String path, final String delimiter, final List<String> expected) {
+    assertEquals(expected, Util.allPaths(path, delimiter).collect(toList()));
+  }
+
+  @Test
+  @DisplayName("allPaths")
+  void allPaths() {
+    allPaths("/a/b/c", "/", list("/a/b/c", "/a/b", "/a", "/"));
+    allPaths("/a/b/c/", "/", list("/a/b/c", "/a/b", "/a", "/"));
+    allPaths("a/b/c", "/", list("a/b/c", "a/b", "a"));
+    allPaths("a/b/c/", "/", list("a/b/c", "a/b", "a"));
+    allPaths("a.b.c.", ".", list("a.b.c", "a.b", "a"));
+    allPaths("a", ".", list("a"));
+    allPaths("/", "/", list("/"));
+    allPaths("", "/", list());
+  }
+
   @Test
   @DisplayName("canonicalPath")
   void canonicalPath() {
