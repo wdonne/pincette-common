@@ -5,6 +5,7 @@ import static java.lang.Boolean.TRUE;
 import static java.lang.Long.MAX_VALUE;
 import static java.lang.Math.max;
 import static java.lang.String.join;
+import static java.lang.Thread.sleep;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
 import static java.time.Instant.now;
@@ -252,7 +253,19 @@ public class Util {
    * @param runnable a function that may throw an exception, which will be rethrown.
    */
   public static void doForever(final RunnableWithException runnable) {
-    doForever(runnable, Util::rethrow);
+    doForever(runnable, Util::rethrow, null);
+  }
+
+  /**
+   * Executes <code>runnable</code> infinitely.
+   *
+   * @param runnable a function that may throw an exception, which will be rethrown.
+   * @param interval the time between two calls of <code>runnable</code>. It may be <code>null
+   *     </code>.
+   * @since 2.3
+   */
+  public static void doForever(final RunnableWithException runnable, final Duration interval) {
+    doForever(runnable, Util::rethrow, interval);
   }
 
   /**
@@ -263,17 +276,56 @@ public class Util {
    */
   public static void doForever(
       final RunnableWithException runnable, final Consumer<Exception> error) {
+    doForever(runnable, error, null);
+  }
+
+  /**
+   * Executes <code>runnable</code> infinitely.
+   *
+   * @param runnable a function that may throw an exception, which will be rethrown.
+   * @param error the function that deals with an exception.
+   * @param interval the time between two calls of <code>runnable</code>. It may be <code>null
+   *     </code>.
+   * @since 2.3
+   */
+  public static void doForever(
+      final RunnableWithException runnable,
+      final Consumer<Exception> error,
+      final Duration interval) {
     tryToDo(
         () -> {
           while (true) {
             runnable.run();
+
+            if (interval != null) {
+              sleep(interval.toMillis());
+            }
           }
         },
         error);
   }
 
+  /**
+   * Executes <code>supplier</code> until it returns <code>true</code>.
+   *
+   * @param supplier a function that may throw an exception, which will be rethrown.
+   * @since 2.0.1
+   */
   public static void doUntil(final SupplierWithException<Boolean> supplier) {
-    doUntil(supplier, Util::rethrow);
+    doUntil(supplier, Util::rethrow, null);
+  }
+
+  /**
+   * Executes <code>supplier</code> until it returns <code>true</code>.
+   *
+   * @param supplier a function that may throw an exception, which will be rethrown.
+   * @param interval the time between two calls of <code>supplier</code>. It may be <code>null
+   *     </code>.
+   * @since 2.3
+   */
+  public static void doUntil(
+      final SupplierWithException<Boolean> supplier, final Duration interval) {
+    doUntil(supplier, Util::rethrow, interval);
   }
 
   /**
@@ -285,10 +337,30 @@ public class Util {
    */
   public static void doUntil(
       final SupplierWithException<Boolean> supplier, final Consumer<Exception> error) {
+    doUntil(supplier, error, null);
+  }
+
+  /**
+   * Executes <code>supplier</code> until it returns <code>true</code>.
+   *
+   * @param supplier a function that may throw an exception, which will be rethrown.
+   * @param error the function that deals with an exception.
+   * @param interval the time between two calls of <code>supplier</code>. It may be <code>null
+   *     </code>.
+   * @since 2.3
+   */
+  public static void doUntil(
+      final SupplierWithException<Boolean> supplier,
+      final Consumer<Exception> error,
+      final Duration interval) {
     tryToDo(
         () -> {
           while (FALSE.equals(supplier.get()))
             ;
+
+          if (interval != null) {
+            sleep(interval.toMillis());
+          }
         },
         error);
   }
@@ -721,7 +793,7 @@ public class Util {
     int position = 0;
 
     while (matcher.find()) {
-      builder.append(s.substring(position, matcher.start()));
+      builder.append(s, position, matcher.start());
       builder.append(replacer.apply(matcher));
       position = matcher.end();
     }
@@ -1383,6 +1455,21 @@ public class Util {
   public static Supplier<CompletionStage<Optional<Boolean>>> waitForCondition(
       final Supplier<CompletionStage<Boolean>> condition) {
     return () -> condition.get().thenApply(result -> ofNullable(TRUE.equals(result) ? TRUE : null));
+  }
+
+  /**
+   * This is for type inference, where <code>T</code> is a complex type, which you would have to
+   * declare in multiple places. If only we had typedefs ...
+   *
+   * @param value the value generator.
+   * @param fn the function that should be applied to the value.
+   * @return The result of the given function <code>fn</code>
+   * @param <T> the value type.
+   * @param <R> the result type.
+   * @since 2.3
+   */
+  public static <T, R> R with(final Supplier<T> value, final Function<T, R> fn) {
+    return fn.apply(value.get());
   }
 
   public static class AutoCloseWrapper<T> implements AutoCloseable {

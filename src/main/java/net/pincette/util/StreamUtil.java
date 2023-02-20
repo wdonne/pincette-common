@@ -525,9 +525,9 @@ public class StreamUtil {
    *
    * @param stream the stream from which values are taken to drive the generated stream.
    * @param seed the function to generate the initial value. If <code>stream</code> is empty this
-   *     function will nit be called.
-   * @param f the function that calculates the next value. If <code>stream</code> is empty this *
-   *     function will nit be called.
+   *     function will not be called.
+   * @param f the function that calculates the next value. If <code>stream</code> is empty this
+   *     function will not be called.
    * @param p the predicate.
    * @param <T> the element type.
    * @param <U> the element type of the driving stream.
