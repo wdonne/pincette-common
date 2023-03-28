@@ -5,6 +5,7 @@ import static java.lang.Boolean.TRUE;
 import static java.lang.Long.MAX_VALUE;
 import static java.lang.Math.max;
 import static java.lang.String.join;
+import static java.lang.System.getProperty;
 import static java.lang.Thread.sleep;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
@@ -14,6 +15,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static java.util.UUID.fromString;
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static java.util.logging.LogManager.getLogManager;
 import static java.util.logging.Logger.getLogger;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.joining;
@@ -507,6 +509,29 @@ public class Util {
       error.accept(e);
     } else {
       printStackTrace(e);
+    }
+  }
+
+  /**
+   * Loads the logging configuration from the <code>/loggiong.properties</code> resource.
+   *
+   * @since 2.3.1
+   */
+  public static void initLogging() {
+    initLogging(Util.class.getResourceAsStream("/logging.properties"));
+  }
+
+  /**
+   * Loads the logging configuration when the system properties <code>java.util.logging
+   * .config.class</code> and <code>java.util.logging.config.file</code> are not set.
+   *
+   * @param configuration the given configuration.
+   * @since 2.3.1
+   */
+  public static void initLogging(final InputStream configuration) {
+    if (getProperty("java.util.logging.config.class") == null
+        && getProperty("java.util.logging.config.file") == null) {
+      tryToDoRethrow(() -> getLogManager().readConfiguration(configuration));
     }
   }
 
