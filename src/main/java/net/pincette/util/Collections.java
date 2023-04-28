@@ -6,6 +6,7 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
+import static net.pincette.util.Array.inArray;
 import static net.pincette.util.Pair.pair;
 import static net.pincette.util.StreamUtil.stream;
 import static net.pincette.util.StreamUtil.takeWhile;
@@ -28,6 +29,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import net.pincette.function.SideEffect;
@@ -212,6 +214,21 @@ public class Collections {
         });
 
     return result;
+  }
+
+  /**
+   * Creates a new map with only the retained entries.
+   *
+   * @param map the given map.
+   * @param retain the predicate that decides which entries remain.
+   * @return The new map.
+   * @param <K> the key type.
+   * @param <V> the value type.
+   * @since 2.3.2
+   */
+  public static <K, V> Map<K, V> filterMap(
+      final Map<K, V> map, final Predicate<Entry<K, V>> retain) {
+    return map.entrySet().stream().filter(retain).collect(toMap(Entry::getKey, Entry::getValue));
   }
 
   /**
@@ -407,11 +424,7 @@ public class Collections {
    */
   @SafeVarargs
   public static <K, V> Map<K, V> remove(final Map<K, V> map, final K... keys) {
-    final Map<K, V> result = new HashMap<>(map);
-
-    Arrays.stream(keys).forEach(result::remove);
-
-    return result;
+    return filterMap(map, e -> !inArray(keys, e.getKey()));
   }
 
   /**

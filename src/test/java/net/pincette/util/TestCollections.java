@@ -6,6 +6,7 @@ import static net.pincette.util.Collections.computeIfPresent;
 import static net.pincette.util.Collections.concat;
 import static net.pincette.util.Collections.difference;
 import static net.pincette.util.Collections.expand;
+import static net.pincette.util.Collections.filterMap;
 import static net.pincette.util.Collections.flatten;
 import static net.pincette.util.Collections.intersection;
 import static net.pincette.util.Collections.list;
@@ -75,6 +76,13 @@ class TestCollections {
     assertEquals(
         map(pair("a", map(pair("b", 0), pair("c", 1))), pair("d", map(pair("e", 2)))),
         expand(map(pair("a.b", 0), pair("a.c", 1), pair("d.e", 2)), "."));
+  }
+
+  @Test
+  @DisplayName("filterMap")
+  void testFilterMap() {
+    assertEquals(
+        map(pair("a", 0)), filterMap(map(pair("a", 0), pair("b", 1)), e -> "a".equals(e.getKey())));
   }
 
   @Test
