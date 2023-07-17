@@ -7,7 +7,6 @@ import static net.pincette.io.StreamConnector.copy;
 import static net.pincette.util.Util.tryToDoRethrow;
 import static net.pincette.util.Util.tryToGetRethrow;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -15,7 +14,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import net.pincette.io.ByteBufferInputStream;
 import net.pincette.io.ByteBufferOutputStream;
 import org.junit.jupiter.api.DisplayName;

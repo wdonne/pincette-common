@@ -1,6 +1,7 @@
 package net.pincette.util;
 
 import static java.lang.Integer.min;
+import static java.lang.Math.max;
 import static java.util.Collections.nCopies;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
@@ -232,6 +233,21 @@ public class Collections {
   }
 
   /**
+   * Returns the first elements of the given list or the complete list if it is smaller.
+   *
+   * @param list the given list.
+   * @param amount the number of elements.
+   * @return The new list.
+   * @param <T> the element type.
+   * @since 2.3.3
+   */
+  public static <T> List<T> first(final List<T> list, final int amount) {
+    final int s = list.size();
+
+    return list.subList(0, min(amount, s));
+  }
+
+  /**
    * Returns a map where the keys are paths created by the keys of the maps and the submaps,
    * separated by <code>delimiter</code>. The keys of all the submaps must be strings too. The
    * result is a map without submaps.
@@ -303,6 +319,21 @@ public class Collections {
         .reduce((s1, s2) -> SideEffect.<HashSet<T>>run(() -> s1.retainAll(s2)).andThenGet(() -> s1))
         .map(s -> (Set<T>) s)
         .orElseGet(java.util.Collections::emptySet);
+  }
+
+  /**
+   * Returns the last elements of the given list or the complete list if it is smaller.
+   *
+   * @param list the given list.
+   * @param amount the number of elements.
+   * @return The new list.
+   * @param <T> the element type.
+   * @since 2.3.3
+   */
+  public static <T> List<T> last(final List<T> list, final int amount) {
+    final int s = list.size();
+
+    return list.subList(max(s - amount, 0), s);
   }
 
   /**
@@ -436,6 +467,10 @@ public class Collections {
    */
   public static <T> Iterator<T> reverse(final List<T> list) {
     return list.isEmpty() ? list.iterator() : new ReverseIterator<>(list);
+  }
+
+  public static <T> List<T> reverseList(final List<T> list) {
+    return stream(reverse(list)).collect(toList());
   }
 
   /**

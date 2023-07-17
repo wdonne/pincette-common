@@ -7,8 +7,10 @@ import static net.pincette.util.Collections.concat;
 import static net.pincette.util.Collections.difference;
 import static net.pincette.util.Collections.expand;
 import static net.pincette.util.Collections.filterMap;
+import static net.pincette.util.Collections.first;
 import static net.pincette.util.Collections.flatten;
 import static net.pincette.util.Collections.intersection;
+import static net.pincette.util.Collections.last;
 import static net.pincette.util.Collections.list;
 import static net.pincette.util.Collections.map;
 import static net.pincette.util.Collections.merge;
@@ -16,6 +18,7 @@ import static net.pincette.util.Collections.multiply;
 import static net.pincette.util.Collections.put;
 import static net.pincette.util.Collections.remove;
 import static net.pincette.util.Collections.reverse;
+import static net.pincette.util.Collections.reverseList;
 import static net.pincette.util.Collections.set;
 import static net.pincette.util.Collections.shiftDown;
 import static net.pincette.util.Collections.shiftUp;
@@ -86,6 +89,15 @@ class TestCollections {
   }
 
   @Test
+  @DisplayName("first")
+  void testFirst() {
+    assertEquals(list(0, 1, 2, 3, 4), first(list(0, 1, 2, 3, 4, 5, 6, 7), 5));
+    assertEquals(list(0, 1, 2, 3, 4), first(list(0, 1, 2, 3, 4), 5));
+    assertEquals(list(0, 1, 2, 3), first(list(0, 1, 2, 3), 5));
+    assertEquals(list(), first(list(), 2));
+  }
+
+  @Test
   @DisplayName("flatten")
   void testFlatten() {
     assertEquals(
@@ -100,6 +112,15 @@ class TestCollections {
     assertEquals(set(1), intersection(set(0, 1), set(1, 2)));
     assertEquals(set(), intersection(set(0, 1), set(2, 3)));
     assertEquals(set(0, 1), intersection(set(0, 1), set(0, 1)));
+  }
+
+  @Test
+  @DisplayName("last")
+  void testLast() {
+    assertEquals(list(3, 4, 5, 6, 7), last(list(0, 1, 2, 3, 4, 5, 6, 7), 5));
+    assertEquals(list(3, 4, 5, 6, 7), last(list(3, 4, 5, 6, 7), 5));
+    assertEquals(list(4, 5, 6, 7), last(list(4, 5, 6, 7), 5));
+    assertEquals(list(), last(list(), 2));
   }
 
   @Test
@@ -152,6 +173,12 @@ class TestCollections {
   @DisplayName("reverse")
   void testReverse() {
     assertEquals(list(3, 2, 1), stream(reverse(list(1, 2, 3))).collect(toList()));
+  }
+
+  @Test
+  @DisplayName("reverseList")
+  void testReverseList() {
+    assertEquals(list(3, 2, 1), reverseList(list(1, 2, 3)));
   }
 
   @Test

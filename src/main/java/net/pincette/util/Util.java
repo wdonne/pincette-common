@@ -745,7 +745,7 @@ public class Util {
   }
 
   public static void printStackTrace(final Throwable e) {
-    getLogger("net.pincette.util.Util").severe(getStackTrace(e));
+    getLogger("net.pincette.util.Util").severe(() -> getStackTrace(e));
   }
 
   public static Stream<String> readLineConfig(final InputStream in) throws IOException {
