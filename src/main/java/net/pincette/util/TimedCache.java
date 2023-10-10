@@ -71,6 +71,13 @@ public class TimedCache<K, V> {
     return this;
   }
 
+  public TimedCache<K, V> remove(final K key) {
+    cleanUp();
+    cache.remove(key);
+
+    return this;
+  }
+
   private static class Slot<T> {
     private final Instant timestamp;
     private final T value;
