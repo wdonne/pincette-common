@@ -748,6 +748,15 @@ public class Util {
     getLogger("net.pincette.util.Util").severe(() -> getStackTrace(e));
   }
 
+  /** Can be used for debugging. */
+  public static void printStackTrace() {
+    try {
+      throw new GeneralException("Debug stack trace");
+    } catch (final Exception e) {
+      printStackTrace(e);
+    }
+  }
+
   public static Stream<String> readLineConfig(final InputStream in) throws IOException {
     return readLineConfig(
         new BufferedReader(new EscapedUnicodeFilterReader(new InputStreamReader(in, UTF_8))));
