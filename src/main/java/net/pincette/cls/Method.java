@@ -3,7 +3,6 @@ package net.pincette.cls;
 import java.util.regex.Pattern;
 
 public class Method {
-
   private static final Pattern METHOD_PARAMETERS = Pattern.compile("\\[*(L[^;]+;|[ZBCSIFDJ])");
 
   Attribute[] attributes;

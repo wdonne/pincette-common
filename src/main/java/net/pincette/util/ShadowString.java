@@ -5,7 +5,7 @@ import static java.lang.CharSequence.compare;
 /**
  * A representation of a string that doesn't copy the underlying string.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  * @since 2.0.4
  */
 public class ShadowString implements CharSequence {
@@ -38,7 +38,7 @@ public class ShadowString implements CharSequence {
 
   @Override
   public boolean equals(final Object o) {
-    return o instanceof CharSequence && compare(this, (CharSequence) o) == 0;
+    return o instanceof CharSequence cs && compare(this, cs) == 0;
   }
 
   @Override

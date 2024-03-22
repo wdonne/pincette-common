@@ -4,7 +4,6 @@ import static java.lang.Integer.min;
 import static java.lang.Math.max;
 import static java.util.Collections.nCopies;
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static net.pincette.util.Array.inArray;
@@ -38,7 +37,7 @@ import net.pincette.function.SideEffect;
 /**
  * Collection utilities.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class Collections {
   private Collections() {}
@@ -111,7 +110,7 @@ public class Collections {
    * @since 1.7
    */
   public static <T> List<T> concat(final Stream<Collection<T>> collections) {
-    return collections.flatMap(Collection::stream).collect(toList());
+    return collections.flatMap(Collection::stream).toList();
   }
 
   private static <T> Stream<T> consumeDeque(final Deque<T> deque, final Function<Deque<T>, T> fn) {
@@ -132,7 +131,7 @@ public class Collections {
   }
 
   /**
-   * Returns a stream that consumes all the elements starting from the head of the queue. The
+   * Returns a stream that consumes all the elements starting from the tail of the queue. The
    * returned elements are removed.
    *
    * @param deque the given queue.
@@ -203,7 +202,7 @@ public class Collections {
 
     map.forEach(
         (k, v) -> {
-          final List<CharSequence> segs = segments.apply(k).collect(toList());
+          final List<CharSequence> segs = segments.apply(k).toList();
 
           segs.subList(0, segs.size() - 1).stream()
               .reduce(
@@ -470,7 +469,7 @@ public class Collections {
   }
 
   public static <T> List<T> reverseList(final List<T> list) {
-    return stream(reverse(list)).collect(toList());
+    return stream(reverse(list)).toList();
   }
 
   /**

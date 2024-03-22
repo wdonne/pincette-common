@@ -11,7 +11,6 @@ import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.ForkJoinPool.commonPool;
-import static java.util.stream.Collectors.toList;
 import static net.pincette.util.Collections.map;
 import static net.pincette.util.Collections.shiftDown;
 import static net.pincette.util.Pair.pair;
@@ -38,7 +37,7 @@ import java.util.stream.StreamSupport;
 /**
  * Some stream API untilities.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class StreamUtil {
   private StreamUtil() {}
@@ -47,7 +46,7 @@ public class StreamUtil {
     return rangeExclusive(0, size)
         .map(i -> iterator.hasNext() ? iterator.next() : null)
         .filter(Objects::nonNull)
-        .collect(toList());
+        .toList();
   }
 
   /**

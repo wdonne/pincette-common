@@ -26,7 +26,7 @@ import org.xml.sax.InputSource;
  * Only PUBLIC and SYSTEM statements are supported at this time. Relative URLs are resolved using
  * the catalog URL as the base URL.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class CatalogResolver implements EntityResolver, XMLResolver {
   // Alphabet.
@@ -57,9 +57,9 @@ public class CatalogResolver implements EntityResolver, XMLResolver {
     {{DQ2, 0}, {TYP, 1}, {DQ2, 0}, {DQ2, 0}, {ERR, 0}, {ERR, 0}} // DQ2
   };
 
-  private String catalogSystemId;
-  private Map<String, String> publicIdentifiers = new HashMap<>();
-  private Map<String, String> systemIdentifiers = new HashMap<>();
+  private final String catalogSystemId;
+  private final Map<String, String> publicIdentifiers = new HashMap<>();
+  private final Map<String, String> systemIdentifiers = new HashMap<>();
 
   public CatalogResolver(final URL catalogUrl) throws IOException {
     this(catalogUrl.toString(), null);
@@ -154,7 +154,7 @@ public class CatalogResolver implements EntityResolver, XMLResolver {
 
     copy(in, out);
 
-    final char[] c = new String(out.toByteArray(), US_ASCII).toCharArray();
+    final char[] c = out.toString(US_ASCII).toCharArray();
     String from = null;
     int line = 1;
     int position = 0;
@@ -169,20 +169,20 @@ public class CatalogResolver implements EntityResolver, XMLResolver {
       }
 
       if (next[1] == 1) {
+        final String from1 = new String(c, position, i - position);
+
         switch (state) {
           case TYP:
             type = getTypeToken(c, position, i - position, line);
             break;
 
-          case SQ1:
-          case DQ1:
-            from = new String(c, position, i - position);
+          case SQ1, DQ1:
+            from = from1;
             break;
 
-          case SQ2:
-          case DQ2:
+          case SQ2, DQ2:
             ("PUBLIC".equals(type) ? publicIdentifiers : systemIdentifiers)
-                .put(from, resolveSystemId(catalogSystemId, new String(c, position, i - position)));
+                .put(from, resolveSystemId(catalogSystemId, from1));
 
             break;
 

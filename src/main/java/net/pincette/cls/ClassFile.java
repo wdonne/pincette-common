@@ -22,7 +22,6 @@ import java.util.stream.Stream;
 import net.pincette.util.Pair;
 
 public class ClassFile {
-
   private static final byte CONSTANT_CLASS = 7;
   private static final byte CONSTANT_FIELDREF = 9;
   private static final byte CONSTANT_METHODREF = 10;
@@ -137,39 +136,19 @@ public class ClassFile {
 
   private static Object readConstantPoolEntry(final DataInput in, final byte tag)
       throws IOException {
-    switch (tag) {
-      case CONSTANT_CLASS:
-        return new ClassInfo(in.readShort());
-
-      case CONSTANT_FIELDREF:
-      case CONSTANT_METHODREF:
-      case CONSTANT_INTERFACE_METHODREF:
-        return new RefInfo(tag, in.readShort(), in.readShort());
-
-      case CONSTANT_STRING:
-        return new StringInfo(in.readShort());
-
-      case CONSTANT_INTEGER:
-        return in.readInt();
-
-      case CONSTANT_FLOAT:
-        return in.readFloat();
-
-      case CONSTANT_LONG:
-        return in.readLong();
-
-      case CONSTANT_DOUBLE:
-        return in.readDouble();
-
-      case CONSTANT_NAME_AND_TYPE:
-        return new NameAndType(in.readShort(), in.readShort());
-
-      case CONSTANT_UTF_8:
-        return readString(in);
-
-      default:
-        return null;
-    }
+    return switch (tag) {
+      case CONSTANT_CLASS -> new ClassInfo(in.readShort());
+      case CONSTANT_FIELDREF, CONSTANT_METHODREF, CONSTANT_INTERFACE_METHODREF ->
+          new RefInfo(tag, in.readShort(), in.readShort());
+      case CONSTANT_STRING -> new StringInfo(in.readShort());
+      case CONSTANT_INTEGER -> in.readInt();
+      case CONSTANT_FLOAT -> in.readFloat();
+      case CONSTANT_LONG -> in.readLong();
+      case CONSTANT_DOUBLE -> in.readDouble();
+      case CONSTANT_NAME_AND_TYPE -> new NameAndType(in.readShort(), in.readShort());
+      case CONSTANT_UTF_8 -> readString(in);
+      default -> null;
+    };
   }
 
   private static String readString(final DataInput in) throws IOException {
@@ -336,14 +315,11 @@ public class ClassFile {
         final String nam = (String) constantPool[in.readShort()];
         final int length = in.readInt(); // The attribute length.
 
-        if (nam.equals("ConstantValue")) {
-          result[i].value = constantPool[in.readShort()];
-        } else if (nam.equals("Synthetic")) {
-          result[i].isSynthetic = true;
-        } else if (nam.equals(DEPRECATED)) {
-          result[i].isDeprecated = true;
-        } else {
-          atts.add(readAttribute(in, nam, length));
+        switch (nam) {
+          case "ConstantValue" -> result[i].value = constantPool[in.readShort()];
+          case "Synthetic" -> result[i].isSynthetic = true;
+          case DEPRECATED -> result[i].isDeprecated = true;
+          default -> atts.add(readAttribute(in, nam, length));
         }
       }
 
@@ -389,16 +365,12 @@ public class ClassFile {
         final String nam = (String) constantPool[in.readShort()];
         final int length = in.readInt(); // The attribute length.
 
-        if (nam.equals("Code")) {
-          result[i].code = readCode(in);
-        } else if (nam.equals("Exceptions")) {
-          result[i].exceptions = readClassNames(in, in.readShort());
-        } else if (nam.equals("Synthetic")) {
-          result[i].isSynthetic = true;
-        } else if (nam.equals(DEPRECATED)) {
-          result[i].isDeprecated = true;
-        } else {
-          atts.add(readAttribute(in, nam, length));
+        switch (nam) {
+          case "Code" -> result[i].code = readCode(in);
+          case "Exceptions" -> result[i].exceptions = readClassNames(in, in.readShort());
+          case "Synthetic" -> result[i].isSynthetic = true;
+          case DEPRECATED -> result[i].isDeprecated = true;
+          default -> atts.add(readAttribute(in, nam, length));
         }
       }
 
@@ -408,17 +380,9 @@ public class ClassFile {
     return result;
   }
 
-  private static class ClassInfo {
-
-    private short name;
-
-    private ClassInfo(final short name) {
-      this.name = name;
-    }
-  }
+  private record ClassInfo(short name) {}
 
   private static class NameAndType {
-
     short name;
     short type;
 
@@ -429,7 +393,6 @@ public class ClassFile {
   }
 
   private static class RefInfo {
-
     short classInfo;
     short nameAndType;
     byte tag;
@@ -442,7 +405,6 @@ public class ClassFile {
   }
 
   private static class StringInfo {
-
     short name;
 
     private StringInfo(final short name) {

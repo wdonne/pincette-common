@@ -19,7 +19,7 @@ import javax.xml.stream.events.XMLEvent;
  * Converts a JSON-stream in an XML-stream. The provided parser will be closed when this reader is
  * closed.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class JsonEventReader implements XMLEventReader {
   private final Deque<Event> events = new LinkedList<>();
@@ -93,36 +93,23 @@ public class JsonEventReader implements XMLEventReader {
   }
 
   private XMLEvent handleEvent(final Event event) {
-    switch (event) {
-      case END_ARRAY:
-      case END_OBJECT:
-        return handleEndObject();
-
-      case KEY_NAME:
+    return switch (event) {
+      case END_ARRAY, END_OBJECT -> handleEndObject();
+      case KEY_NAME -> {
         keyNames.push(cleanName(parser.getString()));
-        return createNop();
-
-      case START_ARRAY:
-      case START_OBJECT:
-        return handleStartObject(event);
-
-      case VALUE_FALSE:
-        return createValue("false");
-
-      case VALUE_NUMBER:
-        return createValue(
-            parser.isIntegralNumber()
-                ? String.valueOf(parser.getLong())
-                : parser.getBigDecimal().toString());
-
-      case VALUE_TRUE:
-        return createValue("true");
-      case VALUE_STRING:
-        return createValue(parser.getString());
-
-      default:
-        return createNop();
-    }
+        yield createNop();
+      }
+      case START_ARRAY, START_OBJECT -> handleStartObject(event);
+      case VALUE_FALSE -> createValue("false");
+      case VALUE_NUMBER ->
+          createValue(
+              parser.isIntegralNumber()
+                  ? String.valueOf(parser.getLong())
+                  : parser.getBigDecimal().toString());
+      case VALUE_TRUE -> createValue("true");
+      case VALUE_STRING -> createValue(parser.getString());
+      default -> createNop();
+    };
   }
 
   private XMLEvent handleStartObject(final Event event) {

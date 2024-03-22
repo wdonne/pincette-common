@@ -81,7 +81,7 @@ import net.pincette.io.StreamConnector;
 /**
  * General purpose utility functions.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class Util {
   private static final Pattern EMAIL =
@@ -131,7 +131,7 @@ public class Util {
                     leading
                         + Arrays.stream(segments, 0, segments.length - i)
                             .collect(joining(delimiter))),
-        !leading.equals("") ? Stream.of(delimiter) : Stream.empty());
+        !leading.isEmpty() ? Stream.of(delimiter) : Stream.empty());
   }
 
   /**
@@ -160,7 +160,7 @@ public class Util {
         + String.join(
             delimiter,
             segments(path, delimiter)
-                .filter(s -> s.length() > 0 && !s.equals("."))
+                .filter(s -> !s.isEmpty() && !s.equals("."))
                 .reduce(
                     new LinkedList<>(),
                     (l, s) -> {
@@ -439,7 +439,7 @@ public class Util {
   public static Optional<String> getLastSegment(final String path, final String delimiter) {
     return Optional.of(path.lastIndexOf(delimiter))
         .map(i -> i != -1 ? path.substring(i + delimiter.length()) : path)
-        .filter(s -> s.length() > 0);
+        .filter(s -> !s.isEmpty());
   }
 
   /**
@@ -513,12 +513,27 @@ public class Util {
   }
 
   /**
-   * Loads the logging configuration from the <code>/loggiong.properties</code> resource.
+   * Loads the logging configuration from the <code>/loggiong.properties</code> resource when the
+   * system properties <code>java.util.logging.config.class</code> and <code>
+   * java.util.logging.config.file</code> are not set.
    *
    * @since 2.3.1
    */
   public static void initLogging() {
-    initLogging(Util.class.getResourceAsStream("/logging.properties"));
+    initLogging(Util.class.getClassLoader().getResourceAsStream("logging.properties"), null);
+  }
+
+  /**
+   * Loads the logging configuration from the <code>/loggiong.properties</code> resource when the
+   * system properties <code>java.util.logging.config.class</code> and <code>
+   * java.util.logging.config.file</code> are not set.
+   *
+   * @param update the function that can update the loaded logging properties before they are given
+   *     to the log manager. It can be <code>null</code>.
+   * @since 2.4.0
+   */
+  public static void initLogging(final ConsumerWithException<Properties> update) {
+    initLogging(Util.class.getClassLoader().getResourceAsStream("logging.properties"), update);
   }
 
   /**
@@ -529,9 +544,27 @@ public class Util {
    * @since 2.3.1
    */
   public static void initLogging(final InputStream configuration) {
+    initLogging(configuration, null);
+  }
+
+  /**
+   * Loads the logging configuration when the system properties <code>java.util.logging
+   * .config.class</code> and <code>java.util.logging.config.file</code> are not set.
+   *
+   * @param configuration the given configuration.
+   * @param update the function that can update the loaded logging properties before they are given
+   *     to the log manager. It can be <code>null</code>.
+   * @since 2.4.0
+   */
+  public static void initLogging(
+      final InputStream configuration, final ConsumerWithException<Properties> update) {
     if (getProperty("java.util.logging.config.class") == null
         && getProperty("java.util.logging.config.file") == null) {
-      tryToDoRethrow(() -> getLogManager().readConfiguration(configuration));
+      tryToDoRethrow(
+          () ->
+              getLogManager()
+                  .readConfiguration(
+                      update != null ? updateLogging(configuration, update) : configuration));
     }
   }
 
@@ -569,6 +602,14 @@ public class Util {
 
   public static boolean isUri(final String s) {
     return tryToGetSilent(() -> new URI(s)).map(URI::isAbsolute).orElse(false);
+  }
+
+  private static Properties loadLogging(final InputStream in) {
+    final var properties = new Properties();
+
+    tryToDoRethrow(() -> properties.load(in));
+
+    return properties;
   }
 
   public static Map<String, String> loadProperties(final Supplier<InputStream> in) {
@@ -783,7 +824,7 @@ public class Util {
 
     return lines
         .map(line -> (line.indexOf('#') != -1 ? line.substring(0, line.indexOf('#')) : line).trim())
-        .filter(line -> line.length() > 0)
+        .filter(line -> !line.isEmpty())
         .map(
             line ->
                 line.charAt(line.length() - 1) == '\\'
@@ -928,8 +969,8 @@ public class Util {
   }
 
   public static void rethrow(final Throwable t) {
-    if (t instanceof RuntimeException) {
-      throw (RuntimeException) t;
+    if (t instanceof RuntimeException re) {
+      throw re;
     } else {
       throw new GeneralException(t);
     }
@@ -1150,7 +1191,7 @@ public class Util {
   }
 
   private static Stream<String> toNonEmptyStrings(final Stream<CharSequence> stream) {
-    return stream.filter(cs -> cs.length() > 0).map(CharSequence::toString);
+    return stream.filter(cs -> !cs.isEmpty()).map(CharSequence::toString);
   }
 
   public static boolean tryToDo(final RunnableWithException run) {
@@ -1332,8 +1373,8 @@ public class Util {
       final Consumer<Exception> onException) {
     final Consumer<Throwable> again =
         e -> {
-          if (e instanceof Exception) {
-            onException.accept((Exception) e);
+          if (e instanceof Exception ex) {
+            onException.accept(ex);
           }
 
           runAsyncAfter(
@@ -1437,6 +1478,20 @@ public class Util {
   public static <T, R> Optional<R> tryToGetWithSilent(
       final AutoCloseWrapper<T> resource, final FunctionWithException<T, R> fn) {
     return tryToGetWith(resource, fn, e -> null);
+  }
+
+  private static InputStream updateLogging(
+      final InputStream in, final ConsumerWithException<Properties> update) {
+    final ByteArrayOutputStream out = new ByteArrayOutputStream();
+    final Properties properties = loadLogging(in);
+
+    tryToDoRethrow(
+        () -> {
+          update.accept(properties);
+          properties.store(out, null);
+        });
+
+    return new ByteArrayInputStream(out.toByteArray());
   }
 
   public static <T> CompletionStage<T> waitFor(

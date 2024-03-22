@@ -1,6 +1,5 @@
 package net.pincette.util;
 
-import static java.util.stream.Collectors.toList;
 import static net.pincette.util.Or.tryWith;
 import static net.pincette.util.Pair.pair;
 import static net.pincette.util.StreamUtil.stream;
@@ -20,7 +19,7 @@ import net.pincette.function.SideEffect;
 /**
  * Utilities to work with expressions.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class Expressions {
   private static final Pattern TOKENS =
@@ -125,17 +124,12 @@ public class Expressions {
   }
 
   private static Object getValue(final int token, final String s) {
-    switch (token) {
-      case NUMBER:
-        return Double.parseDouble(s);
-      case IDENTIFIER:
-        return s;
-      case SINGLE_QUOTED:
-      case DOUBLE_QUOTED:
-        return s.substring(1, s.length() - 1);
-      default:
-        return null;
-    }
+    return switch (token) {
+      case NUMBER -> Double.parseDouble(s);
+      case IDENTIFIER -> s;
+      case SINGLE_QUOTED, DOUBLE_QUOTED -> s.substring(1, s.length() - 1);
+      default -> null;
+    };
   }
 
   private static Identifier identifier(final Supplier<Value> get, final Runnable pushback) {
@@ -207,20 +201,14 @@ public class Expressions {
         .map(
             token ->
                 new Value(token.token, getValue(token.token, s.substring(token.start, token.end))))
-        .collect(toList());
+        .toList();
   }
 
   public interface Expr {
     Object evaluate(Function<String, Object> evaluator);
   }
 
-  private static class Identifier implements Expr {
-    private final String name;
-
-    private Identifier(final String name) {
-      this.name = name;
-    }
-
+  private record Identifier(String name) implements Expr {
     public Object evaluate(final Function<String, Object> evaluator) {
       return evaluator.apply(name);
     }
@@ -248,85 +236,49 @@ public class Expressions {
     public Object evaluate(final Function<String, Object> evaluator) {
       final Object value = operand.evaluate(evaluator);
 
-      return value instanceof Boolean ? !((Boolean) value) : null;
+      return value instanceof Boolean b ? !b : null;
     }
   }
 
-  private static class NumberExpr implements Expr {
-    private final Double value;
-
-    private NumberExpr(final Double value) {
-      this.value = value;
-    }
-
+  private record NumberExpr(Double value) implements Expr {
     public Object evaluate(final Function<String, Object> evaluator) {
       return value;
     }
   }
 
-  private static class Operator implements Expr {
-    private final Expr operand1;
-    private final Expr operand2;
-    private final int op;
-
-    private Operator(final Expr operand1, final int op, final Expr operand2) {
-      this.operand1 = operand1;
-      this.op = op;
-      this.operand2 = operand2;
-    }
+  private record Operator(Expr operand1, int op, Expr operand2) implements Expr {
 
     private static BiFunction<Object, Object, Object> getBinaryOperator(final int operator) {
-      switch (operator) {
-        case AND:
-          return (left, right) -> (Boolean) left && (Boolean) right;
-        case OR:
-          return (left, right) -> (Boolean) left || (Boolean) right;
-        case EQUAL:
-          return Objects::equals;
-        case NOT_EQUAL:
-          return (left, right) -> !left.equals(right);
-        case LESS_THAN:
-          return (left, right) -> ((Comparable) left).compareTo(right) < 0;
-        case GREATER_THAN:
-          return (left, right) -> ((Comparable) left).compareTo(right) > 0;
-        case LESS_THAN_EQUAL:
-          return (left, right) -> ((Comparable) left).compareTo(right) <= 0;
-        case GREATER_THAN_EQUAL:
-          return (left, right) -> ((Comparable) left).compareTo(right) >= 0;
-        case PLUS:
-          return (left, right) -> ((Number) left).doubleValue() + ((Number) right).doubleValue();
-        case MINUS:
-          return (left, right) -> ((Number) left).doubleValue() - ((Number) right).doubleValue();
-        case MULTIPLY:
-          return (left, right) -> ((Number) left).doubleValue() * ((Number) right).doubleValue();
-        case DIVIDE:
-          return (left, right) -> ((Number) left).doubleValue() / ((Number) right).doubleValue();
-        default:
-          return (left, right) -> null;
-      }
+      return switch (operator) {
+        case AND -> (left, right) -> (Boolean) left && (Boolean) right;
+        case OR -> (left, right) -> (Boolean) left || (Boolean) right;
+        case EQUAL -> Objects::equals;
+        case NOT_EQUAL -> (left, right) -> !left.equals(right);
+        case LESS_THAN -> (left, right) -> ((Comparable) left).compareTo(right) < 0;
+        case GREATER_THAN -> (left, right) -> ((Comparable) left).compareTo(right) > 0;
+        case LESS_THAN_EQUAL -> (left, right) -> ((Comparable) left).compareTo(right) <= 0;
+        case GREATER_THAN_EQUAL -> (left, right) -> ((Comparable) left).compareTo(right) >= 0;
+        case PLUS ->
+            (left, right) -> ((Number) left).doubleValue() + ((Number) right).doubleValue();
+        case MINUS ->
+            (left, right) -> ((Number) left).doubleValue() - ((Number) right).doubleValue();
+        case MULTIPLY ->
+            (left, right) -> ((Number) left).doubleValue() * ((Number) right).doubleValue();
+        case DIVIDE ->
+            (left, right) -> ((Number) left).doubleValue() / ((Number) right).doubleValue();
+        default -> (left, right) -> null;
+      };
     }
 
     private static boolean isCompatible(final int operator, final Object value) {
-      switch (operator) {
-        case AND:
-        case OR:
-          return value instanceof Boolean;
-        case EQUAL:
-        case NOT_EQUAL:
-          return true;
-        case LESS_THAN:
-        case GREATER_THAN:
-        case LESS_THAN_EQUAL:
-        case GREATER_THAN_EQUAL:
-          return value instanceof Comparable;
-        case PLUS:
-        case MINUS:
-        case MULTIPLY:
-        case DIVIDE:
-          return value instanceof Number;
-        default:
-          return false;
-      }
+      return switch (operator) {
+        case AND, OR -> value instanceof Boolean;
+        case EQUAL, NOT_EQUAL -> true;
+        case LESS_THAN, GREATER_THAN, LESS_THAN_EQUAL, GREATER_THAN_EQUAL ->
+            value instanceof Comparable;
+        case PLUS, MINUS, MULTIPLY, DIVIDE -> value instanceof Number;
+        default -> false;
+      };
     }
 
     public Object evaluate(final Function<String, Object> evaluator) {
@@ -343,13 +295,7 @@ public class Expressions {
     }
   }
 
-  private static class StringExpr implements Expr {
-    private final String value;
-
-    private StringExpr(final String value) {
-      this.value = value;
-    }
-
+  private record StringExpr(String value) implements Expr {
     public Object evaluate(final Function<String, Object> evaluator) {
       return value;
     }

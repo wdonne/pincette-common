@@ -33,7 +33,7 @@ import net.pincette.function.SideEffect;
  * With this class loader you can load classes in isolation. The classes are actually loaded as
  * resources in order to reuse the parent class loader mechanisms for fetching the byte array.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class IsolatingClassLoader extends ClassLoader {
   private static final Map<ClassLoader, Map<String, byte[]>> classesPerParent = new HashMap<>();
@@ -184,8 +184,8 @@ public class IsolatingClassLoader extends ClassLoader {
               className,
               name -> tryToGetRethrow(() -> loadClassAsResource(name)).orElse(null));
     } catch (Exception e) {
-      throw e.getCause() instanceof ClassNotFoundException
-          ? (ClassNotFoundException) e.getCause()
+      throw e.getCause() instanceof ClassNotFoundException cnf
+          ? cnf
           : new ClassNotFoundException("", e);
     }
   }
