@@ -28,8 +28,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import net.pincette.function.SideEffect;
@@ -400,15 +402,49 @@ public class Collections {
    * @since 1.7
    */
   public static <K, V> Map<K, V> merge(final Stream<Map<K, V>> maps) {
+    return merge(
+        maps,
+        (v1, v2) ->
+            v1 instanceof Map && v2 instanceof Map ? (V) merge(Stream.of((Map) v1, (Map) v2)) : v2);
+  }
+
+  /**
+   * Returns a new map with all the mappings of the given maps combined. When there is more than one
+   * mapping for a key, the <code>merge</code> function is called for the resulting value.
+   *
+   * @param maps the given maps.
+   * @param merge the function that resolves key collisions.
+   * @param <K> the key type.
+   * @param <V> the value type.
+   * @return The new map.
+   * @since 2.4.1
+   */
+  public static <K, V> Map<K, V> merge(
+      final Stream<Map<K, V>> maps, final BinaryOperator<V> merge) {
     return maps.flatMap(m -> m.entrySet().stream())
-        .collect(
-            toMap(
-                Entry::getKey,
-                Entry::getValue,
-                (v1, v2) ->
-                    v1 instanceof Map && v2 instanceof Map
-                        ? (V) merge(Stream.of((Map) v1, (Map) v2))
-                        : v2));
+        .collect(toMap(Entry::getKey, Entry::getValue, merge));
+  }
+
+  /**
+   * Returns a new map with all the mappings of the given maps combined. When there is more than one
+   * mapping for a key, the <code>merge</code> function is called for the resulting value. The key
+   * will have been transformed prior to this.
+   *
+   * @param maps the given maps.
+   * @param transformKey the function that transforms the key.
+   * @param merge the function that resolves key collisions.
+   * @param <K> the key type.
+   * @param <V> the value type.
+   * @return The new map.
+   * @since 2.4.1
+   */
+  public static <K, V> Map<K, V> merge(
+      final Stream<Map<K, V>> maps,
+      final UnaryOperator<K> transformKey,
+      final BinaryOperator<V> merge) {
+    return maps.flatMap(m -> m.entrySet().stream())
+        .map(e -> pair(transformKey.apply(e.getKey()), e.getValue()))
+        .collect(toMap(p -> p.first, p -> p.second, merge));
   }
 
   /**

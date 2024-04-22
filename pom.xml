@@ -7,7 +7,7 @@
   <groupId>net.pincette</groupId>
   <artifactId>pincette-common</artifactId>
   <packaging>jar</packaging>
-  <version>2.4.0</version>
+  <version>2.4.1</version>
   <name>pincette-common</name>
   <description>General utilities</description>
   <url>https://github.com/wdonne/pincette-common</url>
@@ -78,7 +78,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-gpg-plugin</artifactId>
-        <version>3.1.0</version>
+        <version>3.2.3</version>
         <executions>
           <execution>
             <id>sign-artifacts</id>
@@ -99,8 +99,8 @@
             </additionalJOption>
           </additionalJOptions>
           <links>
-            <link>https://docs.oracle.com/en/java/javase/11/docs/api/</link>
-            <link>https://www.javadoc.io/doc/javax.json/javax.json-api/1.1.4/</link>
+            <link>https://docs.oracle.com/en/java/javase/17/docs/api/</link>
+            <link>https://www.javadoc.io/doc/javax.json/javax.json-api/latest/</link>
           </links>
           <sourceFileExcludes>
             <sourceFileExclude>**/module-info.java</sourceFileExclude>
