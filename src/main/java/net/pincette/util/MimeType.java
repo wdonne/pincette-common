@@ -1,12 +1,13 @@
 package net.pincette.util;
 
-import static java.util.Arrays.asList;
 import static java.util.Arrays.copyOfRange;
 import static java.util.Arrays.stream;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 import static net.pincette.util.Array.hasPrefix;
 import static net.pincette.util.Collections.put;
+import static net.pincette.util.Collections.set;
 import static net.pincette.util.Pair.pair;
 import static net.pincette.util.StreamUtil.rangeExclusive;
 import static net.pincette.util.Util.readLineConfig;
@@ -19,27 +20,28 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
  * Some MIME type utilities.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class MimeType {
   private static final String OCTET_STREAM = "application/octet-stream";
 
-  private static Map<String, String> extensions;
+  private static final Map<String, String> extensions;
   private static String[] knownMimeTypes;
-  private static Map<String, List<String>> mimeTypes;
+  private static final Map<String, Set<String>> mimeTypes;
   private static Map<String, String> preferredMimeTypes;
 
   static {
-    final Pair<Map<String, List<String>>, Map<String, String>> result = loadMimeTypeMap();
+    final Pair<Map<String, Set<String>>, Map<String, String>> result = loadMimeTypeMap();
 
     mimeTypes = result.first;
     extensions = result.second;
@@ -133,7 +135,7 @@ public class MimeType {
    * @return The mapped MIME type.
    */
   public static String getContentTypeFromExtension(final String extension) {
-    return Optional.ofNullable(extensions.get(extension)).orElse(OCTET_STREAM);
+    return ofNullable(extensions.get(extension.toLowerCase())).orElse(OCTET_STREAM);
   }
 
   /**
@@ -150,8 +152,8 @@ public class MimeType {
   }
 
   public static String[] getExtensionsFromMimeType(final String mimeType) {
-    return Optional.ofNullable(mimeTypes.get(stripParameters(mimeType).toLowerCase()))
-        .map(list -> list.toArray(new String[0]))
+    return ofNullable(mimeTypes.get(stripParameters(mimeType).toLowerCase()))
+        .map(set -> set.toArray(new String[0]))
         .orElse(new String[0]);
   }
 
@@ -177,7 +179,7 @@ public class MimeType {
   }
 
   public static Optional<String> getParameter(final String mimeType, final String name) {
-    return Optional.ofNullable(getParameters(mimeType).get(name.toLowerCase()));
+    return ofNullable(getParameters(mimeType).get(name.toLowerCase()));
   }
 
   private static Optional<String> getParameterValue(final String value) {
@@ -218,7 +220,7 @@ public class MimeType {
       preferredMimeTypes = loadPreferredMimeTypes();
     }
 
-    return Optional.ofNullable(preferredMimeTypes.get(mimeType.toLowerCase()))
+    return ofNullable(preferredMimeTypes.get(mimeType.toLowerCase()))
         .orElseGet(mimeType::toLowerCase);
   }
 
@@ -257,14 +259,15 @@ public class MimeType {
                 readLineConfig(
                         new BufferedReader(
                             new InputStreamReader(
-                                MimeType.class.getResourceAsStream("res/mime_types"))))
+                                Objects.requireNonNull(
+                                    MimeType.class.getResourceAsStream("res/mime_types")))))
                     .map(String::toLowerCase)
                     .toArray(String[]::new))
         .orElse(new String[0]);
   }
 
-  private static Pair<Map<String, List<String>>, Map<String, String>> loadMimeTypeMap() {
-    final Pair<Map<String, List<String>>, Map<String, String>> result =
+  private static Pair<Map<String, Set<String>>, Map<String, String>> loadMimeTypeMap() {
+    final Pair<Map<String, Set<String>>, Map<String, String>> result =
         pair(new HashMap<>(), new HashMap<>());
 
     tryToDoRethrow(
@@ -292,29 +295,28 @@ public class MimeType {
 
   private static void mapExtensionsToType(
       final Map<String, String> extensions, final String[] tokens) {
-    rangeExclusive(1, tokens.length)
-        .forEach(
-            i -> {
-              if (!extensions.containsKey(tokens[i])) {
-                extensions.put(tokens[i], tokens[0]);
-              }
-            });
+    rangeExclusive(1, tokens.length).forEach(i -> extensions.put(tokens[i], tokens[0]));
   }
 
   private static void mapTypeToExtensions(
-      final Map<String, List<String>> mimeTypes, final String[] tokens) {
-    mimeTypes.put(tokens[0], asList(copyOfRange(tokens, 1, tokens.length)));
+      final Map<String, Set<String>> mimeTypes, final String[] tokens) {
+    mimeTypes.put(tokens[0], set(copyOfRange(tokens, 1, tokens.length)));
   }
 
   private static void parse(
       final InputStream in,
-      final Map<String, List<String>> mimeTypes,
+      final Map<String, Set<String>> mimeTypes,
       final Map<String, String> extensions)
       throws IOException {
     readLineConfig(in)
         .map(line -> line.split("[ \t]"))
+        .map(
+            tokens ->
+                stream(tokens)
+                    .filter(t -> !t.isEmpty())
+                    .map(String::toLowerCase)
+                    .toArray(String[]::new))
         .filter(tokens -> tokens.length > 1)
-        .map(tokens -> new String[] {tokens[0].toLowerCase(), tokens[1]})
         .forEach(
             tokens -> {
               mapExtensionsToType(extensions, tokens);

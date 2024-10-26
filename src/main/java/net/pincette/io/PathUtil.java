@@ -28,6 +28,12 @@ import java.util.Optional;
 public class PathUtil {
   private PathUtil() {}
 
+  /**
+   * Recusively copy <code>source</code> to <code>target</code>.
+   *
+   * @param source the source path.
+   * @param target the target path.
+   */
   public static void copy(final Path source, final Path target) {
     final Path realTarget =
         exists(target) && isDirectory(target) ? target.resolve(source.getFileName()) : target;
@@ -59,6 +65,11 @@ public class PathUtil {
                 }));
   }
 
+  /**
+   * Recursively delete the path.
+   *
+   * @param path the path.
+   */
   public static void delete(final Path path) {
     tryToDoRethrow(
         () ->

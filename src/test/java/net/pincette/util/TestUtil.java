@@ -86,6 +86,24 @@ class TestUtil {
   }
 
   @Test
+  @DisplayName("readLineConfig")
+  void readLineConfig() {
+    assertEquals(
+        list("line1", "line2 continue", "line3 continue", "line4"),
+        Util.readLineConfig(
+                list(
+                    "#comment",
+                    "line1",
+                    "line2 \\\n",
+                    "continue",
+                    "line3 \\\r\n",
+                    "continue",
+                    "line4#comment")
+                    .stream())
+            .toList());
+  }
+
+  @Test
   @DisplayName("segments1")
   void segments1() {
     assertEquals(
