@@ -2,7 +2,6 @@ package net.pincette.util;
 
 import static java.nio.ByteBuffer.allocate;
 import static java.nio.channels.Channels.newChannel;
-import static java.util.stream.Collectors.toList;
 import static net.pincette.io.StreamConnector.copy;
 import static net.pincette.util.Util.tryToDoRethrow;
 import static net.pincette.util.Util.tryToGetRethrow;
@@ -43,7 +42,7 @@ class TestByteBufferIO {
     while (tryToGetRethrow(() -> channel.read(newBuffer(result))).orElse(-1) != -1)
       ;
 
-    return result.stream().map(b -> b.position(0)).collect(toList());
+    return result.stream().map(b -> b.position(0)).toList();
   }
 
   @Test
