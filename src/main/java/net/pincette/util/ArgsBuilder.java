@@ -10,11 +10,10 @@ import java.util.Optional;
 /**
  * An simple args utility for main methods.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class ArgsBuilder {
-
-  private Map<String, String> args = new HashMap<>();
+  private final Map<String, String> args = new HashMap<>();
   private String pending;
 
   /**

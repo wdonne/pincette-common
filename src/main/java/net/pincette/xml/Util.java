@@ -1,5 +1,6 @@
 package net.pincette.xml;
 
+import static java.util.Optional.ofNullable;
 import static javax.xml.XMLConstants.FEATURE_SECURE_PROCESSING;
 import static net.pincette.util.MimeType.stripParameters;
 import static net.pincette.util.Pair.pair;
@@ -25,7 +26,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.helpers.AttributesImpl;
 
-/** @author Werner Donn\u00e9 */
+/**
+ * @author Werner Donné
+ */
 public class Util {
   private Util() {}
 
@@ -66,7 +69,7 @@ public class Util {
 
   private static Node findNextHigherSibling(final Node node) {
     return node.getParentNode() != null
-        ? Optional.ofNullable(node.getParentNode().getNextSibling())
+        ? ofNullable(node.getParentNode().getNextSibling())
             .orElse(findNextHigherSibling(node.getParentNode()))
         : null;
   }
@@ -201,8 +204,8 @@ public class Util {
         || isExtenderChar(c);
   }
 
-  public static boolean isName(String s) {
-    return s.length() > 0
+  public static boolean isName(final String s) {
+    return !s.isEmpty()
         && isNameStartChar(s.charAt(0))
         && s.chars().allMatch(c -> isNameChar((char) c));
   }
@@ -230,7 +233,7 @@ public class Util {
     return s.chars().allMatch(c -> isXmlChar((char) c));
   }
 
-  public static boolean isXmlText(char[] c) {
+  public static boolean isXmlText(final char[] c) {
     return isXmlText(new String(c));
   }
 
@@ -252,6 +255,10 @@ public class Util {
    */
   public static Stream<Node> previousSiblings(final Node node) {
     return takeWhile(node.getPreviousSibling(), Node::getPreviousSibling, Objects::nonNull);
+  }
+
+  public static String qName(final Node node) {
+    return ofNullable(node.getPrefix()).map(p -> p + ":").orElse("") + node.getLocalName();
   }
 
   /**

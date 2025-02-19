@@ -51,12 +51,12 @@ public class Plugins {
     return Optional.of(directory)
         .filter(Files::isDirectory)
         .flatMap(d -> tryToGetRethrow(() -> list(d)))
-        .map(
+        .stream()
+        .flatMap(
             children ->
                 children
                     .map(Plugins::createPluginLayer)
-                    .flatMap(layer -> stream(loader.apply(layer).spliterator(), false)))
-        .orElseGet(Stream::empty);
+                    .flatMap(layer -> stream(loader.apply(layer).spliterator(), false)));
   }
 
   private static Set<String> moduleNames(final ModuleFinder finder) {

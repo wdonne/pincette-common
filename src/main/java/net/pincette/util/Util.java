@@ -548,8 +548,8 @@ public class Util {
   }
 
   /**
-   * Loads the logging configuration when the system properties <code>java.util.logging
-   * .config.class</code> and <code>java.util.logging.config.file</code> are not set.
+   * Loads the logging configuration when the system properties <code>java.util.logging.config.class
+   * </code> and <code>java.util.logging.config.file</code> are not set.
    *
    * @param configuration the given configuration.
    * @param update the function that can update the loaded logging properties before they are given
@@ -798,7 +798,7 @@ public class Util {
     }
   }
 
-  public static Stream<String> readLineConfig(final InputStream in) throws IOException {
+  public static Stream<String> readLineConfig(final InputStream in) {
     return readLineConfig(
         new BufferedReader(new EscapedUnicodeFilterReader(new InputStreamReader(in, UTF_8))));
   }
