@@ -33,7 +33,7 @@ public class Util {
   private Util() {}
 
   /**
-   * Returns the stream of ancestors from the parent to the document element.
+   * Returns the stream of ancestors from the parent of the node to the document element.
    *
    * @param node the given node.
    * @return The stream.

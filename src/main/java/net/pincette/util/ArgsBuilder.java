@@ -54,4 +54,13 @@ public class ArgsBuilder {
   public Optional<Map<String, String>> build() {
     return pending != null ? empty() : of(args);
   }
+
+  /**
+   * Indicates if a pending arg has been added last.
+   *
+   * @return
+   */
+  public boolean hasPending() {
+    return pending != null;
+  }
 }
