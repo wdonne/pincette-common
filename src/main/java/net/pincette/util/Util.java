@@ -357,11 +357,10 @@ public class Util {
       final Duration interval) {
     tryToDo(
         () -> {
-          while (FALSE.equals(supplier.get()))
-            ;
-
-          if (interval != null) {
-            sleep(interval.toMillis());
+          while (FALSE.equals(supplier.get())) {
+            if (interval != null) {
+              sleep(interval.toMillis());
+            }
           }
         },
         error);
