@@ -5,12 +5,12 @@ import static java.nio.channels.Channels.newChannel;
 import static net.pincette.io.StreamConnector.copy;
 import static net.pincette.util.Util.tryToDoRethrow;
 import static net.pincette.util.Util.tryToGetRethrow;
+import static net.pincette.util.Util.tryToGetWithRethrow;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
 import net.pincette.io.ByteBufferInputStream;
@@ -36,13 +36,17 @@ class TestByteBufferIO {
   }
 
   private static List<ByteBuffer> read(final InputStream in) {
-    final ReadableByteChannel channel = newChannel(in);
-    final List<ByteBuffer> result = new ArrayList<>();
+    return tryToGetWithRethrow(
+            () -> newChannel(in),
+            ch -> {
+              final List<ByteBuffer> result = new ArrayList<>();
 
-    while (tryToGetRethrow(() -> channel.read(newBuffer(result))).orElse(-1) != -1)
-      ;
+              while (tryToGetRethrow(() -> ch.read(newBuffer(result))).orElse(-1) != -1)
+                ;
 
-    return result.stream().map(b -> b.position(0)).toList();
+              return result.stream().map(b -> b.position(0)).toList();
+            })
+        .orElse(null);
   }
 
   @Test

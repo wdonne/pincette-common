@@ -1202,8 +1202,12 @@ public class Util {
       run.run();
 
       return true;
-    } catch (Exception e) {
-      handleException(e, error);
+    } catch (Throwable e) {
+      if (e instanceof Exception ex) {
+        handleException(ex, error);
+      } else {
+        printStackTrace(e);
+      }
 
       return false;
     }
@@ -1333,8 +1337,12 @@ public class Util {
       final SupplierWithException<T> run, final Function<Exception, T> error) {
     try {
       return ofNullable(run.get());
-    } catch (Exception e) {
-      return handleException(e, error);
+    } catch (Throwable e) {
+      if (!(e instanceof Exception)) {
+        printStackTrace(e);
+      }
+
+      return e instanceof Exception ex ? handleException(ex, error) : empty();
     }
   }
 
@@ -1374,6 +1382,8 @@ public class Util {
         e -> {
           if (e instanceof Exception ex) {
             onException.accept(ex);
+          } else {
+            printStackTrace(e);
           }
 
           runAsyncAfter(

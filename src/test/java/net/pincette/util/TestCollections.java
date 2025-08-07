@@ -1,6 +1,5 @@
 package net.pincette.util;
 
-import static java.util.stream.Collectors.toList;
 import static net.pincette.util.Collections.computeIfAbsent;
 import static net.pincette.util.Collections.computeIfPresent;
 import static net.pincette.util.Collections.concat;
@@ -172,7 +171,7 @@ class TestCollections {
   @Test
   @DisplayName("reverse")
   void testReverse() {
-    assertEquals(list(3, 2, 1), stream(reverse(list(1, 2, 3))).collect(toList()));
+    assertEquals(list(3, 2, 1), stream(reverse(list(1, 2, 3))).toList());
   }
 
   @Test

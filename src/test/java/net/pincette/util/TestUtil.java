@@ -4,7 +4,6 @@ import static java.time.Duration.ofSeconds;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.regex.Pattern.compile;
-import static java.util.stream.Collectors.toList;
 import static net.pincette.util.Collections.list;
 import static net.pincette.util.ShadowString.shadow;
 import static net.pincette.util.Util.tryToGetForever;
@@ -20,7 +19,7 @@ import org.junit.jupiter.api.Test;
 class TestUtil {
   private static void allPaths(
       final String path, final String delimiter, final List<String> expected) {
-    assertEquals(expected, Util.allPaths(path, delimiter).collect(toList()));
+    assertEquals(expected, Util.allPaths(path, delimiter).toList());
   }
 
   @Test
@@ -106,31 +105,27 @@ class TestUtil {
   @Test
   @DisplayName("segments1")
   void segments1() {
-    assertEquals(
-        list(shadow("a"), shadow("b"), shadow("c")), Util.segments("a#b#c", "#").collect(toList()));
-    assertEquals(list(shadow("a"), shadow("b")), Util.segments("a#b#", "#").collect(toList()));
-    assertEquals(list(shadow("a")), Util.segments("a", "#").collect(toList()));
-    assertEquals(list(shadow(""), shadow("a")), Util.segments("#a", "#").collect(toList()));
-    assertEquals(list(shadow("")), Util.segments("", "#").collect(toList()));
-    assertEquals(list(shadow("")), Util.segments("#", "#").collect(toList()));
+    assertEquals(list(shadow("a"), shadow("b"), shadow("c")), Util.segments("a#b#c", "#").toList());
+    assertEquals(list(shadow("a"), shadow("b")), Util.segments("a#b#", "#").toList());
+    assertEquals(list(shadow("a")), Util.segments("a", "#").toList());
+    assertEquals(list(shadow(""), shadow("a")), Util.segments("#a", "#").toList());
+    assertEquals(list(shadow("")), Util.segments("", "#").toList());
+    assertEquals(list(shadow("")), Util.segments("#", "#").toList());
   }
 
   @Test
   @DisplayName("segments2")
   void segments2() {
     assertEquals(
-        list(shadow("a"), shadow("b"), shadow("c")),
-        Util.segments("a#b#c", compile("#")).collect(toList()));
+        list(shadow("a"), shadow("b"), shadow("c")), Util.segments("a#b#c", compile("#")).toList());
     assertEquals(
         list(shadow("a"), shadow("b"), shadow("c")),
-        Util.segments("a# b # c", compile(" *# *")).collect(toList()));
-    assertEquals(
-        list(shadow("a"), shadow("b")), Util.segments("a#b#", compile("#")).collect(toList()));
-    assertEquals(list(shadow("a")), Util.segments("a", compile("#")).collect(toList()));
-    assertEquals(
-        list(shadow(""), shadow("a")), Util.segments("#a", compile("#")).collect(toList()));
-    assertEquals(list(shadow("")), Util.segments("", compile("#")).collect(toList()));
-    assertEquals(list(shadow("")), Util.segments("#", compile("#")).collect(toList()));
+        Util.segments("a# b # c", compile(" *# *")).toList());
+    assertEquals(list(shadow("a"), shadow("b")), Util.segments("a#b#", compile("#")).toList());
+    assertEquals(list(shadow("a")), Util.segments("a", compile("#")).toList());
+    assertEquals(list(shadow(""), shadow("a")), Util.segments("#a", compile("#")).toList());
+    assertEquals(list(shadow("")), Util.segments("", compile("#")).toList());
+    assertEquals(list(shadow("")), Util.segments("#", compile("#")).toList());
   }
 
   @Test

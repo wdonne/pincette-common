@@ -16,7 +16,6 @@ import static net.pincette.util.Util.tryToGetRethrow;
 import static net.pincette.xml.Util.isXml;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
@@ -306,8 +305,7 @@ public class MimeType {
   private static void parse(
       final InputStream in,
       final Map<String, Set<String>> mimeTypes,
-      final Map<String, String> extensions)
-      throws IOException {
+      final Map<String, String> extensions) {
     readLineConfig(in)
         .map(line -> line.split("[ \t]"))
         .map(
