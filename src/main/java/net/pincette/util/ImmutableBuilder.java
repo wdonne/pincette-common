@@ -13,7 +13,7 @@ import net.pincette.function.UnaryOperatorWithException;
  * Chains immutable object creation with optional conditions.
  *
  * @param <T> the object type.
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  * @since 2.0.3
  */
 public class ImmutableBuilder<T> {

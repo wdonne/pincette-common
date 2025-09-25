@@ -13,7 +13,7 @@ import net.pincette.function.SupplierWithException;
  * Chains asynchronous updates to mutable objects.
  *
  * @param <T> the object type.
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  * @since 1.9
  */
 public class AsyncBuilder<T> {

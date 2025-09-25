@@ -8,7 +8,7 @@ import java.util.function.Function;
 /**
  * An immutable pair of elements.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public final class Pair<T, U> {
   public final T first;
@@ -43,7 +43,6 @@ public final class Pair<T, U> {
   @SuppressWarnings("unchecked")
   public boolean equals(final Object o) {
     return o instanceof Pair
-        && getClass().isAssignableFrom(o.getClass())
         && Objects.equals(first, ((Pair<T, U>) o).first)
         && Objects.equals(second, ((Pair<T, U>) o).second);
   }

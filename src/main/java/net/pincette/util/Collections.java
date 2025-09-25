@@ -212,7 +212,7 @@ public class Collections {
                   (m, segment) ->
                       (Map<T, Object>) m.computeIfAbsent(key.apply(segment), s -> new HashMap<>()),
                   (m1, m2) -> m1)
-              .put(key.apply(segs.get(segs.size() - 1)), v);
+              .put(key.apply(segs.getLast()), v);
         });
 
     return result;
@@ -532,7 +532,7 @@ public class Collections {
    * @since 1.7
    */
   public static <T> List<T> shiftDown(final List<T> list, final int positions) {
-    return !list.isEmpty() ? shiftDown(list, positions, list.get(list.size() - 1)) : list;
+    return !list.isEmpty() ? shiftDown(list, positions, list.getLast()) : list;
   }
 
   /**
@@ -567,7 +567,7 @@ public class Collections {
    * @since 1.7
    */
   public static <T> List<T> shiftUp(final List<T> list, final int positions) {
-    return !list.isEmpty() ? shiftUp(list, positions, list.get(0)) : list;
+    return !list.isEmpty() ? shiftUp(list, positions, list.getFirst()) : list;
   }
 
   /**

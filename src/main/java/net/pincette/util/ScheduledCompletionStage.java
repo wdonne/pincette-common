@@ -15,7 +15,7 @@ import java.util.function.Supplier;
  * Starts a completable future after a delay without blocking. It uses one timer thread to complete
  * the pending futures.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class ScheduledCompletionStage {
   private static final Timer TIMER = new Timer("ScheduledCompletionStage", true);

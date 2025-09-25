@@ -11,7 +11,7 @@ import java.util.Optional;
 /**
  * Creates an input stream from a list of buffers.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  * @since 2.2
  */
 public class ByteBufferInputStream extends InputStream {

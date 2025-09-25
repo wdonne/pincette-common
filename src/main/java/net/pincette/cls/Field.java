@@ -1,7 +1,6 @@
 package net.pincette.cls;
 
 public class Field {
-
   Attribute[] attributes;
   String descriptor;
   boolean isDeprecated;

@@ -3,7 +3,6 @@ package net.pincette.cls;
 import java.util.function.Supplier;
 
 public class Util {
-
   private static final String[][] basicTypes = {
     {"B", "byte"},
     {"C", "char"},
@@ -19,9 +18,9 @@ public class Util {
   private Util() {}
 
   private static String getBasicType(final String descriptor) {
-    for (int i = 0; i < basicTypes.length; ++i) {
-      if (basicTypes[i][0].equals(descriptor)) {
-        return basicTypes[i][1];
+    for (final String[] basicType : basicTypes) {
+      if (basicType[0].equals(descriptor)) {
+        return basicType[1];
       }
     }
 

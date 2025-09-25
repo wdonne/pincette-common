@@ -22,7 +22,7 @@ import java.util.Optional;
 /**
  * Some path utilities.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  * @since 2.0.2
  */
 public class PathUtil {

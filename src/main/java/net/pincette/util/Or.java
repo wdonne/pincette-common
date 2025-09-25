@@ -12,7 +12,7 @@ import net.pincette.function.OptionalSupplier;
  *
  * <p>{@code Or.tryWith(lamba1).or(lambda2).or(lambda3).get();}
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class Or<T> {
   private final Optional<T> result;

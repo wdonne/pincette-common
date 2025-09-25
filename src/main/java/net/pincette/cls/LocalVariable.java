@@ -1,7 +1,6 @@
 package net.pincette.cls;
 
 public class LocalVariable {
-
   String descriptor;
   short index;
   short length;

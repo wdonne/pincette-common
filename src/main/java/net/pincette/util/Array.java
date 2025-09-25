@@ -1,6 +1,6 @@
 package net.pincette.util;
 
-/** @author Werner Donn\u00e9 */
+/** @author Werner Donné */
 public class Array {
   private Array() {}
 

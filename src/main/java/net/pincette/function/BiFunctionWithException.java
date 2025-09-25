@@ -3,7 +3,7 @@ package net.pincette.function;
 /**
  * A bi-function interface that allows lambda expressions to throw an exception.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 @FunctionalInterface
 public interface BiFunctionWithException<T, U, R> {

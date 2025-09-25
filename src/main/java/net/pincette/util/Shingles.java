@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 /**
  * Functions te generate a stream of shingles.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class Shingles {
   private Shingles() {}

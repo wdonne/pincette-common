@@ -12,7 +12,7 @@ import net.pincette.function.SideEffect;
  *
  * <p>{@code Do.<T>withValue(v).or(v -> test1, v -> {}).or(v -> test2, v -> {});}
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  * @since 1.9.2
  */
 public class Do<T> {

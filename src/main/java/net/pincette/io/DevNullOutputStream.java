@@ -5,7 +5,7 @@ import java.io.OutputStream;
 /**
  * This output stream gobbles all output.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class DevNullOutputStream extends OutputStream {
   @Override

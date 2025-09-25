@@ -7,23 +7,22 @@ import java.io.IOException;
 import java.lang.reflect.Modifier;
 
 public class Writer {
-
   private Writer() {}
 
   private static String getConstructors(final Method[] methods) {
     final StringBuilder result = new StringBuilder();
 
-    for (int i = 0; i < methods.length; ++i) {
-      if (methods[i].isConstructor() && !methods[i].isSynthetic()) {
+    for (final Method method : methods) {
+      if (method.isConstructor() && !method.isSynthetic()) {
         result
             .append("  ")
-            .append(getModifiers(methods[i].getModifiers()))
+            .append(getModifiers(method.getModifiers()))
             .append("\n  ")
-            .append(methods[i].getName())
-            .append(getParameters(methods[i]))
+            .append(method.getName())
+            .append(getParameters(method))
             .append(
-                (methods[i].getExceptionTypes().length > 0)
-                    ? ("\n    " + getThrows(methods[i].getExceptionTypes()))
+                (method.getExceptionTypes().length > 0)
+                    ? ("\n    " + getThrows(method.getExceptionTypes()))
                     : "")
             .append("\n  {\n  }\n\n");
       }
@@ -37,14 +36,14 @@ public class Writer {
 
     final StringBuilder result = new StringBuilder();
 
-    for (int i = 0; i < fields.length; ++i) {
-      if (!fields[i].isSynthetic()) {
+    for (final Field field : fields) {
+      if (!field.isSynthetic()) {
         result
             .append("  ")
-            .append(getModifiers(fields[i].getModifiers()))
-            .append(fields[i].getType())
+            .append(getModifiers(field.getModifiers()))
+            .append(field.getType())
             .append(' ')
-            .append(fields[i].getName())
+            .append(field.getName())
             .append(";\n");
       }
     }
@@ -57,21 +56,21 @@ public class Writer {
 
     final StringBuilder result = new StringBuilder();
 
-    for (int i = 0; i < methods.length; ++i) {
-      if (!methods[i].isConstructor() && !methods[i].isInitializer() && !methods[i].isSynthetic()) {
+    for (final Method method : methods) {
+      if (!method.isConstructor() && !method.isInitializer() && !method.isSynthetic()) {
         result
             .append("  ")
-            .append(getModifiers(methods[i].getModifiers()))
-            .append(methods[i].getReturnType())
+            .append(getModifiers(method.getModifiers()))
+            .append(method.getReturnType())
             .append("\n  ")
-            .append(methods[i].getName())
-            .append(getParameters(methods[i]))
+            .append(method.getName())
+            .append(getParameters(method))
             .append(
-                (methods[i].getExceptionTypes().length > 0)
-                    ? ("\n    " + getThrows(methods[i].getExceptionTypes()))
+                (method.getExceptionTypes().length > 0)
+                    ? ("\n    " + getThrows(method.getExceptionTypes()))
                     : "")
             .append(
-                isInterface || Modifier.isNative(methods[i].getModifiers())
+                isInterface || Modifier.isNative(method.getModifiers())
                     ? ";\n\n"
                     : "\n  {\n  }\n\n");
       }

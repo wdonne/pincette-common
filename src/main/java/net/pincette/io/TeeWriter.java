@@ -6,7 +6,7 @@ import java.io.Writer;
 /**
  * Replicates the output to several Writers in the order given in the constructor.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class TeeWriter extends Writer {
   private final Writer[] writers;

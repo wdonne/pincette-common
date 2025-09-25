@@ -7,7 +7,7 @@ import java.io.OutputStream;
 /**
  * Copies an input stream to an output stream.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class StreamConnector {
   private StreamConnector() {}

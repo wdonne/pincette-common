@@ -1,7 +1,6 @@
 package net.pincette.cls;
 
 public class ExceptionHandler {
-
   short endPC;
   short handlerPC;
   short startPC;

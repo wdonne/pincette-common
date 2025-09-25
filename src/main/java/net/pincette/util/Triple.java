@@ -8,10 +8,9 @@ import java.util.function.Function;
 /**
  * An immutable triple of elements.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public final class Triple<T, U, V> {
-
   public final T first;
   public final U second;
   public final V third;
@@ -47,7 +46,6 @@ public final class Triple<T, U, V> {
   @SuppressWarnings("unchecked")
   public boolean equals(final Object o) {
     return o instanceof Triple
-        && getClass().isAssignableFrom(o.getClass())
         && Objects.equals(first, ((Triple<T, U, V>) o).first)
         && Objects.equals(second, ((Triple<T, U, V>) o).second)
         && Objects.equals(third, ((Triple<T, U, V>) o).third);

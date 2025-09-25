@@ -247,7 +247,6 @@ public class Expressions {
   }
 
   private record Operator(Expr operand1, int op, Expr operand2) implements Expr {
-
     private static BiFunction<Object, Object, Object> getBinaryOperator(final int operator) {
       return switch (operator) {
         case AND -> (left, right) -> (Boolean) left && (Boolean) right;

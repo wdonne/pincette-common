@@ -7,7 +7,7 @@ import java.io.OutputStream;
 /**
  * Wraps another output stream and protects it against being closed.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 @SuppressWarnings("squid:S4349")
 public class DontCloseOutputStream extends FilterOutputStream {

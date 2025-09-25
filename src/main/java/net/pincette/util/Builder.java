@@ -14,7 +14,7 @@ import net.pincette.function.SupplierWithException;
  * Chains updates to mutable objects.
  *
  * @param <T> the object type.
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class Builder<T> {
   private final T object;

@@ -11,7 +11,7 @@ import java.util.function.Predicate;
  *
  * <p>{@code Cases.<T, U>withValue(v).or(v -> test1, v -> v1).or(v -> test2, v -> v2).get();}
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  * @since 1.8
  */
 public class Cases<T, U> {

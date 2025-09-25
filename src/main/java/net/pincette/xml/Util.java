@@ -10,7 +10,7 @@ import static net.pincette.util.Util.isUri;
 import static net.pincette.util.Util.tryToDoRethrow;
 import static net.pincette.util.Util.tryToGet;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -278,7 +278,7 @@ public class Util {
         () -> systemId.charAt(0) == '/' ? systemId : tryBaseURI.get();
 
     return isUri(baseURI)
-        ? tryToGet(() -> new URL(new URL(baseURI), systemId)).map(URL::toString).orElse(null)
+        ? tryToGet(() -> new URI(baseURI).resolve(systemId)).map(URI::toString).orElse(null)
         : trySystemId.get();
   }
 

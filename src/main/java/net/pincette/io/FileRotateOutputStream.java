@@ -16,7 +16,7 @@ import java.util.zip.GZIPOutputStream;
 /**
  * Rotates the given file based on the size in bytes and the depth.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class FileRotateOutputStream extends OutputStream {
 

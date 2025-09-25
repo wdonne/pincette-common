@@ -58,7 +58,7 @@ public class ArgsBuilder {
   /**
    * Indicates if a pending arg has been added last.
    *
-   * @return
+   * @return Is arg pending.
    */
   public boolean hasPending() {
     return pending != null;

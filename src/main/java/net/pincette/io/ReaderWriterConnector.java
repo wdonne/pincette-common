@@ -8,7 +8,7 @@ import java.io.Writer;
  * This class reads data from reader and writes it to writer in a separate thread. The thread stops
  * when there is no more input or when an exception occurs.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class ReaderWriterConnector {
   private ReaderWriterConnector() {}

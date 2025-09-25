@@ -7,7 +7,7 @@ import java.io.InputStream;
 /**
  * Wraps another input stream and protects it against being closed.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 @SuppressWarnings("squid:S4929") // Why?
 public class DontCloseInputStream extends FilterInputStream {

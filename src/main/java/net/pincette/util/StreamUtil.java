@@ -16,6 +16,7 @@ import static net.pincette.util.Collections.shiftDown;
 import static net.pincette.util.Pair.pair;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
@@ -363,7 +364,63 @@ public class StreamUtil {
    * @since 1.9.2
    */
   public static <T> Stream<T> repeat(final T value, final int count) {
-    return rangeExclusive(0, count).map(i -> value);
+    return repeat(() -> value, count);
+  }
+
+  /**
+   * Create a stream of <code>count</code> times <code>value</code>.
+   *
+   * @param value the function that produces the value that will be repeated. It is called for each
+   *     iteration.
+   * @param count the number of times the value will be repeated.
+   * @param <T> the element type.
+   * @return The stream of repetitions.
+   * @since 2.5.5
+   */
+  public static <T> Stream<T> repeat(final Supplier<T> value, final int count) {
+    return rangeExclusive(0, count).map(i -> value.get());
+  }
+
+  /**
+   * Create an infinite stream of values by iterating over the given collection forever.
+   *
+   * @param collection the collection that provides the values for the stream.
+   * @param <T> the element type.
+   * @return The stream of repetitions.
+   * @since 2.5.5
+   */
+  public static <T> Stream<T> repeatForever(final Collection<T> collection) {
+    return repeatForever(() -> collection);
+  }
+
+  /**
+   * Create an infinite stream of values by iterating over the given collection forever.
+   *
+   * @param collection the function that produces the collection that provides the values for the
+   *     stream. It is called for each iteration.
+   * @param <T> the element type.
+   * @return The stream of repetitions.
+   * @since 2.5.5
+   */
+  public static <T> Stream<T> repeatForever(final Supplier<Collection<T>> collection) {
+    return stream(
+        new Iterator<T>() {
+          private Iterator<T> iterator;
+
+          @Override
+          public boolean hasNext() {
+            if (iterator == null || !iterator.hasNext()) {
+              iterator = collection.get().iterator();
+            }
+
+            return iterator.hasNext();
+          }
+
+          @Override
+          public T next() {
+            return iterator.next();
+          }
+        });
   }
 
   /**
@@ -539,7 +596,7 @@ public class StreamUtil {
       final Predicate<T> p) {
     return stream(
         new Iterator<T>() {
-          private Iterator<U> i = stream.iterator();
+          private final Iterator<U> i = stream.iterator();
           private T current = i.hasNext() ? seed.apply(i.next()) : null;
           private boolean ok;
 

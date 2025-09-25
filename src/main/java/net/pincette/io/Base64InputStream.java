@@ -8,7 +8,7 @@ import java.util.Arrays;
 /**
  * See also RFC 2045 section 6.8.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class Base64InputStream extends FilterInputStream {
   private static final byte[] values = createValues();
@@ -62,18 +62,13 @@ public class Base64InputStream extends FilterInputStream {
   }
 
   private int decodeQuantumPosition(final byte[] b, final int position, final int off) {
-    switch (quantumPosition) {
-      case 0:
-        return decode0(position);
-      case 1:
-        return decode1(b, position, off);
-      case 2:
-        return decode2(b, position, off);
-      case 3:
-        return decode3(b, position, off);
-      default:
-        return position;
-    }
+    return switch (quantumPosition) {
+      case 0 -> decode0(position);
+      case 1 -> decode1(b, position, off);
+      case 2 -> decode2(b, position, off);
+      case 3 -> decode3(b, position, off);
+      default -> position;
+    };
   }
 
   private int decode0(final int position) {
@@ -83,7 +78,7 @@ public class Base64InputStream extends FilterInputStream {
   }
 
   private int decode1(final byte[] b, final int position, final int off) {
-    decodedBuffer[0] |= (values[encodedBuffer[encodedPosition]] >> 4) & 0x03;
+    decodedBuffer[0] |= (byte) ((values[encodedBuffer[encodedPosition]] >> 4) & 0x03);
     decodedBuffer[1] = (byte) (values[encodedBuffer[encodedPosition]] << 4);
     b[position + off] = decodedBuffer[0];
 
@@ -92,7 +87,7 @@ public class Base64InputStream extends FilterInputStream {
 
   private int decode2(final byte[] b, final int position, final int off) {
     if (encodedBuffer[encodedPosition] != '=') {
-      decodedBuffer[1] |= (values[encodedBuffer[encodedPosition]] >> 2) & 0x0f;
+      decodedBuffer[1] |= (byte) ((values[encodedBuffer[encodedPosition]] >> 2) & 0x0f);
       decodedBuffer[2] = (byte) (values[encodedBuffer[encodedPosition]] << 6);
       b[position + off] = decodedBuffer[1];
 

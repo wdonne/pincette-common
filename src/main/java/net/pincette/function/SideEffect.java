@@ -7,7 +7,7 @@ import java.util.function.Supplier;
  *
  * <p>{@code final int i = SideEffect.<Integer>run(() -> doSomething()).andThenGet(() -> 3); }
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 @FunctionalInterface
 public interface SideEffect<T> extends Runnable {

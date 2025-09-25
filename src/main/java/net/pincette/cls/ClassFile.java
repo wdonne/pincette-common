@@ -90,7 +90,7 @@ public class ClassFile {
       }
     }
 
-    c.attributes = attributes.toArray(new Attribute[attributes.size()]);
+    c.attributes = attributes.toArray(new Attribute[0]);
     c.constantPool = null;
 
     return c;

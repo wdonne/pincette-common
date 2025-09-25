@@ -11,7 +11,7 @@ import java.util.function.Supplier;
  * Writes the bytes to a series of buffers. It will request as many buffers as needed.
  *
  * @since 2.2
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class ByteBufferOutputStream extends OutputStream {
   private final Supplier<ByteBuffer> get;

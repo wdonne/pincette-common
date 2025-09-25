@@ -115,10 +115,10 @@ public class MimeType {
     final Supplier<String> jpegOr =
         () ->
             b.length > 3
-                    && b[0] == 0xff
-                    && b[1] == 0xd8
-                    && b[b.length - 2] == 0xff
-                    && b[b.length - 1] == 0xd9
+                    && b[0] == (byte) 0xff
+                    && b[1] == (byte) 0xd8
+                    && b[b.length - 2] == (byte) 0xff
+                    && b[b.length - 1] == (byte) 0xd9
                 ? "image/jpeg"
                 : pngOr.get();
 

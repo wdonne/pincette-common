@@ -1,7 +1,6 @@
 package net.pincette.cls;
 
 public class Attribute {
-
   String name;
   byte[] value;
 

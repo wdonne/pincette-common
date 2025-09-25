@@ -10,7 +10,7 @@ import net.pincette.function.RunnableWithException;
  *
  * <p>{@code () -> when(<condition>).run(() -> <do something>).orElse(() -> <do something else>) }
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class When {
   private final boolean condition;

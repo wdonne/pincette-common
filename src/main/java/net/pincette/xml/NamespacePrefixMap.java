@@ -22,7 +22,7 @@ import javax.xml.namespace.NamespaceContext;
  * This class copes with the fact that the same namespace declarations can be nested and that
  * prefixes can be redeclared for other URIs.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class NamespacePrefixMap implements NamespaceContext {
   private final Map<String, Deque<String>> namespaceMap = new HashMap<>();
@@ -70,7 +70,7 @@ public class NamespacePrefixMap implements NamespaceContext {
    * @return The prefix.
    */
   public String getNamespacePrefix(final String uri) {
-    if (uri == null || "".equals(uri)) {
+    if (uri == null || uri.isEmpty()) {
       throw new IllegalArgumentException();
     }
 
@@ -103,7 +103,7 @@ public class NamespacePrefixMap implements NamespaceContext {
   }
 
   public Iterator<String> getPrefixes(final String namespaceURI) {
-    if (namespaceURI == null || "".equals(namespaceURI)) {
+    if (namespaceURI == null || namespaceURI.isEmpty()) {
       throw new IllegalArgumentException();
     }
 

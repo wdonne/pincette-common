@@ -6,7 +6,7 @@ import java.io.OutputStream;
 /**
  * Replicates the output to several OutputStreams in the order given in the constructor.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class TeeOutputStream extends OutputStream {
   private final OutputStream[] out;

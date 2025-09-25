@@ -11,7 +11,7 @@ import java.io.IOException;
  * Deletes the file after the stream has been closed, which is interesting when working with
  * temporary files.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class DeleteFileInputStream extends FileInputStream {
   private final File file;

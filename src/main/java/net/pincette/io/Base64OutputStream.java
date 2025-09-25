@@ -8,7 +8,7 @@ import java.io.OutputStream;
  * This stream passes an arbitrary byte stream to the underlying stream in a Base64 encoded form.
  * See also RFC 2045 section 6.8.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 public class Base64OutputStream extends FilterOutputStream {
   private static final byte[] alphabet = {

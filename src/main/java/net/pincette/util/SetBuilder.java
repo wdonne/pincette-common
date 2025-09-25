@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class SetBuilder<E> {
-
   private final Set<E> set;
 
   /**

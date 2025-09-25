@@ -10,6 +10,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -79,7 +80,7 @@ public class CatalogResolver implements EntityResolver, XMLResolver {
             tryToGetRethrow(
                     () ->
                         isUri(catalogSystemId)
-                            ? new URL(catalogSystemId).openStream()
+                            ? new URI(catalogSystemId).toURL().openStream()
                             : new FileInputStream(catalogSystemId))
                 .orElse(null);
 

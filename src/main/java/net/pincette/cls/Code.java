@@ -1,7 +1,6 @@
 package net.pincette.cls;
 
 public class Code {
-
   Attribute[] attributes;
   byte[] theCode;
   ExceptionHandler[] exceptions;

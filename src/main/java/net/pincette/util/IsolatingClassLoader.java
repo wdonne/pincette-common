@@ -14,6 +14,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -128,7 +129,8 @@ public class IsolatingClassLoader extends ClassLoader {
                     .flatMap(
                         e ->
                             tryToGetRethrow(
-                                () -> new URL("jar:" + classPathEntry.toURI() + "!/" + name)))
+                                () ->
+                                    new URI("jar:" + classPathEntry.toURI() + "!/" + name).toURL()))
                     .orElse(null))
         .orElse(null);
   }

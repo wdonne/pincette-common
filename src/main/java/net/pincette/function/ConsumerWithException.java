@@ -3,7 +3,7 @@ package net.pincette.function;
 /**
  * An consumer interface that allows lambda expressions to throw an exception.
  *
- * @author Werner Donn\u00e9
+ * @author Werner Donné
  */
 @FunctionalInterface
 public interface ConsumerWithException<T> {
