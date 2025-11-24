@@ -6,11 +6,8 @@ import static net.pincette.util.MimeType.stripParameters;
 import static net.pincette.util.Pair.pair;
 import static net.pincette.util.StreamUtil.rangeExclusive;
 import static net.pincette.util.StreamUtil.takeWhile;
-import static net.pincette.util.Util.isUri;
 import static net.pincette.util.Util.tryToDoRethrow;
-import static net.pincette.util.Util.tryToGet;
 
-import java.net.URI;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -274,12 +271,8 @@ public class Util {
             baseURI.charAt(baseURI.length() - 1) == '/'
                 ? (baseURI + systemId)
                 : (baseURI.substring(0, baseURI.lastIndexOf('/') + 1) + systemId);
-    final Supplier<String> trySystemId =
-        () -> systemId.charAt(0) == '/' ? systemId : tryBaseURI.get();
 
-    return isUri(baseURI)
-        ? tryToGet(() -> new URI(baseURI).resolve(systemId)).map(URI::toString).orElse(null)
-        : trySystemId.get();
+    return systemId.charAt(0) == '/' ? systemId : tryBaseURI.get();
   }
 
   /**
