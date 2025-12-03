@@ -345,7 +345,7 @@ public class Util {
   /**
    * Executes <code>supplier</code> until it returns <code>true</code>.
    *
-   * @param supplier a function that may throw an exception, which will be rethrown.
+   * @param supplier a function that may throw an exception.
    * @param error the function that deals with an exception.
    * @param interval the time between two calls of <code>supplier</code>. It may be <code>null
    *     </code>.
@@ -364,6 +364,34 @@ public class Util {
           }
         },
         error);
+  }
+
+  /**
+   * Executes <code>supplier</code> until it returns <code>true</code>.
+   *
+   * @param supplier a function that may throw an exception.
+   * @param error the function that deals with an exception.
+   * @param interval the time before a retry when there was an exception. It may be <code>null
+   *     </code>.
+   * @since 2.5.7
+   */
+  public static void doUntilRetry(
+      final SupplierWithException<Boolean> supplier,
+      final Consumer<Exception> error,
+      final Duration interval) {
+    while (!tryToGet(
+            supplier,
+            e -> {
+              error.accept(e);
+
+              if (interval != null) {
+                tryToDoSilent(() -> sleep(interval.toMillis()));
+              }
+
+              return false;
+            })
+        .orElse(false))
+      ;
   }
 
   /**
