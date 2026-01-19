@@ -108,7 +108,7 @@ public class PEM {
     return keyStore(privateKey, certificateChain)
         .flatMap(
             store ->
-                tryToGetRethrow(() -> SSLContext.getInstance("TLS"))
+                tryToGetRethrow(() -> SSLContext.getInstance("TLSv1.2"))
                     .map(
                         context -> {
                           tryToDoRethrow(() -> context.init(keyManagers(store), null, null));
